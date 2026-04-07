@@ -1,7 +1,7 @@
 // lib/ai.ts
 // Anthropic AI integration — product search, trend analysis, insight generation
 
-import Anthropic from 'anthropic'
+import Anthropic from '@anthropic-ai/sdk'
 import { Product, SearchParams } from './types'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
