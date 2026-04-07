@@ -296,24 +296,71 @@ async function loadSuppliers(search = '') {
 
 function renderSuppliers(suppliers) {
   const tbody = document.getElementById('suppliers-tbody');
+  tbody.textContent = '';
+
   if (suppliers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px">No suppliers found</td></tr>';
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 6;
+    td.style.textAlign = 'center';
+    td.style.color = 'var(--text-muted)';
+    td.style.padding = '30px';
+    td.textContent = 'No suppliers found';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
     return;
   }
-  tbody.innerHTML = suppliers.map((s) => `
-    <tr>
-      <td><strong>${s.name}</strong></td>
-      <td>${s.country}</td>
-      <td><span class="tag tag-${s.rating >= 4.5 ? 'green' : 'yellow'}">⭐ ${s.rating}</span></td>
-      <td>${(s.categories || []).join(', ')}</td>
-      <td>${s.avgShippingDays || 'N/A'} days</td>
-      <td>
-        <span class="tag tag-${s.status === 'active' ? 'green' : 'red'}">${s.status}</span>
-        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="openEditSupplier('${s.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteSupplier('${s.id}')">🗑</button>
-      </td>
-    </tr>
-  `).join('');
+
+  suppliers.forEach((s) => {
+    const tr = document.createElement('tr');
+
+    const nameTd = document.createElement('td');
+    const nameStrong = document.createElement('strong');
+    nameStrong.textContent = s.name;
+    nameTd.appendChild(nameStrong);
+    tr.appendChild(nameTd);
+
+    const countryTd = document.createElement('td');
+    countryTd.textContent = s.country;
+    tr.appendChild(countryTd);
+
+    const ratingTd = document.createElement('td');
+    const ratingSpan = document.createElement('span');
+    ratingSpan.className = `tag tag-${s.rating >= 4.5 ? 'green' : 'yellow'}`;
+    ratingSpan.textContent = `⭐ ${s.rating}`;
+    ratingTd.appendChild(ratingSpan);
+    tr.appendChild(ratingTd);
+
+    const categoriesTd = document.createElement('td');
+    categoriesTd.textContent = (s.categories || []).join(', ');
+    tr.appendChild(categoriesTd);
+
+    const shippingTd = document.createElement('td');
+    shippingTd.textContent = `${s.avgShippingDays || 'N/A'} days`;
+    tr.appendChild(shippingTd);
+
+    const actionsTd = document.createElement('td');
+    const statusSpan = document.createElement('span');
+    statusSpan.className = `tag tag-${s.status === 'active' ? 'green' : 'red'}`;
+    statusSpan.textContent = s.status;
+    actionsTd.appendChild(statusSpan);
+
+    const editButton = document.createElement('button');
+    editButton.className = 'btn btn-ghost btn-sm';
+    editButton.style.marginLeft = '8px';
+    editButton.textContent = '✏️';
+    editButton.addEventListener('click', () => openEditSupplier(s.id));
+    actionsTd.appendChild(editButton);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn btn-danger btn-sm';
+    deleteButton.textContent = '🗑';
+    deleteButton.addEventListener('click', () => deleteSupplier(s.id));
+    actionsTd.appendChild(deleteButton);
+
+    tr.appendChild(actionsTd);
+    tbody.appendChild(tr);
+  });
 }
 
 async function deleteSupplier(id) {
