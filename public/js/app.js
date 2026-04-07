@@ -9,7 +9,12 @@ function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-  toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+  const iconSpan = document.createElement('span');
+  iconSpan.textContent = icons[type] || 'ℹ️';
+  const messageSpan = document.createElement('span');
+  messageSpan.textContent = message;
+  toast.appendChild(iconSpan);
+  toast.appendChild(messageSpan);
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 4000);
 }
