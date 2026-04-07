@@ -2,7 +2,7 @@
 // Handles AI product search. Keeps Anthropic API key server-side.
 
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from 'anthropic'
+import Anthropic from '@anthropic-ai/sdk'
 import { supabaseAdmin } from '@/lib/supabase'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
