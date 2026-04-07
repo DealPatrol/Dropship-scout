@@ -11,7 +11,12 @@ function readData(filename) {
     return [];
   }
   const raw = fs.readFileSync(filePath, 'utf8');
-  return JSON.parse(raw);
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error(`Failed to parse JSON data from ${filePath}: ${error.message}`);
+    return [];
+  }
 }
 
 function writeData(filename, data) {
