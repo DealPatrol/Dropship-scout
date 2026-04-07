@@ -38,6 +38,27 @@ router.post('/jobs', (req, res) => {
     });
   }
 
+  const productRequiredTypes = [
+    Automation.JOB_TYPES.PRICE_MONITOR,
+    Automation.JOB_TYPES.STOCK_CHECK,
+  ];
+
+  if (productRequiredTypes.includes(type) && !productId) {
+    return res.status(400).json({
+      success: false,
+      message: `productId is required for job type ${type}`,
+    });
+  }
+
+  if (productRequiredTypes.includes(type)) {
+    const product = Product.getById(productId);
+    if (!product) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid productId',
+      });
+    }
+  }
   const job = Automation.create(req.body);
   res.status(201).json({ success: true, data: job });
 });
