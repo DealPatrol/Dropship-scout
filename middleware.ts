@@ -1,10 +1,12 @@
 // middleware.ts
-// Runs on every request — adds security headers and handles CORS for API routes
+// Integrates Supabase session refresh + security headers + CORS
 
 import { NextRequest, NextResponse } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
-export function middleware(req: NextRequest) {
-  const res = NextResponse.next()
+export async function middleware(req: NextRequest) {
+  // Let Supabase handle session refresh and auth redirects
+  const res = await updateSession(req)
 
   // Security headers
   res.headers.set('X-Content-Type-Options', 'nosniff')
@@ -14,14 +16,11 @@ export function middleware(req: NextRequest) {
 
   // CORS for API routes
   if (req.nextUrl.pathname.startsWith('/api/')) {
-    const origin = req.headers.get('origin') || ''
     const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL || '*'
-
     res.headers.set('Access-Control-Allow-Origin', allowedOrigin)
     res.headers.set('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS')
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
-    // Handle preflight
     if (req.method === 'OPTIONS') {
       return new NextResponse(null, { status: 204, headers: res.headers })
     }

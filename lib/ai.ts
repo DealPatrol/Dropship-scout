@@ -1,7 +1,7 @@
 // lib/ai.ts
 // Anthropic AI integration — product search, trend analysis, insight generation
 
-import Anthropic from 'anthropic'
+import Anthropic from '@anthropic-ai/sdk'
 import { Product, SearchParams } from './types'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -10,7 +10,7 @@ export async function generateProducts(params: SearchParams): Promise<Product[]>
   const { platforms, category, sortBy, customNiche } = params
 
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-3-5-sonnet-20241022',
     max_tokens: 1024,
     messages: [{ role: 'user', content: buildSearchPrompt(platforms, category, sortBy, customNiche) }],
   })
@@ -26,7 +26,7 @@ export async function refreshProductInsight(product: {
   currentScore: number
 }): Promise<{ trend: string; score: number; aiInsight: string }> {
   const message = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+    model: 'claude-3-haiku-20240307',
     max_tokens: 256,
     messages: [{
       role: 'user',
