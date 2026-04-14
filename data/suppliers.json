@@ -1,0 +1,47 @@
+[
+  {
+    "id": "sup-001",
+    "name": "AliSource Pro",
+    "website": "https://example-supplier1.com",
+    "country": "China",
+    "rating": 4.8,
+    "categories": ["Electronics", "Gadgets", "Accessories"],
+    "minOrderQty": 1,
+    "shippingMethods": ["ePacket", "DHL", "AliExpress Standard"],
+    "avgShippingDays": 14,
+    "contactEmail": "contact@alisourcepro.com",
+    "status": "active",
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "sup-002",
+    "name": "GlobalGoods Wholesale",
+    "website": "https://example-supplier2.com",
+    "country": "United States",
+    "rating": 4.5,
+    "categories": ["Home & Garden", "Kitchen", "Furniture"],
+    "minOrderQty": 1,
+    "shippingMethods": ["USPS", "FedEx", "UPS"],
+    "avgShippingDays": 5,
+    "contactEmail": "sales@globalgoodswholesale.com",
+    "status": "active",
+    "createdAt": "2026-01-15T00:00:00Z",
+    "updatedAt": "2026-01-15T00:00:00Z"
+  },
+  {
+    "id": "sup-003",
+    "name": "EuroTrade Direct",
+    "website": "https://example-supplier3.com",
+    "country": "Germany",
+    "rating": 4.6,
+    "categories": ["Fashion", "Clothing", "Accessories"],
+    "minOrderQty": 2,
+    "shippingMethods": ["DHL", "DPD", "Hermes"],
+    "avgShippingDays": 7,
+    "contactEmail": "orders@eurotradedirect.com",
+    "status": "active",
+    "createdAt": "2026-02-01T00:00:00Z",
+    "updatedAt": "2026-02-01T00:00:00Z"
+  }
+]
