@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getSavedProducts, deleteSavedProduct, pushToShopify, getShopifyDomain } from '@/lib/api'
+import { getSavedProducts, deleteSavedProduct, pushToShopify, exportProducts, syncProducts } from '@/lib/api'
 import type { Product } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,6 +15,9 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
+  Download,
+  RefreshCw,
+  ChevronDown,
 } from 'lucide-react'
 
 const trendColors: Record<string, string> = {
@@ -42,18 +45,18 @@ export function SavedProductsView({ userId }: SavedProductsViewProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [pushing, setPushing] = useState(false)
   const [pushResult, setPushResult] = useState<{ pushed: number; total: number } | null>(null)
-  const [shopifyDomain, setShopifyDomain] = useState<string | null>(null)
+  const [pushError, setPushError] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncToast, setSyncToast] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const [prods, domain] = await Promise.all([
-        getSavedProducts(userId),
-        getShopifyDomain(userId),
-      ])
+      const prods = await getSavedProducts(userId)
       setProducts(prods)
-      setShopifyDomain(domain)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load')
     } finally {
@@ -91,22 +94,56 @@ export function SavedProductsView({ userId }: SavedProductsViewProps) {
   }
 
   async function handlePush() {
-    if (!shopifyDomain || selected.size === 0) return
+    if (selected.size === 0) return
     setPushing(true)
     setPushResult(null)
+    setPushError(null)
     const selectedProducts = products.filter(p => p.id && selected.has(p.id))
     try {
-      const result = await pushToShopify({
-        domain: shopifyDomain,
-        token: '',
-        products: selectedProducts,
-        userId,
-      })
+      const result = await pushToShopify({ userId, products: selectedProducts })
       setPushResult({ pushed: result.pushed, total: result.total })
-    } catch {
-      // ignore
+      setSelected(new Set())
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Push failed'
+      if (msg.toLowerCase().includes('not connected')) {
+        setPushError('Shopify not connected — add credentials in Settings first.')
+      } else {
+        setPushError(msg)
+      }
     } finally {
       setPushing(false)
+    }
+  }
+
+  async function handleSync() {
+    setSyncing(true)
+    setSyncToast(null)
+    try {
+      const { summary } = await syncProducts(userId)
+      setSyncToast(
+        summary.updated > 0
+          ? `Updated ${summary.updated} of ${summary.total} products`
+          : 'All products are up to date'
+      )
+      // Re-fetch to show updated trends/scores
+      await loadProducts()
+    } catch (err) {
+      setSyncToast(err instanceof Error ? err.message : 'Sync failed')
+    } finally {
+      setSyncing(false)
+      setTimeout(() => setSyncToast(null), 4000)
+    }
+  }
+
+  async function handleExport(format: 'shopify' | 'simple') {
+    setExportOpen(false)
+    setExporting(true)
+    try {
+      await exportProducts(userId, format)
+    } catch {
+      // ignore — browser download errors are silent
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -146,7 +183,7 @@ export function SavedProductsView({ userId }: SavedProductsViewProps) {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-start justify-between mb-6 gap-4">
+      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Saved Products</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -154,33 +191,96 @@ export function SavedProductsView({ userId }: SavedProductsViewProps) {
           </p>
         </div>
 
-        {selected.size > 0 && shopifyDomain && (
-          <Button onClick={handlePush} disabled={pushing} className="gap-2 shrink-0">
-            {pushing ? (
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Refresh market data */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSync}
+            disabled={syncing || products.length === 0}
+            className="gap-2"
+          >
+            <RefreshCw className={cn('h-3.5 w-3.5', syncing && 'animate-spin')} />
+            {syncing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+
+          {/* Export CSV dropdown */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExportOpen(o => !o)}
+              disabled={exporting || products.length === 0}
+              className="gap-2"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </Button>
+            {exportOpen && (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Pushing...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                Push {selected.size} to Shopify
+                <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
+                <div className="absolute right-0 mt-1 z-20 bg-card border border-border rounded-md shadow-lg py-1 min-w-[160px]">
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-secondary transition-colors"
+                    onClick={() => handleExport('shopify')}
+                  >
+                    Shopify CSV
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-secondary transition-colors"
+                    onClick={() => handleExport('simple')}
+                  >
+                    Simple CSV
+                  </button>
+                </div>
               </>
             )}
-          </Button>
-        )}
+          </div>
 
-        {!shopifyDomain && selected.size > 0 && (
-          <p className="text-xs text-muted-foreground">
-            Connect Shopify in Settings to push products
-          </p>
-        )}
+          {/* Push to Shopify */}
+          {selected.size > 0 && (
+            <Button onClick={handlePush} disabled={pushing} className="gap-2 shrink-0">
+              {pushing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Pushing...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Push {selected.size} to Shopify
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Toasts */}
+      {syncToast && (
+        <div className="mb-4 flex items-center gap-2 text-sm text-blue-400 bg-blue-400/10 border border-blue-400/20 rounded-md px-4 py-2">
+          <RefreshCw className="h-4 w-4" />
+          {syncToast}
+        </div>
+      )}
 
       {pushResult && (
         <div className="mb-4 flex items-center gap-2 text-sm text-green-400 bg-green-400/10 border border-green-400/20 rounded-md px-4 py-2">
           <CheckCircle className="h-4 w-4" />
           Pushed {pushResult.pushed} of {pushResult.total} products to Shopify
+        </div>
+      )}
+
+      {pushError && (
+        <div className="mb-4 flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-4 py-2">
+          <AlertCircle className="h-4 w-4" />
+          {pushError}
+          {pushError.includes('Settings') && (
+            <a href="/dashboard/settings" className="ml-1 underline underline-offset-2">
+              Go to Settings →
+            </a>
+          )}
         </div>
       )}
 

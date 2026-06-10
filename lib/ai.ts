@@ -17,7 +17,11 @@ export async function generateProducts(params: SearchParams): Promise<Product[]>
 
   const text = message.content.map((b: { type: string; text?: string }) => ('text' in b ? b.text : '') || '').join('')
   const clean = text.replace(/```json|```/g, '').trim()
-  return JSON.parse(clean) as Product[]
+  try {
+    return JSON.parse(clean) as Product[]
+  } catch {
+    throw new Error('AI returned invalid JSON — please retry')
+  }
 }
 
 export async function refreshProductInsight(product: {
@@ -26,7 +30,7 @@ export async function refreshProductInsight(product: {
   currentScore: number
 }): Promise<{ trend: string; score: number; aiInsight: string }> {
   const message = await client.messages.create({
-    model: 'claude-3-haiku-20240307',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 256,
     messages: [{
       role: 'user',
@@ -43,7 +47,11 @@ score: 0–10 float`,
 
   const text = message.content.map((b: { type: string; text?: string }) => ('text' in b ? b.text : '') || '').join('')
   const clean = text.replace(/```json|```/g, '').trim()
-  return JSON.parse(clean)
+  try {
+    return JSON.parse(clean)
+  } catch {
+    throw new Error('AI returned invalid JSON — please retry')
+  }
 }
 
 function buildSearchPrompt(

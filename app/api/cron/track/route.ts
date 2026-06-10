@@ -7,9 +7,10 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { refreshProductInsight } from '@/lib/ai'
 
 export async function GET(req: NextRequest) {
-  // Validate cron secret
+  // Validate cron secret — fail-closed: if CRON_SECRET is not set, deny all requests
+  const secret = process.env.CRON_SECRET
   const authHeader = req.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!secret || authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

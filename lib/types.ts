@@ -72,3 +72,29 @@ export interface SearchParams {
   customNiche: string
   userId?: string
 }
+
+export interface AnalyticsData {
+  saved: {
+    total: number
+    avgScore: number
+    trendBreakdown: Record<string, number>
+    topProduct: { score: number; trend: string } | null
+  }
+  shopify: {
+    totalPushed: number
+    totalFailed: number
+    successRate: number
+    estimatedRevenue: number
+  }
+  lastSearch: {
+    searchedAt: string
+    platforms: string[]
+    category: string
+  } | null
+}
+
+export interface SyncSummary {
+  total: number
+  updated: number
+  errors: number
+}

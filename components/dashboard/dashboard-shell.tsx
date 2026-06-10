@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -23,6 +24,7 @@ import { Separator } from '@/components/ui/separator'
 const navItems = [
   { href: '/dashboard', label: 'Search', icon: Search, exact: true },
   { href: '/dashboard/saved', label: 'Saved Products', icon: Bookmark, exact: false },
+  { href: '/dashboard/recommendations', label: 'Recommendations', icon: Sparkles, exact: false },
   { href: '/dashboard/history', label: 'Push History', icon: History, exact: false },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings, exact: false },
 ]

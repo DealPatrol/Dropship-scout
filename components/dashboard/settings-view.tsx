@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { saveShopifyCredentials, getShopifyDomain } from '@/lib/api'
+import { saveShopifyCredentials, getShopifyDomain, validateShopify } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, CheckCircle, ShoppingBag, User, Shield } from 'lucide-react'
+import { Loader2, CheckCircle, ShoppingBag, User, Shield, Plug } from 'lucide-react'
 
 interface SettingsViewProps {
   userId: string
@@ -20,6 +20,8 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
   const [savedSuccess, setSavedSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{ valid: boolean; shopName?: string; error?: string } | null>(null)
 
   const loadCredentials = useCallback(async () => {
     try {
@@ -39,6 +41,7 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
     setSaving(true)
     setError(null)
     setSavedSuccess(false)
+    setTestResult(null)
     try {
       await saveShopifyCredentials(userId, domain, token)
       setSavedSuccess(true)
@@ -48,6 +51,20 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
       setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleTest() {
+    if (!domain || !token) return
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const result = await validateShopify(domain.replace(/\.myshopify\.com$/, ''), token)
+      setTestResult(result)
+    } catch {
+      setTestResult({ valid: false, error: 'Connection test failed' })
+    } finally {
+      setTesting(false)
     }
   }
 
@@ -102,7 +119,7 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
                     <Input
                       id="shopify-domain"
                       value={domain}
-                      onChange={e => setDomain(e.target.value)}
+                      onChange={e => { setDomain(e.target.value); setTestResult(null) }}
                       placeholder="your-store"
                       required
                       className="border-0 rounded-none bg-transparent focus:ring-0"
@@ -119,13 +136,31 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
                     id="shopify-token"
                     type="password"
                     value={token}
-                    onChange={e => setToken(e.target.value)}
+                    onChange={e => { setToken(e.target.value); setTestResult(null) }}
                     placeholder={domain ? 'Leave blank to keep existing token' : 'shpat_xxxxxxxxxxxx'}
                   />
                   <p className="text-xs text-muted-foreground">
                     Create a Custom App in your Shopify Admin and copy the Admin API access token.
                   </p>
                 </div>
+
+                {/* Test connection result */}
+                {testResult && (
+                  <div className={`flex items-center gap-2 text-sm rounded-md px-3 py-2 ${
+                    testResult.valid
+                      ? 'text-green-400 bg-green-400/10 border border-green-400/20'
+                      : 'text-destructive bg-destructive/10 border border-destructive/20'
+                  }`}>
+                    {testResult.valid ? (
+                      <CheckCircle className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <Plug className="h-4 w-4 shrink-0" />
+                    )}
+                    {testResult.valid
+                      ? `Connected to ${testResult.shopName}`
+                      : testResult.error || 'Connection failed'}
+                  </div>
+                )}
 
                 {error && <p className="text-sm text-destructive">{error}</p>}
 
@@ -136,16 +171,37 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
                   </div>
                 )}
 
-                <Button type="submit" disabled={saving} className="w-fit gap-2">
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Save credentials'
-                  )}
-                </Button>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Button type="submit" disabled={saving} className="gap-2">
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save credentials'
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={testing || !domain || !token}
+                    onClick={handleTest}
+                    className="gap-2"
+                  >
+                    {testing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Testing...
+                      </>
+                    ) : (
+                      <>
+                        <Plug className="h-4 w-4" />
+                        Test connection
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             )}
           </CardContent>
@@ -157,7 +213,7 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
             <div className="flex items-start gap-3">
               <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Your Shopify access token is encrypted and stored server-side. It is never exposed to the browser and is only used when pushing products to your store.
+                Your Shopify access token is stored server-side and never exposed to the browser. It is only used when pushing products to your store.
               </p>
             </div>
           </CardContent>
