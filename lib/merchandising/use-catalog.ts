@@ -5,27 +5,39 @@
 // to localStorage when the backend is unavailable (e.g. the catalog_items
 // migration has not been run yet), so the feature always works.
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { buildCatalog, parseBuilderPrompt } from './builder'
 import { getProduct } from './data'
 import type { BuilderResult, CatalogItem, CatalogProduct } from './types'
 
-const STORAGE_KEY = 'repodrop-catalog'
+const STORAGE_KEY_PREFIX = 'repodrop-catalog'
 
-function readLocal(): CatalogItem[] {
+function storageKey(userId: string): string {
+  return `${STORAGE_KEY_PREFIX}:${userId}`
+}
+
+function readLocal(userId: string): CatalogItem[] | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as CatalogItem[]) : []
+    const raw = localStorage.getItem(storageKey(userId))
+    return raw === null ? null : (JSON.parse(raw) as CatalogItem[])
   } catch {
-    return []
+    return null
   }
 }
 
-function writeLocal(items: CatalogItem[]) {
+function writeLocal(userId: string, items: CatalogItem[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    localStorage.setItem(storageKey(userId), JSON.stringify(items))
   } catch {
     // storage unavailable — state stays in memory
+  }
+}
+
+function clearLocal(userId: string) {
+  try {
+    localStorage.removeItem(storageKey(userId))
+  } catch {
+    // storage unavailable — no local fallback to clear
   }
 }
 
@@ -67,25 +79,61 @@ export interface UseCatalog {
 
 export function useCatalog(userId: string): UseCatalog {
   const [items, setItems] = useState<CatalogItem[]>([])
+  const itemsRef = useRef<CatalogItem[]>([])
   const [loading, setLoading] = useState(true)
   const [remote, setRemote] = useState(true)
   const [shopifyDomain, setShopifyDomain] = useState<string | null>(null)
 
+  const replaceItems = useCallback((next: CatalogItem[]) => {
+    itemsRef.current = next
+    setItems(next)
+  }, [])
+
+  const updateItems = useCallback((updater: (current: CatalogItem[]) => CatalogItem[]) => {
+    const next = updater(itemsRef.current)
+    itemsRef.current = next
+    setItems(next)
+    return next
+  }, [])
+
   useEffect(() => {
     let cancelled = false
 
+    async function fetchCatalog(): Promise<CatalogItem[]> {
+      const res = await fetch('/api/catalog')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      return data.items
+    }
+
     async function load() {
       try {
-        const res = await fetch(`/api/catalog?userId=${userId}`)
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
+        let remoteItems = await fetchCatalog()
+        const localItems = readLocal(userId)
+
+        if (localItems !== null) {
+          const remoteIds = new Set(remoteItems.map(item => item.productId))
+
+          for (const item of localItems.filter(item => !remoteIds.has(item.productId))) {
+            const res = await fetch('/api/catalog', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ productIds: [item.productId], source: item.source }),
+            })
+            if (!res.ok) throw new Error()
+          }
+
+          remoteItems = await fetchCatalog()
+          clearLocal(userId)
+        }
+
         if (!cancelled) {
-          setItems(data.items)
+          replaceItems(remoteItems)
           setRemote(true)
         }
       } catch {
         if (!cancelled) {
-          setItems(readLocal())
+          replaceItems(readLocal(userId) ?? [])
           setRemote(false)
         }
       } finally {
@@ -108,50 +156,52 @@ export function useCatalog(userId: string): UseCatalog {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [replaceItems, userId])
 
   const addProducts = useCallback(
     async (productIds: string[], source: CatalogItem['source'] = 'manual') => {
-      const next = mergeItems(items, toItems(productIds, source))
-      setItems(next)
+      const next = updateItems(current => mergeItems(current, toItems(productIds, source)))
 
       if (remote) {
         try {
           const res = await fetch('/api/catalog', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, productIds, source }),
+            body: JSON.stringify({ productIds, source }),
           })
           if (!res.ok) throw new Error()
           return
         } catch {
           setRemote(false)
+          writeLocal(userId, itemsRef.current)
+          return
         }
       }
-      writeLocal(next)
+      writeLocal(userId, next)
     },
-    [items, remote, userId]
+    [remote, updateItems, userId]
   )
 
   const removeProduct = useCallback(
     async (productId: string) => {
-      const next = items.filter(item => item.productId !== productId)
-      setItems(next)
+      const next = updateItems(current => current.filter(item => item.productId !== productId))
 
       if (remote) {
         try {
-          const res = await fetch(`/api/catalog?userId=${userId}&productId=${productId}`, {
+          const res = await fetch(`/api/catalog?productId=${productId}`, {
             method: 'DELETE',
           })
           if (!res.ok) throw new Error()
           return
         } catch {
           setRemote(false)
+          writeLocal(userId, itemsRef.current)
+          return
         }
       }
-      writeLocal(next)
+      writeLocal(userId, next)
     },
-    [items, remote, userId]
+    [remote, updateItems, userId]
   )
 
   const runBuilder = useCallback(
@@ -161,13 +211,12 @@ export function useCatalog(userId: string): UseCatalog {
           const res = await fetch('/api/catalog/build', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, prompt }),
+            body: JSON.stringify({ prompt }),
           })
           const data = await res.json()
           if (!res.ok) throw new Error(data.error)
-          const next = mergeItems(items, toItems(data.productIds, 'ai_builder'))
-          setItems(next)
-          return { summary: data.summary, added: data.productIds.length }
+          updateItems(current => mergeItems(current, toItems(data.productIds, 'ai_builder')))
+          return { summary: data.summary, added: data.added }
         } catch {
           setRemote(false)
         }
@@ -175,12 +224,16 @@ export function useCatalog(userId: string): UseCatalog {
 
       // Offline path: same deterministic builder, run locally.
       const result: BuilderResult = buildCatalog(parseBuilderPrompt(prompt))
-      const next = mergeItems(items, toItems(result.products.map(product => product.id), 'ai_builder'))
-      setItems(next)
-      writeLocal(next)
-      return { summary: result.summary, added: result.products.length }
+      let added = 0
+      const next = updateItems(current => {
+        const merged = mergeItems(current, toItems(result.products.map(product => product.id), 'ai_builder'))
+        added = merged.length - current.length
+        return merged
+      })
+      writeLocal(userId, next)
+      return { summary: result.summary, added }
     },
-    [items, remote, userId]
+    [remote, updateItems, userId]
   )
 
   const pushToStore = useCallback(
@@ -189,7 +242,7 @@ export function useCatalog(userId: string): UseCatalog {
         const res = await fetch('/api/shopify/push-catalog', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, productIds }),
+          body: JSON.stringify({ productIds }),
         })
         const data = await res.json()
         if (!res.ok) return { pushed: 0, total: productIds.length, error: data.error }
@@ -200,11 +253,12 @@ export function useCatalog(userId: string): UseCatalog {
             .map(r => r.productId)
         )
         const now = new Date().toISOString()
-        setItems(prev =>
-          mergeItems(prev, toItems(Array.from(pushedNow), 'manual')).map(item =>
+        const next = updateItems(current =>
+          mergeItems(current, toItems(Array.from(pushedNow), 'manual')).map(item =>
             pushedNow.has(item.productId) ? { ...item, pushedAt: now } : item
           )
         )
+        if (!remote) writeLocal(userId, next)
         return { pushed: data.pushed, total: data.total }
       } catch {
         return {
@@ -214,7 +268,7 @@ export function useCatalog(userId: string): UseCatalog {
         }
       }
     },
-    [userId]
+    [remote, updateItems, userId]
   )
 
   const products = items

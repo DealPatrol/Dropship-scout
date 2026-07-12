@@ -5,20 +5,41 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { getShopifyCredentials, logPushResult } from '@/lib/db'
 import { pushProductToShopify } from '@/lib/fulfillment'
 import { getProduct } from '@/lib/merchandising/data'
 import { toPushableProduct } from '@/lib/merchandising/fulfillment'
 
+interface PushResult {
+  productId: string
+  name?: string
+  success: boolean
+  shopifyId?: string
+  error?: string
+  alreadyPushed?: boolean
+}
+
 // POST /api/shopify/push-catalog
-// Body: { userId, productIds: string[] }
+// Body: { productIds: string[] }
 export async function POST(req: NextRequest) {
-  const { userId, productIds } = await req.json()
-  if (!userId || !Array.isArray(productIds) || productIds.length === 0) {
-    return NextResponse.json({ error: 'userId and productIds required' }, { status: 400 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { productIds } = await req.json()
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    return NextResponse.json({ error: 'productIds required' }, { status: 400 })
   }
 
-  const credentials = await getShopifyCredentials(userId)
+  const requestedProductIds = Array.from(
+    new Set(productIds.filter((productId: unknown): productId is string => typeof productId === 'string'))
+  )
+  if (requestedProductIds.length === 0) {
+    return NextResponse.json({ error: 'No valid product ids' }, { status: 400 })
+  }
+
+  const credentials = await getShopifyCredentials(user.id)
   if (!credentials) {
     return NextResponse.json(
       { error: 'No Shopify store connected. Add your store domain and access token in Settings.' },
@@ -26,21 +47,43 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const results = []
+  const { data: catalogRows, error: catalogError } = await supabaseAdmin
+    .from('catalog_items')
+    .select('product_id, pushed_at, shopify_product_id')
+    .eq('user_id', user.id)
+    .in('product_id', requestedProductIds)
 
-  for (const productId of productIds as string[]) {
+  if (catalogError) {
+    return NextResponse.json({ error: catalogError.message }, { status: 500 })
+  }
+
+  const existingItems = new Map((catalogRows || []).map(row => [row.product_id, row]))
+  const results: PushResult[] = []
+
+  for (const productId of requestedProductIds) {
     const product = getProduct(productId)
     if (!product) {
       results.push({ productId, success: false, error: 'Unknown product' })
       continue
     }
 
+    const existing = existingItems.get(productId)
+    if (existing?.pushed_at || existing?.shopify_product_id) {
+      results.push({
+        productId,
+        name: product.name,
+        success: true,
+        shopifyId: existing.shopify_product_id ?? undefined,
+        alreadyPushed: true,
+      })
+      continue
+    }
+
     const pushable = toPushableProduct(product)
     const result = await pushProductToShopify(credentials.domain, credentials.token, pushable)
-    results.push({ productId, name: product.name, ...result })
 
     await logPushResult({
-      userId,
+      userId: user.id,
       productName: product.name,
       sellPrice: product.price,
       status: result.success ? 'success' : 'failed',
@@ -50,22 +93,49 @@ export async function POST(req: NextRequest) {
 
     if (result.success) {
       // Ensure the product is in the catalog, then mark it as pushed.
-      await supabaseAdmin.from('catalog_items').upsert(
+      const { error: upsertError } = await supabaseAdmin.from('catalog_items').upsert(
         {
-          user_id: userId,
+          user_id: user.id,
           product_id: productId,
           source: 'manual',
         },
         { onConflict: 'user_id,product_id', ignoreDuplicates: true }
       )
-      await supabaseAdmin
+
+      if (upsertError) {
+        results.push({
+          productId,
+          name: product.name,
+          success: false,
+          shopifyId: result.shopifyId,
+          error: `Product was created on Shopify, but catalog persistence failed: ${upsertError.message}`,
+        })
+        continue
+      }
+
+      const { data: updated, error: updateError } = await supabaseAdmin
         .from('catalog_items')
         .update({ pushed_at: new Date().toISOString(), shopify_product_id: result.shopifyId })
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .eq('product_id', productId)
+        .select('id')
+        .maybeSingle()
+
+      if (updateError || !updated) {
+        results.push({
+          productId,
+          name: product.name,
+          success: false,
+          shopifyId: result.shopifyId,
+          error: `Product was created on Shopify, but its catalog status could not be saved${updateError ? `: ${updateError.message}` : '.'}`,
+        })
+        continue
+      }
     }
+
+    results.push({ productId, name: product.name, ...result })
   }
 
   const pushed = results.filter(r => r.success).length
-  return NextResponse.json({ pushed, total: productIds.length, results })
+  return NextResponse.json({ pushed, total: requestedProductIds.length, results })
 }

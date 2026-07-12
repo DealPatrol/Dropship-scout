@@ -5,17 +5,19 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { getProduct } from '@/lib/merchandising/data'
 
-// GET /api/catalog?userId=xxx
-export async function GET(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+// GET /api/catalog
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data, error } = await supabaseAdmin
     .from('catalog_items')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', user.id)
     .order('added_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -33,21 +35,41 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/catalog
-// Body: { userId, productIds: string[], source? }
+// Body: { productIds: string[], source? }
 export async function POST(req: NextRequest) {
-  const { userId, productIds, source } = await req.json()
-  if (!userId || !Array.isArray(productIds) || productIds.length === 0) {
-    return NextResponse.json({ error: 'userId and productIds required' }, { status: 400 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { productIds, source } = await req.json()
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    return NextResponse.json({ error: 'productIds required' }, { status: 400 })
   }
 
-  const validIds = productIds.filter((id: string) => getProduct(id))
+  const validIds = Array.from(
+    new Set(
+      productIds.filter(
+        (productId: unknown): productId is string =>
+          typeof productId === 'string' && Boolean(getProduct(productId))
+      )
+    )
+  )
   if (validIds.length === 0) {
     return NextResponse.json({ error: 'No valid product ids' }, { status: 400 })
   }
 
+  const { data: existing, error: selectError } = await supabaseAdmin
+    .from('catalog_items')
+    .select('product_id')
+    .eq('user_id', user.id)
+    .in('product_id', validIds)
+
+  if (selectError) return NextResponse.json({ error: selectError.message }, { status: 500 })
+
+  const existingIds = new Set((existing || []).map(row => row.product_id))
   const { error } = await supabaseAdmin.from('catalog_items').upsert(
     validIds.map((productId: string) => ({
-      user_id: userId,
+      user_id: user.id,
       product_id: productId,
       source: source || 'manual',
     })),
@@ -55,21 +77,24 @@ export async function POST(req: NextRequest) {
   )
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ added: validIds.length })
+  return NextResponse.json({ added: validIds.filter(id => !existingIds.has(id)).length })
 }
 
-// DELETE /api/catalog?userId=xxx&productId=xxx
+// DELETE /api/catalog?productId=xxx
 export async function DELETE(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const productId = req.nextUrl.searchParams.get('productId')
-  if (!userId || !productId) {
-    return NextResponse.json({ error: 'userId and productId required' }, { status: 400 })
+  if (!productId) {
+    return NextResponse.json({ error: 'productId required' }, { status: 400 })
   }
 
   const { error } = await supabaseAdmin
     .from('catalog_items')
     .delete()
-    .eq('user_id', userId)
+    .eq('user_id', user.id)
     .eq('product_id', productId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { buildCatalog, parseBuilderPrompt } from '@/lib/merchandising/builder'
 import { NICHES } from '@/lib/merchandising/data'
 import type { BuilderCriteria } from '@/lib/merchandising/types'
@@ -53,20 +54,37 @@ impulseOnly = true if they want viral/TikTok/impulse products.`,
 }
 
 // POST /api/catalog/build
-// Body: { userId, prompt }
+// Body: { prompt }
 export async function POST(req: NextRequest) {
-  const { userId, prompt } = await req.json()
-  if (!userId || !prompt) {
-    return NextResponse.json({ error: 'userId and prompt required' }, { status: 400 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { prompt } = await req.json()
+  if (!prompt) {
+    return NextResponse.json({ error: 'prompt required' }, { status: 400 })
   }
 
   const criteria = (await parseWithClaude(prompt)) ?? parseBuilderPrompt(prompt)
   const result = buildCatalog(criteria)
+  const productIds = result.products.map(product => product.id)
+  let added = 0
 
   if (result.products.length > 0) {
+    const { data: existing, error: selectError } = await supabaseAdmin
+      .from('catalog_items')
+      .select('product_id')
+      .eq('user_id', user.id)
+      .in('product_id', productIds)
+
+    if (selectError) return NextResponse.json({ error: selectError.message }, { status: 500 })
+
+    const existingIds = new Set((existing || []).map(row => row.product_id))
+    added = productIds.filter(productId => !existingIds.has(productId)).length
+
     const { error } = await supabaseAdmin.from('catalog_items').upsert(
       result.products.map(product => ({
-        user_id: userId,
+        user_id: user.id,
         product_id: product.id,
         source: 'ai_builder',
       })),
@@ -78,6 +96,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     summary: result.summary,
     criteria: result.criteria,
-    productIds: result.products.map(product => product.id),
+    productIds,
+    added,
   })
 }
