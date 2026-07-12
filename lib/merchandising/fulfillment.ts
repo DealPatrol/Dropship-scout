@@ -8,8 +8,8 @@
 import { getSearchUrl, SUPPLIERS } from '@/lib/suppliers'
 import { revenueImpact } from './scoring'
 import { marginPercent, NICHE_MAP } from './data'
-import type { Product, SupplierPlatform } from '@/lib/types'
-import type { CatalogProduct } from './types'
+import type { Product, SupplierPlatform, TrendLabel } from '@/lib/types'
+import type { CatalogProduct, ProductTrend } from './types'
 
 export interface ProfitPerSale {
   sellPrice: number
@@ -70,6 +70,23 @@ export function supplierSources(product: CatalogProduct): SupplierSource[] {
   }))
 }
 
+function toTrendLabel(trend: ProductTrend): TrendLabel {
+  switch (trend) {
+    case 'hot':
+      return '🔥 Hot'
+    case 'rising':
+      return '📈 Rising'
+    case 'stable':
+      return '✅ Stable'
+    case 'declining':
+      return '📉 Declining'
+    default: {
+      const exhaustiveTrend: never = trend
+      return exhaustiveTrend
+    }
+  }
+}
+
 /**
  * Converts a discovery-catalog product into the shape the existing Shopify
  * push pipeline (`/api/shopify/push` → `buildShopifyPayload`) expects.
@@ -84,7 +101,7 @@ export function toPushableProduct(product: CatalogProduct): Product {
     id: product.id,
     name: product.name,
     category: primaryNiche.label,
-    trend: product.trend === 'hot' ? '🔥 Hot' : product.trend === 'rising' ? '📈 Rising' : '✅ Stable',
+    trend: toTrendLabel(product.trend),
     margin: perSale.marginPercent,
     sellPrice: product.price.toFixed(2),
     sourcePrice: product.cost.toFixed(2),

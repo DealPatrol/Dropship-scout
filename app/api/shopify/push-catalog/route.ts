@@ -10,6 +10,7 @@ import { getShopifyCredentials, logPushResult } from '@/lib/db'
 import { pushProductToShopify } from '@/lib/fulfillment'
 import { getProduct } from '@/lib/merchandising/data'
 import { toPushableProduct } from '@/lib/merchandising/fulfillment'
+import type { PostgrestError } from '@supabase/supabase-js'
 
 interface PushResult {
   productId: string
@@ -18,6 +19,10 @@ interface PushResult {
   shopifyId?: string
   error?: string
   alreadyPushed?: boolean
+}
+
+function isMissingCatalogTable(error: PostgrestError): boolean {
+  return error.code === '42P01' || error.code === 'PGRST205'
 }
 
 // POST /api/shopify/push-catalog
@@ -53,11 +58,35 @@ export async function POST(req: NextRequest) {
     .eq('user_id', user.id)
     .in('product_id', requestedProductIds)
 
-  if (catalogError) {
+  const catalogAvailable = !catalogError
+  if (catalogError && !isMissingCatalogTable(catalogError)) {
     return NextResponse.json({ error: catalogError.message }, { status: 500 })
   }
 
   const existingItems = new Map((catalogRows || []).map(row => [row.product_id, row]))
+  const productNames = requestedProductIds
+    .map(productId => getProduct(productId)?.name)
+    .filter((name): name is string => Boolean(name))
+  const pushedByName = new Map<string, { shopify_product_id: string | null }>()
+
+  if (productNames.length > 0) {
+    const { data: pushHistory, error: historyError } = await supabaseAdmin
+      .from('push_history')
+      .select('product_name, shopify_product_id')
+      .eq('user_id', user.id)
+      .eq('status', 'success')
+      .in('product_name', productNames)
+      .order('pushed_at', { ascending: false })
+
+    if (historyError) {
+      return NextResponse.json({ error: historyError.message }, { status: 500 })
+    }
+
+    for (const row of pushHistory || []) {
+      if (!pushedByName.has(row.product_name)) pushedByName.set(row.product_name, row)
+    }
+  }
+
   const results: PushResult[] = []
 
   for (const productId of requestedProductIds) {
@@ -68,12 +97,13 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = existingItems.get(productId)
-    if (existing?.pushed_at || existing?.shopify_product_id) {
+    const previousPush = pushedByName.get(product.name)
+    if (existing?.pushed_at || existing?.shopify_product_id || previousPush) {
       results.push({
         productId,
         name: product.name,
         success: true,
-        shopifyId: existing.shopify_product_id ?? undefined,
+        shopifyId: existing?.shopify_product_id ?? previousPush?.shopify_product_id ?? undefined,
         alreadyPushed: true,
       })
       continue
@@ -91,7 +121,7 @@ export async function POST(req: NextRequest) {
       errorMessage: result.error,
     })
 
-    if (result.success) {
+    if (result.success && catalogAvailable) {
       // Ensure the product is in the catalog, then mark it as pushed.
       const { error: upsertError } = await supabaseAdmin.from('catalog_items').upsert(
         {

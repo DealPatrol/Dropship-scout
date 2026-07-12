@@ -162,64 +162,60 @@ export function useCatalog(userId: string): UseCatalog {
     async (productIds: string[], source: CatalogItem['source'] = 'manual') => {
       const next = updateItems(current => mergeItems(current, toItems(productIds, source)))
 
-      if (remote) {
-        try {
-          const res = await fetch('/api/catalog', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productIds, source }),
-          })
-          if (!res.ok) throw new Error()
-          return
-        } catch {
-          setRemote(false)
-          writeLocal(userId, itemsRef.current)
-          return
-        }
+      try {
+        const res = await fetch('/api/catalog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productIds, source }),
+        })
+        if (!res.ok) throw new Error()
+        setRemote(true)
+        if (readLocal(userId) !== null) writeLocal(userId, next)
+      } catch {
+        setRemote(false)
+        writeLocal(userId, itemsRef.current)
       }
-      writeLocal(userId, next)
     },
-    [remote, updateItems, userId]
+    [updateItems, userId]
   )
 
   const removeProduct = useCallback(
     async (productId: string) => {
       const next = updateItems(current => current.filter(item => item.productId !== productId))
 
-      if (remote) {
-        try {
-          const res = await fetch(`/api/catalog?productId=${productId}`, {
-            method: 'DELETE',
-          })
-          if (!res.ok) throw new Error()
-          return
-        } catch {
-          setRemote(false)
-          writeLocal(userId, itemsRef.current)
-          return
-        }
+      try {
+        const res = await fetch(`/api/catalog?productId=${productId}`, {
+          method: 'DELETE',
+        })
+        if (!res.ok) throw new Error()
+        setRemote(true)
+        if (readLocal(userId) !== null) writeLocal(userId, next)
+      } catch {
+        setRemote(false)
+        writeLocal(userId, itemsRef.current)
       }
-      writeLocal(userId, next)
     },
-    [remote, updateItems, userId]
+    [updateItems, userId]
   )
 
   const runBuilder = useCallback(
     async (prompt: string): Promise<{ summary: string; added: number }> => {
-      if (remote) {
-        try {
-          const res = await fetch('/api/catalog/build', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt }),
-          })
-          const data = await res.json()
-          if (!res.ok) throw new Error(data.error)
-          updateItems(current => mergeItems(current, toItems(data.productIds, 'ai_builder')))
-          return { summary: data.summary, added: data.added }
-        } catch {
-          setRemote(false)
-        }
+      try {
+        const res = await fetch('/api/catalog/build', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
+        const next = updateItems(current =>
+          mergeItems(current, toItems(data.productIds, 'ai_builder'))
+        )
+        setRemote(true)
+        if (readLocal(userId) !== null) writeLocal(userId, next)
+        return { summary: data.summary, added: data.added }
+      } catch {
+        setRemote(false)
       }
 
       // Offline path: same deterministic builder, run locally.
@@ -233,7 +229,7 @@ export function useCatalog(userId: string): UseCatalog {
       writeLocal(userId, next)
       return { summary: result.summary, added }
     },
-    [remote, updateItems, userId]
+    [updateItems, userId]
   )
 
   const pushToStore = useCallback(
@@ -247,15 +243,21 @@ export function useCatalog(userId: string): UseCatalog {
         const data = await res.json()
         if (!res.ok) return { pushed: 0, total: productIds.length, error: data.error }
 
-        const pushedNow = new Set(
-          (data.results as { productId: string; success: boolean }[])
-            .filter(r => r.success)
-            .map(r => r.productId)
+        const pushedNow = new Map(
+          (data.results as { productId: string; success: boolean; shopifyId?: string }[])
+            .filter(result => result.success)
+            .map(result => [result.productId, result.shopifyId])
         )
         const now = new Date().toISOString()
         const next = updateItems(current =>
-          mergeItems(current, toItems(Array.from(pushedNow), 'manual')).map(item =>
-            pushedNow.has(item.productId) ? { ...item, pushedAt: now } : item
+          mergeItems(current, toItems(Array.from(pushedNow.keys()), 'manual')).map(item =>
+            pushedNow.has(item.productId)
+              ? {
+                  ...item,
+                  pushedAt: now,
+                  shopifyProductId: pushedNow.get(item.productId) ?? item.shopifyProductId,
+                }
+              : item
           )
         )
         if (!remote) writeLocal(userId, next)
@@ -279,7 +281,9 @@ export function useCatalog(userId: string): UseCatalog {
     items,
     products,
     productIds: new Set(items.map(item => item.productId)),
-    pushedIds: new Set(items.filter(item => item.pushedAt).map(item => item.productId)),
+    pushedIds: new Set(
+      items.filter(item => item.pushedAt || item.shopifyProductId).map(item => item.productId)
+    ),
     shopifyDomain,
     loading,
     addProducts,

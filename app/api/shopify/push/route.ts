@@ -5,13 +5,17 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { pushProductToShopify } from '@/lib/fulfillment'
-import { getShopifyCredentials } from '@/lib/db'
-import { logPushResult } from '@/lib/db'
+import { getShopifyCredentials, logPushResult } from '@/lib/db'
+import { createClient } from '@/lib/supabase/server'
 import { Product } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const body = await req.json()
-  const { products, userId } = body
+  const { products } = body
   let { domain, token } = body
 
   if (!products?.length) {
@@ -19,8 +23,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Fall back to the credentials saved in Settings.
-  if ((!domain || !token) && userId) {
-    const stored = await getShopifyCredentials(userId)
+  if (!domain || !token) {
+    const stored = await getShopifyCredentials(user.id)
     domain = domain || stored?.domain
     token = token || stored?.token
   }
@@ -39,16 +43,14 @@ export async function POST(req: NextRequest) {
 
     results.push({ name: p.name, ...result })
 
-    if (userId) {
-      await logPushResult({
-        userId,
-        productName: p.name,
-        sellPrice: parseFloat(p.sellPrice),
-        status: result.success ? 'success' : 'failed',
-        shopifyProductId: result.shopifyId,
-        errorMessage: result.error,
-      })
-    }
+    await logPushResult({
+      userId: user.id,
+      productName: p.name,
+      sellPrice: parseFloat(p.sellPrice),
+      status: result.success ? 'success' : 'failed',
+      shopifyProductId: result.shopifyId,
+      errorMessage: result.error,
+    })
   }
 
   const pushed = results.filter(r => r.success).length
