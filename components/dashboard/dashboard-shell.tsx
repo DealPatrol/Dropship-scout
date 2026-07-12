@@ -16,12 +16,20 @@ import {
   Menu,
   X,
   ChevronRight,
+  LayoutDashboard,
+  Compass,
+  ShoppingBag,
+  CalendarDays,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 
 const navItems = [
-  { href: '/dashboard', label: 'Search', icon: Search, exact: true },
+  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+  { href: '/dashboard/explore', label: 'Product Explorer', icon: Compass, exact: false },
+  { href: '/dashboard/catalog', label: 'My Catalog', icon: ShoppingBag, exact: false },
+  { href: '/dashboard/planner', label: 'Seasonal Planner', icon: CalendarDays, exact: false },
+  { href: '/dashboard/search', label: 'AI Search', icon: Search, exact: false },
   { href: '/dashboard/saved', label: 'Saved Products', icon: Bookmark, exact: false },
   { href: '/dashboard/history', label: 'Push History', icon: History, exact: false },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings, exact: false },
