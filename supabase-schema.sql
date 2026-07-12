@@ -91,3 +91,22 @@ alter table public.search_sessions enable row level security;
 
 create policy "Users can manage own search session"
   on public.search_sessions for all using (auth.uid() = user_id);
+
+-- ─── Catalog Items ───────────────────────────────────────────────────────────
+-- Products from the discovery catalog that a user added to their store catalog
+
+create table if not exists public.catalog_items (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) on delete cascade,
+  product_id text not null,          -- id from the curated product dataset
+  source text default 'manual',      -- 'manual' | 'ai_builder' | 'suggestion'
+  added_at timestamptz default now(),
+  unique (user_id, product_id)
+);
+
+alter table public.catalog_items enable row level security;
+
+create policy "Users can manage own catalog items"
+  on public.catalog_items for all using (auth.uid() = user_id);
+
+create index catalog_items_user_id_idx on public.catalog_items(user_id);
