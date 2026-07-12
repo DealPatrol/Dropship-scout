@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { marginPercent, NICHE_MAP, HOLIDAY_MAP } from '@/lib/merchandising/data'
 import { opportunityScore, revenueImpact } from '@/lib/merchandising/scoring'
+import { dropshipEconomics, supplierSources } from '@/lib/merchandising/fulfillment'
 import {
   demandForMonth,
   demandGlyph,
@@ -24,9 +26,12 @@ import {
   CalendarDays,
   Check,
   DollarSign,
+  ExternalLink,
+  Loader2,
   Package,
   Plus,
   Sparkles,
+  Store,
   Truck,
 } from 'lucide-react'
 
@@ -42,14 +47,40 @@ const BREAKDOWN_LABELS: Record<string, string> = {
 export function ProductDetailView({ product, userId }: { product: CatalogProduct; userId: string }) {
   const catalog = useCatalog(userId)
   const { toast } = useToast()
+  const [pushing, setPushing] = useState(false)
   const score = opportunityScore(product)
   const impact = revenueImpact(product)
   const bundles = bundleSuggestions(product)
   const bundle = bundleValue(product, bundles)
   const margin = marginPercent(product)
   const inCatalog = catalog.productIds.has(product.id)
+  const isPushed = catalog.pushedIds.has(product.id)
   const peak = peakMonth(product)
   const stockBy = stockByMonth(product)
+  const economics = dropshipEconomics(product)
+  const sources = supplierSources(product)
+
+  async function handleSell() {
+    if (!catalog.shopifyDomain) {
+      toast({
+        title: 'No store connected',
+        description: 'Add your Shopify domain and access token in Settings first.',
+        variant: 'destructive',
+      })
+      return
+    }
+    setPushing(true)
+    try {
+      const result = await catalog.pushToStore([product.id])
+      if (result.error || result.pushed === 0) {
+        toast({ title: 'Push failed', description: result.error || 'Could not list the product.', variant: 'destructive' })
+      } else {
+        toast({ title: 'Live on your store 🎉', description: `${product.name} is now listed on ${catalog.shopifyDomain}` })
+      }
+    } finally {
+      setPushing(false)
+    }
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -78,24 +109,130 @@ export function ProductDetailView({ product, userId }: { product: CatalogProduct
             )}
           </div>
         </div>
-        {inCatalog ? (
-          <Button variant="secondary" className="gap-2" onClick={() => catalog.removeProduct(product.id)}>
-            <Check className="h-4 w-4 text-green-400" />
-            In Catalog — Remove
-          </Button>
-        ) : (
-          <Button
-            className="gap-2"
-            onClick={async () => {
-              await catalog.addProducts([product.id])
-              toast({ title: 'Added to catalog', description: product.name })
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Add to Catalog
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {inCatalog ? (
+            <Button variant="secondary" className="gap-2" onClick={() => catalog.removeProduct(product.id)}>
+              <Check className="h-4 w-4 text-green-400" />
+              In Catalog — Remove
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={async () => {
+                await catalog.addProducts([product.id])
+                toast({ title: 'Added to catalog', description: product.name })
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Add to Catalog
+            </Button>
+          )}
+          {isPushed ? (
+            <Button variant="secondary" className="gap-2" disabled>
+              <Check className="h-4 w-4 text-green-400" />
+              Live on Your Store
+            </Button>
+          ) : (
+            <Button className="gap-2" onClick={handleSell} disabled={pushing}>
+              {pushing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Store className="h-4 w-4" />}
+              Sell on My Store
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Sell this on your store — dropshipping economics */}
+      <Card className="mb-4 border-green-400/30">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Store className="h-4 w-4 text-green-400" />
+              Sell This on Your Store
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {catalog.shopifyDomain ? (
+                <>Connected to <span className="text-foreground font-medium">{catalog.shopifyDomain}</span></>
+              ) : (
+                <Link href="/dashboard/settings" className="text-primary hover:underline">
+                  Connect your Shopify store in Settings →
+                </Link>
+              )}
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Per-sale money flow */}
+            <div className="rounded-md bg-surface-raised p-4 flex flex-col gap-2">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Every time a customer buys</p>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Customer pays you</span>
+                <span className="font-semibold text-foreground tabular-nums">${economics.perSale.sellPrice.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">You order from supplier</span>
+                <span className="font-semibold text-foreground tabular-nums">−${economics.perSale.supplierCost.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Payment fees (est.)</span>
+                <span className="font-semibold text-foreground tabular-nums">−${economics.perSale.fees.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm border-t border-border pt-2 mt-1">
+                <span className="text-foreground font-medium">You keep</span>
+                <span className="font-bold text-green-400 tabular-nums">
+                  ${economics.perSale.profit.toFixed(2)} ({economics.perSale.marginPercent}%)
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Est. <span className="text-green-400 font-medium">${economics.monthlyProfit.toLocaleString()}/mo profit</span> at{' '}
+                {economics.monthlyUnitsLow}–{economics.monthlyUnitsHigh} sales/month
+              </p>
+            </div>
+
+            {/* How fulfillment works */}
+            <div className="rounded-md bg-surface-raised p-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">How fulfillment works</p>
+              <ol className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <li className="flex gap-2">
+                  <span className="text-primary font-semibold shrink-0">1.</span>
+                  A customer orders on your store at ${economics.perSale.sellPrice.toFixed(2)} — you never hold inventory.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-primary font-semibold shrink-0">2.</span>
+                  You place the order with a supplier below at ~${economics.perSale.supplierCost.toFixed(2)}, entering the customer&apos;s shipping address.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-primary font-semibold shrink-0">3.</span>
+                  The supplier ships directly to your customer. The difference is your profit.
+                </li>
+              </ol>
+            </div>
+
+            {/* Supplier order links */}
+            <div className="rounded-md bg-surface-raised p-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Order from these suppliers</p>
+              <div className="flex flex-col gap-2">
+                {sources.map(source => (
+                  <a
+                    key={source.platform}
+                    href={source.orderUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:border-primary/40 transition-colors group"
+                  >
+                    <span className="text-foreground font-medium">{source.label}</span>
+                    <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {source.shippingDays}
+                      <ExternalLink className="h-3 w-3 group-hover:text-primary transition-colors" />
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         {/* Opportunity score */}

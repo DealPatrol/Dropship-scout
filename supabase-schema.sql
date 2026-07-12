@@ -101,6 +101,8 @@ create table if not exists public.catalog_items (
   product_id text not null,          -- id from the curated product dataset
   source text default 'manual',      -- 'manual' | 'ai_builder' | 'suggestion'
   added_at timestamptz default now(),
+  pushed_at timestamptz,             -- set when listed on the user's store
+  shopify_product_id text,           -- Shopify product id after push
   unique (user_id, product_id)
 );
 

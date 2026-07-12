@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { marginPercent, NICHES, PRODUCTS } from '@/lib/merchandising/data'
 import { opportunityScore } from '@/lib/merchandising/scoring'
@@ -10,7 +11,7 @@ import type { CatalogProduct, NicheId, TimingFilterId } from '@/lib/merchandisin
 import { Button } from '@/components/ui/button'
 import { DiscoveryCard } from '@/components/merchandising/discovery-card'
 import { useToast } from '@/components/ui/toaster'
-import { Layers, ShoppingBag, SlidersHorizontal } from 'lucide-react'
+import { Layers, ShoppingBag, SlidersHorizontal, Store } from 'lucide-react'
 
 type SortId = 'opportunity' | 'margin' | 'orders' | 'price_low' | 'competition'
 
@@ -67,6 +68,7 @@ export function ExplorerView({ userId }: { userId: string }) {
   const [multiNicheOnly, setMultiNicheOnly] = useState(false)
   const [quickFilters, setQuickFilters] = useState<Set<QuickFilterId>>(new Set())
   const [sort, setSort] = useState<SortId>('opportunity')
+  const [pushingId, setPushingId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     let list = PRODUCTS.filter(product => {
@@ -115,6 +117,28 @@ export function ExplorerView({ userId }: { userId: string }) {
     toast({ title: 'Added to catalog', description: product.name })
   }
 
+  async function handleSell(product: CatalogProduct) {
+    if (!catalog.shopifyDomain) {
+      toast({
+        title: 'No store connected',
+        description: 'Add your Shopify domain and access token in Settings first.',
+        variant: 'destructive',
+      })
+      return
+    }
+    setPushingId(product.id)
+    try {
+      const result = await catalog.pushToStore([product.id])
+      if (result.error || result.pushed === 0) {
+        toast({ title: 'Push failed', description: result.error || 'Could not list the product.', variant: 'destructive' })
+      } else {
+        toast({ title: 'Live on your store 🎉', description: `${product.name} is now listed on ${catalog.shopifyDomain}` })
+      }
+    } finally {
+      setPushingId(null)
+    }
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -125,9 +149,21 @@ export function ExplorerView({ userId }: { userId: string }) {
             Top 10 best sellers across 10 niches, scored and timed — build your catalog with one click
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card border border-border rounded-md px-3 py-2">
-          <ShoppingBag className="h-4 w-4 text-primary" />
-          <span className="text-foreground font-medium">{catalog.products.length}</span> in catalog
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card border border-border rounded-md px-3 py-2">
+            <ShoppingBag className="h-4 w-4 text-primary" />
+            <span className="text-foreground font-medium">{catalog.products.length}</span> in catalog
+          </div>
+          <div className="flex items-center gap-2 text-sm bg-card border border-border rounded-md px-3 py-2">
+            <Store className={cn('h-4 w-4', catalog.shopifyDomain ? 'text-green-400' : 'text-muted-foreground')} />
+            {catalog.shopifyDomain ? (
+              <span className="text-foreground font-medium">{catalog.shopifyDomain}</span>
+            ) : (
+              <Link href="/dashboard/settings" className="text-primary hover:underline">
+                Connect your store
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
@@ -252,8 +288,11 @@ export function ExplorerView({ userId }: { userId: string }) {
             key={product.id}
             product={product}
             inCatalog={catalog.productIds.has(product.id)}
+            isPushed={catalog.pushedIds.has(product.id)}
+            isPushing={pushingId === product.id}
             onAdd={() => handleAdd(product)}
             onRemove={() => catalog.removeProduct(product.id)}
+            onSell={() => handleSell(product)}
           />
         ))}
       </div>

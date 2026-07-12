@@ -25,6 +25,8 @@ export async function GET(req: NextRequest) {
     productId: row.product_id,
     source: row.source,
     addedAt: row.added_at,
+    pushedAt: row.pushed_at ?? undefined,
+    shopifyProductId: row.shopify_product_id ?? undefined,
   }))
 
   return NextResponse.json({ items })

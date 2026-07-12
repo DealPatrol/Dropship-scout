@@ -4,8 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { marginPercent, NICHE_MAP } from '@/lib/merchandising/data'
-import { opportunityScore, catalogScore, revenueImpact } from '@/lib/merchandising/scoring'
+import { opportunityScore, catalogScore } from '@/lib/merchandising/scoring'
 import { missingBundlePartners } from '@/lib/merchandising/bundles'
+import { dropshipEconomics, profitPerSale } from '@/lib/merchandising/fulfillment'
 import { sellingWindowLabel } from '@/lib/merchandising/seasonal'
 import { useCatalog } from '@/lib/merchandising/use-catalog'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import {
   Loader2,
   Package,
   ShoppingBag,
+  Store,
   Trash2,
 } from 'lucide-react'
 
@@ -36,6 +38,8 @@ export function CatalogView({ userId }: { userId: string }) {
   const [prompt, setPrompt] = useState('')
   const [building, setBuilding] = useState(false)
   const [builderSummary, setBuilderSummary] = useState<string | null>(null)
+  const [pushingId, setPushingId] = useState<string | null>(null)
+  const [pushingAll, setPushingAll] = useState(false)
 
   const score = catalogScore(catalog.products)
   const missing = missingBundlePartners(catalog.products)
@@ -46,10 +50,11 @@ export function CatalogView({ userId }: { userId: string }) {
     nicheCounts.set(primary, (nicheCounts.get(primary) ?? 0) + 1)
   }
 
-  const totalRevenue = catalog.products.reduce((sum, product) => sum + revenueImpact(product).monthlyRevenue, 0)
+  const totalProfit = catalog.products.reduce((sum, product) => sum + dropshipEconomics(product).monthlyProfit, 0)
   const avgMargin = catalog.products.length
     ? Math.round(catalog.products.reduce((sum, product) => sum + marginPercent(product), 0) / catalog.products.length)
     : 0
+  const unpushed = catalog.products.filter(product => !catalog.pushedIds.has(product.id))
 
   async function handleBuild(text: string) {
     if (!text.trim() || building) return
@@ -64,16 +69,67 @@ export function CatalogView({ userId }: { userId: string }) {
     }
   }
 
+  function requireStore(): boolean {
+    if (catalog.shopifyDomain) return true
+    toast({
+      title: 'No store connected',
+      description: 'Add your Shopify domain and access token in Settings first.',
+      variant: 'destructive',
+    })
+    return false
+  }
+
+  async function handlePushOne(productId: string, name: string) {
+    if (!requireStore()) return
+    setPushingId(productId)
+    try {
+      const result = await catalog.pushToStore([productId])
+      if (result.error || result.pushed === 0) {
+        toast({ title: 'Push failed', description: result.error || 'Could not list the product.', variant: 'destructive' })
+      } else {
+        toast({ title: 'Live on your store 🎉', description: name })
+      }
+    } finally {
+      setPushingId(null)
+    }
+  }
+
+  async function handlePushAll() {
+    if (!requireStore() || unpushed.length === 0) return
+    setPushingAll(true)
+    try {
+      const result = await catalog.pushToStore(unpushed.map(product => product.id))
+      if (result.error) {
+        toast({ title: 'Push failed', description: result.error, variant: 'destructive' })
+      } else {
+        toast({
+          title: `Listed ${result.pushed} of ${result.total} products`,
+          description: `Now live on ${catalog.shopifyDomain}`,
+        })
+      }
+    } finally {
+      setPushingAll(false)
+    }
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-foreground">My Store Catalog</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {catalog.products.length > 0
-            ? `${catalog.products.length} products · ${Array.from(nicheCounts.entries()).map(([id, count]) => `${NICHE_MAP[id as keyof typeof NICHE_MAP]?.label ?? id} (${count})`).join(' · ')}`
-            : 'Build your perfect product catalog — by hand or with the AI builder'}
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">My Store Catalog</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {catalog.products.length > 0
+              ? `${catalog.products.length} products · ${Array.from(nicheCounts.entries()).map(([id, count]) => `${NICHE_MAP[id as keyof typeof NICHE_MAP]?.label ?? id} (${count})`).join(' · ')}`
+              : 'Build your perfect product catalog — by hand or with the AI builder'}
+          </p>
+        </div>
+        {unpushed.length > 0 && (
+          <Button onClick={handlePushAll} disabled={pushingAll} className="gap-2 shrink-0">
+            {pushingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Store className="h-4 w-4" />}
+            List {unpushed.length} on My Store
+          </Button>
+        )}
       </div>
 
       {/* AI Catalog Builder */}
@@ -209,12 +265,12 @@ export function CatalogView({ userId }: { userId: string }) {
                   <p className="text-xl font-bold text-green-400">{avgMargin}%</p>
                 </div>
                 <div className="bg-surface-raised rounded-md p-3">
-                  <p className="text-xs text-muted-foreground">Niches</p>
-                  <p className="text-xl font-bold text-foreground">{new Set(catalog.products.flatMap(product => product.niches)).size}</p>
+                  <p className="text-xs text-muted-foreground">Live on Store</p>
+                  <p className="text-xl font-bold text-foreground">{catalog.pushedIds.size}<span className="text-xs font-normal text-muted-foreground"> / {catalog.products.length}</span></p>
                 </div>
                 <div className="bg-surface-raised rounded-md p-3">
-                  <p className="text-xs text-muted-foreground">Est. Revenue</p>
-                  <p className="text-xl font-bold text-foreground">${(totalRevenue / 1000).toFixed(1)}k<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
+                  <p className="text-xs text-muted-foreground">Est. Profit</p>
+                  <p className="text-xl font-bold text-green-400">${(totalProfit / 1000).toFixed(1)}k<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
                 </div>
               </CardContent>
             </Card>
@@ -265,15 +321,18 @@ export function CatalogView({ userId }: { userId: string }) {
                     <th className="pb-2 pr-4 font-medium">Product</th>
                     <th className="pb-2 pr-4 font-medium">Niche</th>
                     <th className="pb-2 pr-4 font-medium">Score</th>
-                    <th className="pb-2 pr-4 font-medium">Price</th>
-                    <th className="pb-2 pr-4 font-medium">Margin</th>
+                    <th className="pb-2 pr-4 font-medium">Sell / Cost</th>
+                    <th className="pb-2 pr-4 font-medium">Profit/Sale</th>
                     <th className="pb-2 pr-4 font-medium">Best Time</th>
+                    <th className="pb-2 pr-4 font-medium">Store</th>
                     <th className="pb-2 font-medium sr-only">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {catalog.products.map(product => {
                     const productScore = opportunityScore(product).total
+                    const perSale = profitPerSale(product)
+                    const isPushed = catalog.pushedIds.has(product.id)
                     return (
                       <tr key={product.id} className="border-b border-border/50 last:border-0">
                         <td className="py-2.5 pr-4">
@@ -290,9 +349,36 @@ export function CatalogView({ userId }: { userId: string }) {
                             {productScore}
                           </span>
                         </td>
-                        <td className="py-2.5 pr-4 text-foreground tabular-nums">${product.price.toFixed(2)}</td>
-                        <td className="py-2.5 pr-4 text-green-400 tabular-nums">{marginPercent(product)}%</td>
+                        <td className="py-2.5 pr-4 text-foreground tabular-nums whitespace-nowrap">
+                          ${product.price.toFixed(2)} <span className="text-muted-foreground">/ ${product.cost.toFixed(2)}</span>
+                        </td>
+                        <td className="py-2.5 pr-4 text-green-400 font-semibold tabular-nums whitespace-nowrap">
+                          ${perSale.profit.toFixed(2)} <span className="font-normal text-green-400/70">({perSale.marginPercent}%)</span>
+                        </td>
                         <td className="py-2.5 pr-4 text-muted-foreground whitespace-nowrap">{sellingWindowLabel(product)}</td>
+                        <td className="py-2.5 pr-4 whitespace-nowrap">
+                          {isPushed ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-400 bg-green-400/10 border border-green-400/20 rounded-full px-2 py-0.5">
+                              <Check className="h-3 w-3" />
+                              Live
+                            </span>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 gap-1.5 text-xs"
+                              disabled={pushingId === product.id || pushingAll}
+                              onClick={() => handlePushOne(product.id, product.name)}
+                            >
+                              {pushingId === product.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Store className="h-3 w-3" />
+                              )}
+                              List
+                            </Button>
+                          )}
+                        </td>
                         <td className="py-2.5 text-right">
                           <Button
                             variant="ghost"

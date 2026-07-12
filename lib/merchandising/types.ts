@@ -122,6 +122,9 @@ export interface CatalogItem {
   productId: string
   addedAt: string
   source: 'manual' | 'ai_builder' | 'suggestion'
+  /** Set when the product has been listed on the user's store */
+  pushedAt?: string
+  shopifyProductId?: string
 }
 
 export interface SeasonalAlert {

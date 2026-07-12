@@ -18,6 +18,18 @@ export async function upsertProfile(userId: string, updates: Record<string, unkn
     .upsert({ id: userId, ...updates })
 }
 
+export async function getShopifyCredentials(
+  userId: string
+): Promise<{ domain: string; token: string } | null> {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('shopify_domain, shopify_token_enc')
+    .eq('id', userId)
+    .single()
+  if (!data?.shopify_domain || !data?.shopify_token_enc) return null
+  return { domain: data.shopify_domain, token: data.shopify_token_enc }
+}
+
 export async function getTrackedProducts(userId: string) {
   const { data } = await supabaseAdmin
     .from('saved_products')

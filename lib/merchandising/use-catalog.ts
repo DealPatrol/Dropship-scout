@@ -44,20 +44,32 @@ function mergeItems(existing: CatalogItem[], added: CatalogItem[]): CatalogItem[
   return [...added.filter(item => !have.has(item.productId)), ...existing]
 }
 
+export interface PushToStoreResult {
+  pushed: number
+  total: number
+  error?: string
+}
+
 export interface UseCatalog {
   items: CatalogItem[]
   products: CatalogProduct[]
   productIds: Set<string>
+  /** Product ids already listed on the user's store */
+  pushedIds: Set<string>
+  /** Connected Shopify store domain, if any */
+  shopifyDomain: string | null
   loading: boolean
   addProducts: (productIds: string[], source?: CatalogItem['source']) => Promise<void>
   removeProduct: (productId: string) => Promise<void>
   runBuilder: (prompt: string) => Promise<{ summary: string; added: number }>
+  pushToStore: (productIds: string[]) => Promise<PushToStoreResult>
 }
 
 export function useCatalog(userId: string): UseCatalog {
   const [items, setItems] = useState<CatalogItem[]>([])
   const [loading, setLoading] = useState(true)
   const [remote, setRemote] = useState(true)
+  const [shopifyDomain, setShopifyDomain] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -81,7 +93,18 @@ export function useCatalog(userId: string): UseCatalog {
       }
     }
 
+    async function loadStore() {
+      try {
+        const res = await fetch(`/api/shopify/credentials?userId=${userId}`)
+        const data = await res.json()
+        if (!cancelled) setShopifyDomain(data.domain || null)
+      } catch {
+        if (!cancelled) setShopifyDomain(null)
+      }
+    }
+
     load()
+    loadStore()
     return () => {
       cancelled = true
     }
@@ -160,6 +183,40 @@ export function useCatalog(userId: string): UseCatalog {
     [items, remote, userId]
   )
 
+  const pushToStore = useCallback(
+    async (productIds: string[]): Promise<PushToStoreResult> => {
+      try {
+        const res = await fetch('/api/shopify/push-catalog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, productIds }),
+        })
+        const data = await res.json()
+        if (!res.ok) return { pushed: 0, total: productIds.length, error: data.error }
+
+        const pushedNow = new Set(
+          (data.results as { productId: string; success: boolean }[])
+            .filter(r => r.success)
+            .map(r => r.productId)
+        )
+        const now = new Date().toISOString()
+        setItems(prev =>
+          mergeItems(prev, toItems(Array.from(pushedNow), 'manual')).map(item =>
+            pushedNow.has(item.productId) ? { ...item, pushedAt: now } : item
+          )
+        )
+        return { pushed: data.pushed, total: data.total }
+      } catch {
+        return {
+          pushed: 0,
+          total: productIds.length,
+          error: 'Could not reach the store connection. Check Settings and try again.',
+        }
+      }
+    },
+    [userId]
+  )
+
   const products = items
     .map(item => getProduct(item.productId))
     .filter((product): product is CatalogProduct => Boolean(product))
@@ -168,9 +225,12 @@ export function useCatalog(userId: string): UseCatalog {
     items,
     products,
     productIds: new Set(items.map(item => item.productId)),
+    pushedIds: new Set(items.filter(item => item.pushedAt).map(item => item.productId)),
+    shopifyDomain,
     loading,
     addProducts,
     removeProduct,
     runBuilder,
+    pushToStore,
   }
 }
