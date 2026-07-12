@@ -64,29 +64,6 @@ export async function POST(req: NextRequest) {
   }
 
   const existingItems = new Map((catalogRows || []).map(row => [row.product_id, row]))
-  const productNames = requestedProductIds
-    .map(productId => getProduct(productId)?.name)
-    .filter((name): name is string => Boolean(name))
-  const pushedByName = new Map<string, { shopify_product_id: string | null }>()
-
-  if (productNames.length > 0) {
-    const { data: pushHistory, error: historyError } = await supabaseAdmin
-      .from('push_history')
-      .select('product_name, shopify_product_id')
-      .eq('user_id', user.id)
-      .eq('status', 'success')
-      .in('product_name', productNames)
-      .order('pushed_at', { ascending: false })
-
-    if (historyError) {
-      return NextResponse.json({ error: historyError.message }, { status: 500 })
-    }
-
-    for (const row of pushHistory || []) {
-      if (!pushedByName.has(row.product_name)) pushedByName.set(row.product_name, row)
-    }
-  }
-
   const results: PushResult[] = []
 
   for (const productId of requestedProductIds) {
@@ -97,13 +74,12 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = existingItems.get(productId)
-    const previousPush = pushedByName.get(product.name)
-    if (existing?.pushed_at || existing?.shopify_product_id || previousPush) {
+    if (existing?.pushed_at || existing?.shopify_product_id) {
       results.push({
         productId,
         name: product.name,
         success: true,
-        shopifyId: existing?.shopify_product_id ?? previousPush?.shopify_product_id ?? undefined,
+        shopifyId: existing.shopify_product_id ?? undefined,
         alreadyPushed: true,
       })
       continue

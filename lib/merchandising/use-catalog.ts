@@ -6,9 +6,8 @@
 // migration has not been run yet), so the feature always works.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { buildCatalog, parseBuilderPrompt } from './builder'
 import { getProduct } from './data'
-import type { BuilderResult, CatalogItem, CatalogProduct } from './types'
+import type { CatalogItem, CatalogProduct } from './types'
 
 const STORAGE_KEY_PREFIX = 'repodrop-catalog'
 
@@ -207,27 +206,17 @@ export function useCatalog(userId: string): UseCatalog {
           body: JSON.stringify({ prompt }),
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
+        if (!res.ok) throw new Error(data.error || 'Could not build the catalog.')
         const next = updateItems(current =>
           mergeItems(current, toItems(data.productIds, 'ai_builder'))
         )
         setRemote(true)
         if (readLocal(userId) !== null) writeLocal(userId, next)
         return { summary: data.summary, added: data.added }
-      } catch {
+      } catch (error) {
         setRemote(false)
+        throw error
       }
-
-      // Offline path: same deterministic builder, run locally.
-      const result: BuilderResult = buildCatalog(parseBuilderPrompt(prompt))
-      let added = 0
-      const next = updateItems(current => {
-        const merged = mergeItems(current, toItems(result.products.map(product => product.id), 'ai_builder'))
-        added = merged.length - current.length
-        return merged
-      })
-      writeLocal(userId, next)
-      return { summary: result.summary, added }
     },
     [updateItems, userId]
   )
