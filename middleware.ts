@@ -1,12 +1,7 @@
-// middleware.ts
-// Integrates Supabase session refresh + security headers + CORS
-
 import { NextRequest, NextResponse } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(req: NextRequest) {
-  // Let Supabase handle session refresh and auth redirects
-  const res = await updateSession(req)
+  const res = NextResponse.next()
 
   // Security headers
   res.headers.set('X-Content-Type-Options', 'nosniff')
