@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth'
 import { getProduct } from '@/lib/merchandising/data'
 import { ProductDetailView } from '@/components/merchandising/product-detail-view'
 
@@ -13,10 +13,6 @@ export default async function ProductDetailPage({
   const product = getProduct(params.productId)
   if (!product) notFound()
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await getSession()
   return <ProductDetailView product={product} userId={user?.id ?? ''} />
 }

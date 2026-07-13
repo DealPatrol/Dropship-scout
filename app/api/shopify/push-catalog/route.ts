@@ -4,8 +4,7 @@
 // item as pushed so the UI shows "Live on your store".
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
-import { getShopifyCredentials, logPushResult } from '@/lib/db'
+import { addCatalogItems, getShopifyCredentials, logPushResult, markCatalogItemPushed } from '@/lib/db'
 import { pushProductToShopify } from '@/lib/fulfillment'
 import { getProduct } from '@/lib/merchandising/data'
 import { toPushableProduct } from '@/lib/merchandising/fulfillment'
@@ -50,19 +49,8 @@ export async function POST(req: NextRequest) {
 
     if (result.success) {
       // Ensure the product is in the catalog, then mark it as pushed.
-      await supabaseAdmin.from('catalog_items').upsert(
-        {
-          user_id: userId,
-          product_id: productId,
-          source: 'manual',
-        },
-        { onConflict: 'user_id,product_id', ignoreDuplicates: true }
-      )
-      await supabaseAdmin
-        .from('catalog_items')
-        .update({ pushed_at: new Date().toISOString(), shopify_product_id: result.shopifyId })
-        .eq('user_id', userId)
-        .eq('product_id', productId)
+      await addCatalogItems(userId, [productId], 'manual')
+      await markCatalogItemPushed(userId, productId, result.shopifyId)
     }
   }
 

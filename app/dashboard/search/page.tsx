@@ -1,11 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth'
 import { SearchView } from '@/components/dashboard/search-view'
 
 export default async function SearchPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await getSession()
   return <SearchView userId={user?.id ?? ''} />
 }

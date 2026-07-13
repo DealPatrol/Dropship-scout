@@ -1,11 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth'
 import { SavedProductsView } from '@/components/dashboard/saved-products-view'
 
 export default async function SavedProductsPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await getSession()
   return <SavedProductsView userId={user?.id ?? ''} />
 }

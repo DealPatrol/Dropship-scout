@@ -1,11 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth'
 import { PlannerView } from '@/components/merchandising/planner-view'
 
 export default async function PlannerPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await getSession()
   return <PlannerView userId={user?.id ?? ''} />
 }

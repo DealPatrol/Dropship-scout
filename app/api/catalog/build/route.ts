@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { supabaseAdmin } from '@/lib/supabase'
+import { addCatalogItems } from '@/lib/db'
 import { buildCatalog, parseBuilderPrompt } from '@/lib/merchandising/builder'
 import { NICHES } from '@/lib/merchandising/data'
 import type { BuilderCriteria } from '@/lib/merchandising/types'
@@ -64,15 +64,12 @@ export async function POST(req: NextRequest) {
   const result = buildCatalog(criteria)
 
   if (result.products.length > 0) {
-    const { error } = await supabaseAdmin.from('catalog_items').upsert(
-      result.products.map(product => ({
-        user_id: userId,
-        product_id: product.id,
-        source: 'ai_builder',
-      })),
-      { onConflict: 'user_id,product_id', ignoreDuplicates: true }
-    )
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    try {
+      await addCatalogItems(userId, result.products.map(product => product.id), 'ai_builder')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save catalog'
+      return NextResponse.json({ error: message }, { status: 500 })
+    }
   }
 
   return NextResponse.json({

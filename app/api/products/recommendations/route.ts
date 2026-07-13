@@ -2,8 +2,8 @@
 // AI-powered product recommendations derived from the user's search and save history
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
 import Anthropic from '@anthropic-ai/sdk'
+import { getSavedProducts, getSearchSession } from '@/lib/db'
 import { Product } from '@/lib/types'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -17,25 +17,20 @@ export async function GET(req: NextRequest) {
 
   try {
     // Fetch saved products and most recent search session in parallel
-    const [savedRes, sessionRes] = await Promise.all([
-      supabaseAdmin
-        .from('saved_products')
-        .select('name, category, trend, margin, score, tags, platforms')
-        .eq('user_id', userId)
-        .order('saved_at', { ascending: false })
-        .limit(20),
-
-      supabaseAdmin
-        .from('search_sessions')
-        .select('platforms, category, custom_niche, sort_by')
-        .eq('user_id', userId)
-        .order('searched_at', { ascending: false })
-        .limit(1)
-        .single(),
+    const [savedProducts, lastSession] = await Promise.all([
+      getSavedProducts(userId),
+      getSearchSession(userId),
     ])
 
-    const saved = savedRes.data || []
-    const lastSession = sessionRes.data
+    const saved = savedProducts.slice(0, 20).map(p => ({
+      name: p.name,
+      category: p.category,
+      trend: p.trend,
+      margin: p.margin,
+      score: p.score,
+      tags: p.tags,
+      platforms: p.platforms,
+    })) as Record<string, unknown>[]
 
     if (saved.length === 0 && !lastSession) {
       return NextResponse.json(

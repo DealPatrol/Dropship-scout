@@ -1,11 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth'
 import { CatalogView } from '@/components/merchandising/catalog-view'
 
 export default async function CatalogPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await getSession()
   return <CatalogView userId={user?.id ?? ''} />
 }

@@ -2,7 +2,7 @@
 // Exports saved products as a Shopify-compatible CSV file
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSavedProductRows } from '@/lib/db'
 
 // GET /api/products/export?userId=xxx&format=shopify
 export async function GET(req: NextRequest) {
@@ -11,14 +11,14 @@ export async function GET(req: NextRequest) {
 
   if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
-  const { data, error } = await supabaseAdmin
-    .from('saved_products')
-    .select('*')
-    .eq('user_id', userId)
-    .order('score', { ascending: false })
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!data?.length) return NextResponse.json({ error: 'No saved products to export' }, { status: 404 })
+  let data: Record<string, unknown>[]
+  try {
+    data = await getSavedProductRows(userId)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Export failed'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+  if (!data.length) return NextResponse.json({ error: 'No saved products to export' }, { status: 404 })
 
   const csv = format === 'shopify' ? buildShopifyCSV(data) : buildSimpleCSV(data)
   const filename = `dropship-scout-export-${new Date().toISOString().split('T')[0]}.csv`

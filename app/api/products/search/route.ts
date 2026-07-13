@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { generateProducts } from '@/lib/ai'
-import { supabaseAdmin } from '@/lib/supabase'
+import { upsertSearchSession } from '@/lib/db'
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,20 +17,13 @@ export async function POST(req: NextRequest) {
 
     // If user is logged in, save the search session to DB
     if (userId) {
-      await supabaseAdmin
-        .from('search_sessions')
-        .upsert(
-          {
-            user_id: userId,
-            platforms,
-            category,
-            sort_by: sortBy,
-            custom_niche: customNiche,
-            results: products,
-            searched_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id' }
-        )
+      await upsertSearchSession(userId, {
+        platforms,
+        category,
+        sortBy,
+        customNiche,
+        results: products,
+      })
     }
 
     return NextResponse.json({ products })

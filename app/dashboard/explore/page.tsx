@@ -1,11 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth'
 import { ExplorerView } from '@/components/merchandising/explorer-view'
 
 export default async function ExplorePage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await getSession()
   return <ExplorerView userId={user?.id ?? ''} />
 }
