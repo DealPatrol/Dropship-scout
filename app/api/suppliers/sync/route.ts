@@ -2,7 +2,7 @@
 // Re-evaluates saved products against current supplier data and refreshes their market insights
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSavedProductsForSync, updateProductTracking } from '@/lib/db'
 import { refreshProductInsight } from '@/lib/ai'
 import { SUPPLIERS, estimateMargin } from '@/lib/suppliers'
 import { SupplierPlatform } from '@/lib/types'
@@ -39,22 +39,11 @@ export async function POST(req: NextRequest) {
     const { userId, productIds } = await req.json()
     if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
-    let query = supabaseAdmin
-      .from('saved_products')
-      .select('id, name, category, score, trend, sell_price, source_price, platforms')
-      .eq('user_id', userId)
-
-    if (productIds?.length) {
-      query = query.in('id', productIds)
-    }
-
-    const { data: products, error: fetchError } = await query.limit(20)
-
-    if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
+    const products = await getSavedProductsForSync(userId, productIds)
     if (!products?.length) return NextResponse.json({ error: 'No products found' }, { status: 404 })
 
     const results: SyncResult[] = await Promise.all(
-      (products as SavedProductRow[]).map(async (product): Promise<SyncResult> => {
+      (products as unknown as SavedProductRow[]).map(async (product): Promise<SyncResult> => {
         try {
           const refreshed = await refreshProductInsight({
             name: product.name,
@@ -98,21 +87,12 @@ export async function POST(req: NextRequest) {
           }
 
           if (hasChanges) {
-            const updatePayload: Record<string, unknown> = {
-              updated_at: new Date().toISOString(),
-            }
-            if (changes.trend !== undefined) updatePayload.trend = changes.trend
-            if (changes.score !== undefined) updatePayload.score = changes.score
-            if (changes.aiInsight !== undefined) updatePayload.ai_insight = changes.aiInsight
-            if (changes.margin !== undefined) updatePayload.margin = changes.margin
-
-            const { error: updateError } = await supabaseAdmin
-              .from('saved_products')
-              .update(updatePayload)
-              .eq('id', product.id)
-              .eq('user_id', userId)
-
-            if (updateError) throw new Error(updateError.message)
+            await updateProductTracking(product.id, {
+              trend: changes.trend,
+              score: changes.score,
+              ai_insight: changes.aiInsight,
+              margin: changes.margin,
+            })
           }
 
           return {

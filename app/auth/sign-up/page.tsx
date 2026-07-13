@@ -1,74 +1,46 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Radar, CheckCircle } from 'lucide-react'
+import { Loader2, Radar } from 'lucide-react'
 
 export default function SignUpPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo:
-          process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-          `${window.location.origin}/dashboard`,
-      },
-    })
-
-    if (error) {
-      setError(error.message)
+    try {
+      const res = await fetch('/api/auth/sign-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Sign up failed')
+        setLoading(false)
+        return
+      }
+    } catch {
+      setError('Could not reach the server. Try again.')
       setLoading(false)
       return
     }
 
-    setSuccess(true)
-    setLoading(false)
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="fixed inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:64px_64px] opacity-30 pointer-events-none" />
-        <div className="relative w-full max-w-sm animate-fade-in text-center">
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Radar className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold text-foreground">Dropship Scout</span>
-          </div>
-          <Card className="border-border bg-card/80 backdrop-blur-sm shadow-2xl">
-            <CardContent className="pt-8 pb-8 flex flex-col items-center gap-4">
-              <CheckCircle className="h-12 w-12 text-primary" />
-              <h2 className="text-xl font-semibold">Check your email</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                We sent a confirmation link to <strong className="text-foreground">{email}</strong>.
-                Click it to activate your account.
-              </p>
-              <Link href="/auth/login">
-                <Button variant="outline" size="sm">Back to sign in</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (

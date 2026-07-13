@@ -8,10 +8,10 @@ function requireEnv(key: string): string {
 }
 
 export const env = {
-  // Supabase
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  supabaseServiceKey: () => requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
+  // Postgres (Neon free tier or any Postgres)
+  databaseUrl: () => requireEnv('DATABASE_URL'),
+  // Session signing secret
+  authSecret: () => requireEnv('AUTH_SECRET'),
   // Anthropic
   anthropicApiKey: () => requireEnv('ANTHROPIC_API_KEY'),
   // App

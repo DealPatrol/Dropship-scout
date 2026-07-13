@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { type User } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
+import type { SessionUser } from '@/lib/session'
 import { cn } from '@/lib/utils'
 import {
   Search,
@@ -16,19 +15,27 @@ import {
   Menu,
   X,
   ChevronRight,
+  LayoutDashboard,
+  Compass,
+  ShoppingBag,
+  CalendarDays,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 
 const navItems = [
-  { href: '/dashboard', label: 'Search', icon: Search, exact: true },
+  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+  { href: '/dashboard/explore', label: 'Product Explorer', icon: Compass, exact: false },
+  { href: '/dashboard/catalog', label: 'My Catalog', icon: ShoppingBag, exact: false },
+  { href: '/dashboard/planner', label: 'Seasonal Planner', icon: CalendarDays, exact: false },
+  { href: '/dashboard/search', label: 'AI Search', icon: Search, exact: false },
   { href: '/dashboard/saved', label: 'Saved Products', icon: Bookmark, exact: false },
   { href: '/dashboard/history', label: 'Push History', icon: History, exact: false },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings, exact: false },
 ]
 
 interface DashboardShellProps {
-  user: User
+  user: SessionUser
   children: React.ReactNode
 }
 
@@ -38,8 +45,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/')
     router.refresh()
   }

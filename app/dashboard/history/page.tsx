@@ -1,8 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth'
 import { PushHistoryView } from '@/components/dashboard/push-history-view'
 
 export default async function PushHistoryPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getSession()
   return <PushHistoryView userId={user?.id ?? ''} />
 }

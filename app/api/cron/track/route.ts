@@ -3,7 +3,7 @@
 // Protected by CRON_SECRET header (set in vercel.json + env vars)
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getStaleTrackedProducts, updateProductTracking } from '@/lib/db'
 import { refreshProductInsight } from '@/lib/ai'
 
 export async function GET(req: NextRequest) {
@@ -14,37 +14,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-
-    // Get recently saved products that haven't been refreshed in the last hour
-    const { data: products, error } = await supabaseAdmin
-      .from('saved_products')
-      .select('id, name, category, score')
-      .gte('saved_at', thirtyDaysAgo)
-      .or(`updated_at.is.null,updated_at.lt.${oneHourAgo}`)
-      .limit(20) // Max 20 per run to stay within AI rate limits
-
-    if (error) throw error
+    // Recently saved products (30 days) not refreshed in the last hour,
+    // max 20 per run to stay within AI rate limits
+    const products = await getStaleTrackedProducts(30, 60)
 
     let updated = 0
-    for (const product of products || []) {
+    for (const product of products) {
       try {
         const refresh = await refreshProductInsight({
           name: product.name,
           category: product.category,
-          currentScore: product.score,
+          currentScore: Number(product.score),
         })
 
-        await supabaseAdmin
-          .from('saved_products')
-          .update({
-            trend: refresh.trend,
-            score: refresh.score,
-            ai_insight: refresh.aiInsight,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', product.id)
+        await updateProductTracking(product.id, {
+          trend: refresh.trend,
+          score: refresh.score,
+          ai_insight: refresh.aiInsight,
+        })
 
         updated++
       } catch {
