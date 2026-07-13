@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { type User } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
+import { useSession, signOut } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
+import type { Session } from 'better-auth/types'
 import {
   Search,
   Bookmark,
@@ -28,7 +28,7 @@ const navItems = [
 ]
 
 interface DashboardShellProps {
-  user: User
+  user: any
   children: React.ReactNode
 }
 
@@ -38,8 +38,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await signOut()
     router.push('/')
     router.refresh()
   }

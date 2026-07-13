@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { searchProducts, saveProduct } from '@/lib/api'
+import { getSavedProducts, saveProduct, deleteProduct } from '@/app/actions/products'
 import type { Product, SupplierPlatform } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,11 +49,7 @@ const SORT_OPTIONS = [
   'New Arrivals',
 ]
 
-interface SearchViewProps {
-  userId: string
-}
-
-export function SearchView({ userId }: SearchViewProps) {
+export function SearchView() {
   const [platforms, setPlatforms] = useState<SupplierPlatform[]>(['aliexpress'])
   const [category, setCategory] = useState('All Categories')
   const [sortBy, setSortBy] = useState('Best Selling')
@@ -61,9 +57,22 @@ export function SearchView({ userId }: SearchViewProps) {
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [savedProducts, setSavedProducts] = useState<any[]>([])
   const [savingId, setSavingId] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
+
+  // Load saved products on mount
+  useEffect(() => {
+    async function loadSaved() {
+      try {
+        const saved = await getSavedProducts()
+        setSavedProducts(saved)
+      } catch (err) {
+        console.error('Failed to load saved products:', err)
+      }
+    }
+    loadSaved()
+  }, [])
 
   function togglePlatform(id: SupplierPlatform) {
     setPlatforms(prev =>
@@ -77,13 +86,18 @@ export function SearchView({ userId }: SearchViewProps) {
       setError('Select at least one platform')
       return
     }
+    
+    // For now, show that real search integration would go here
     setLoading(true)
     setError(null)
     setSearched(true)
 
     try {
-      const results = await searchProducts({ platforms, category, sortBy, customNiche, userId })
-      setProducts(results)
+      // TODO: Integrate with real API/scraper
+      // const results = await searchProducts({ platforms, category, sortBy, customNiche })
+      // setProducts(results)
+      setProducts([])
+      setError('Real product search integration coming soon. You can save products manually.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed')
     } finally {
@@ -95,14 +109,27 @@ export function SearchView({ userId }: SearchViewProps) {
     const key = product.name
     setSavingId(key)
     try {
-      await saveProduct(userId, product)
-      setSavedIds(prev => new Set([...prev, key]))
-    } catch {
-      // silently fail — user will see unsaved state
+      await saveProduct(product)
+      const saved = await getSavedProducts()
+      setSavedProducts(saved)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save product')
     } finally {
       setSavingId(null)
     }
   }
+
+  async function handleDelete(id: number) {
+    try {
+      await deleteProduct(id)
+      const saved = await getSavedProducts()
+      setSavedProducts(saved)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete product')
+    }
+  }
+
+  const isSaved = (name: string) => savedProducts.some(p => p.title === name)
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -110,7 +137,7 @@ export function SearchView({ userId }: SearchViewProps) {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-foreground">Product Research</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          AI-powered search across top dropshipping platforms
+          Search across top dropshipping platforms and save products
         </p>
       </div>
 
@@ -194,12 +221,12 @@ export function SearchView({ userId }: SearchViewProps) {
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Analyzing with AI...
+                    Searching...
                   </>
                 ) : (
                   <>
                     <Search className="h-4 w-4" />
-                    Find Products
+                    Search Products
                   </>
                 )}
               </Button>
@@ -208,12 +235,80 @@ export function SearchView({ userId }: SearchViewProps) {
         </CardContent>
       </Card>
 
-      {/* Results */}
+      {/* Saved Products Section */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground">Saved Products</h2>
+          <p className="text-sm text-muted-foreground">
+            {savedProducts.length} product{savedProducts.length !== 1 ? 's' : ''} saved
+          </p>
+        </div>
+        
+        {savedProducts.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+              <Sparkles className="h-10 w-10 text-muted-foreground mb-3" />
+              <h3 className="text-base font-medium text-foreground">No saved products yet</h3>
+              <p className="text-sm text-muted-foreground mt-1">Search and save products to get started</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {savedProducts.map((product) => (
+              <Card key={product.id}>
+                <CardContent className="pt-4 flex flex-col h-full">
+                  {product.image && (
+                    <img 
+                      src={product.image} 
+                      alt={product.title}
+                      className="w-full h-40 object-cover rounded-md mb-3"
+                    />
+                  )}
+                  <h3 className="font-medium text-foreground line-clamp-2">{product.title}</h3>
+                  {product.price && (
+                    <p className="text-sm text-primary font-semibold mt-2">${product.price}</p>
+                  )}
+                  {product.supplier && (
+                    <p className="text-xs text-muted-foreground mt-1">{product.supplier}</p>
+                  )}
+                  {product.notes && (
+                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{product.notes}</p>
+                  )}
+                  <div className="flex gap-2 mt-auto pt-3">
+                    {product.url && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => window.open(product.url, '_blank')}
+                      >
+                        View
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(product.id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Search Results Section */}
       {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <ProductCardSkeleton key={i} />
-          ))}
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Search Results</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
       )}
 
@@ -226,18 +321,14 @@ export function SearchView({ userId }: SearchViewProps) {
       )}
 
       {!loading && products.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">
-              Found <span className="text-foreground font-medium">{products.length}</span> products
-            </p>
-          </div>
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Search Results</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {products.map((product, i) => (
               <ProductCard
                 key={`${product.name}-${i}`}
                 product={product}
-                isSaved={savedIds.has(product.name)}
+                isSaved={isSaved(product.name)}
                 isSaving={savingId === product.name}
                 onSave={() => handleSave(product)}
               />

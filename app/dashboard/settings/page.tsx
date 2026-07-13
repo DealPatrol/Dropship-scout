@@ -1,8 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import { SettingsView } from '@/components/dashboard/settings-view'
-
-export default async function SettingsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return <SettingsView userId={user?.id ?? ''} userEmail={user?.email ?? ''} />
+export default function SettingsPage() {
+  return (
+    <div className="p-6 max-w-7xl mx-auto">
+      <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+      <p className="text-sm text-muted-foreground mt-1">
+        Settings coming soon
+      </p>
+    </div>
+  )
 }
