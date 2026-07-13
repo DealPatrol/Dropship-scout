@@ -6,3 +6,7 @@ export async function POST() {
     { status: 501 }
   )
 }
+
+export async function GET() {
+  return NextResponse.json({ domain: null })
+}

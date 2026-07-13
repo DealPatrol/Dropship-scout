@@ -6,10 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "migrate": "node --env-file-if-exists=/vercel/share/.env.project -r ts-node/register scripts/migrate.ts"
+    "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.3",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
@@ -21,6 +21,8 @@
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@supabase/ssr": "^0.3.0",
+    "@supabase/supabase-js": "^2.43.4",
     "better-auth": "^1.6.23",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -43,7 +45,6 @@
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.4",
-    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

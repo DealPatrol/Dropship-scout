@@ -1,7 +1,7 @@
 'use server'
 
 import { auth } from '@/lib/auth'
-import { db } from '@/lib/db'
+import { db } from '@/lib/db/index'
 import { savedProducts } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import { headers } from 'next/headers'
@@ -29,11 +29,11 @@ export async function saveProduct(product: Product) {
   await db.insert(savedProducts).values({
     userId,
     title: product.name,
-    url: product.url,
-    price: product.price ? parseFloat(product.price) : null,
-    image: product.image,
-    supplier: product.supplier,
-    notes: product.notes,
+    url: '',
+    price: product.sellPrice ? String(product.sellPrice) : null,
+    image: product.imageUrl,
+    supplier: '',
+    notes: product.aiInsight,
   })
   
   revalidatePath('/dashboard')
