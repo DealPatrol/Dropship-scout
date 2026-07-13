@@ -44,13 +44,13 @@ export function OverviewView({ userId, email }: { userId: string; email: string 
   const declining = catalog.products.filter(product => product.trend === 'declining')
 
   // Top opportunities the user hasn't added yet.
-  const opportunities = useMemo(
+  const allOpportunities = useMemo(
     () =>
       PRODUCTS.filter(product => !catalog.productIds.has(product.id))
-        .sort((a, b) => opportunityScore(b).total - opportunityScore(a).total)
-        .slice(0, 6),
+        .sort((a, b) => opportunityScore(b).total - opportunityScore(a).total),
     [catalog.productIds]
   )
+  const opportunities = allOpportunities.slice(0, 6)
 
   const potentialRevenue = opportunities
     .slice(0, 3)
@@ -128,7 +128,7 @@ export function OverviewView({ userId, email }: { userId: string; email: string 
         <Card>
           <CardContent className="pt-5 pb-4">
             <p className="text-xs text-muted-foreground">Opportunities Found</p>
-            <p className="text-2xl font-bold text-foreground">{opportunities.length}</p>
+            <p className="text-2xl font-bold text-foreground">{allOpportunities.length}</p>
           </CardContent>
         </Card>
         <Card>

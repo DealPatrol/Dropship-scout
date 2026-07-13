@@ -1,19 +1,21 @@
 // app/api/catalog/route.ts
-// GET: fetch user's catalog items
+// GET: fetch the user's catalog items
 // POST: add one or more products to the catalog
 // DELETE: remove a product from the catalog
+// The user is derived from the session cookie — never from the request body.
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
 import { addCatalogItems, getCatalogItems, removeCatalogItem } from '@/lib/db'
 import { getProduct } from '@/lib/merchandising/data'
 
-// GET /api/catalog?userId=xxx
-export async function GET(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+// GET /api/catalog
+export async function GET() {
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const rows = await getCatalogItems(userId)
+    const rows = await getCatalogItems(user.id)
     const items = rows.map(row => ({
       id: row.id,
       productId: row.product_id,
@@ -30,37 +32,49 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/catalog
-// Body: { userId, productIds: string[], source? }
+// Body: { productIds: string[], source? }
 export async function POST(req: NextRequest) {
-  const { userId, productIds, source } = await req.json()
-  if (!userId || !Array.isArray(productIds) || productIds.length === 0) {
-    return NextResponse.json({ error: 'userId and productIds required' }, { status: 400 })
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { productIds, source } = await req.json()
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    return NextResponse.json({ error: 'productIds required' }, { status: 400 })
   }
 
-  const validIds = productIds.filter((id: string) => getProduct(id))
+  const validIds = Array.from(
+    new Set(
+      productIds.filter(
+        (productId: unknown): productId is string =>
+          typeof productId === 'string' && Boolean(getProduct(productId))
+      )
+    )
+  )
   if (validIds.length === 0) {
     return NextResponse.json({ error: 'No valid product ids' }, { status: 400 })
   }
 
   try {
-    await addCatalogItems(userId, validIds, source || 'manual')
-    return NextResponse.json({ added: validIds.length })
+    const added = await addCatalogItems(user.id, validIds, source || 'manual')
+    return NextResponse.json({ added })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to add products'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
-// DELETE /api/catalog?userId=xxx&productId=xxx
+// DELETE /api/catalog?productId=xxx
 export async function DELETE(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const productId = req.nextUrl.searchParams.get('productId')
-  if (!userId || !productId) {
-    return NextResponse.json({ error: 'userId and productId required' }, { status: 400 })
+  if (!productId) {
+    return NextResponse.json({ error: 'productId required' }, { status: 400 })
   }
 
   try {
-    await removeCatalogItem(userId, productId)
+    await removeCatalogItem(user.id, productId)
     return NextResponse.json({ success: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to remove product'

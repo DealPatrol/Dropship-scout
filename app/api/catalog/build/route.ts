@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { getSession } from '@/lib/auth'
 import { addCatalogItems } from '@/lib/db'
 import { buildCatalog, parseBuilderPrompt } from '@/lib/merchandising/builder'
 import { NICHES } from '@/lib/merchandising/data'
@@ -53,19 +54,24 @@ impulseOnly = true if they want viral/TikTok/impulse products.`,
 }
 
 // POST /api/catalog/build
-// Body: { userId, prompt }
+// Body: { prompt }
 export async function POST(req: NextRequest) {
-  const { userId, prompt } = await req.json()
-  if (!userId || !prompt) {
-    return NextResponse.json({ error: 'userId and prompt required' }, { status: 400 })
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { prompt } = await req.json()
+  if (!prompt) {
+    return NextResponse.json({ error: 'prompt required' }, { status: 400 })
   }
 
   const criteria = (await parseWithClaude(prompt)) ?? parseBuilderPrompt(prompt)
   const result = buildCatalog(criteria)
+  const productIds = result.products.map(product => product.id)
+  let added = 0
 
-  if (result.products.length > 0) {
+  if (productIds.length > 0) {
     try {
-      await addCatalogItems(userId, result.products.map(product => product.id), 'ai_builder')
+      added = await addCatalogItems(user.id, productIds, 'ai_builder')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save catalog'
       return NextResponse.json({ error: message }, { status: 500 })
@@ -75,6 +81,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     summary: result.summary,
     criteria: result.criteria,
-    productIds: result.products.map(product => product.id),
+    productIds,
+    added,
   })
 }

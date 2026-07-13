@@ -63,6 +63,24 @@ export function buildCatalog(criteria: BuilderCriteria): BuilderResult {
 
   pool = pool.sort((a, b) => opportunityScore(b).total - opportunityScore(a).total)
 
+  if (criteria.niches.length !== 1) {
+    const productsByNiche = new Map<NicheId, CatalogProduct[]>()
+    for (const product of pool) {
+      const primaryNiche = product.niches[0]
+      productsByNiche.set(primaryNiche, [...(productsByNiche.get(primaryNiche) ?? []), product])
+    }
+
+    if (productsByNiche.size > 1) {
+      const balancedPool: CatalogProduct[] = []
+      for (let index = 0; balancedPool.length < pool.length; index++) {
+        for (const products of productsByNiche.values()) {
+          if (products[index]) balancedPool.push(products[index])
+        }
+      }
+      pool = balancedPool
+    }
+  }
+
   const targetSeasonal = Math.round(criteria.count * 0.25)
   const selected: CatalogProduct[] = []
   let seasonalCount = 0

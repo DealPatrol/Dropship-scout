@@ -64,6 +64,12 @@ export function CatalogView({ userId }: { userId: string }) {
       const result = await catalog.runBuilder(text.trim())
       setBuilderSummary(result.summary)
       toast({ title: 'Catalog built', description: `${result.added} products selected` })
+    } catch (error) {
+      toast({
+        title: 'Catalog build failed',
+        description: error instanceof Error ? error.message : 'Could not save the catalog. Try again.',
+        variant: 'destructive',
+      })
     } finally {
       setBuilding(false)
     }
@@ -99,8 +105,12 @@ export function CatalogView({ userId }: { userId: string }) {
     setPushingAll(true)
     try {
       const result = await catalog.pushToStore(unpushed.map(product => product.id))
-      if (result.error) {
-        toast({ title: 'Push failed', description: result.error, variant: 'destructive' })
+      if (result.error || result.pushed === 0) {
+        toast({
+          title: 'Push failed',
+          description: result.error || 'Could not list any products.',
+          variant: 'destructive',
+        })
       } else {
         toast({
           title: `Listed ${result.pushed} of ${result.total} products`,

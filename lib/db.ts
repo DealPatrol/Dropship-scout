@@ -210,12 +210,24 @@ export async function getCatalogItems(userId: string) {
   return sql`select * from catalog_items where user_id = ${userId} order by added_at desc`
 }
 
-export async function addCatalogItems(userId: string, productIds: string[], source: string) {
+/** Adds products to the catalog; returns how many were newly inserted. */
+export async function addCatalogItems(userId: string, productIds: string[], source: string): Promise<number> {
   await ensureSchema()
-  await sql`
+  const inserted = await sql`
     insert into catalog_items (user_id, product_id, source)
     select ${userId}, unnest(${productIds}::text[]), ${source}
     on conflict (user_id, product_id) do nothing
+    returning id
+  `
+  return inserted.length
+}
+
+export async function getCatalogItemsForProducts(userId: string, productIds: string[]) {
+  await ensureSchema()
+  return sql`
+    select product_id, pushed_at, shopify_product_id
+    from catalog_items
+    where user_id = ${userId} and product_id = any(${productIds})
   `
 }
 
