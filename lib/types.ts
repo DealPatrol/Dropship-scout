@@ -14,6 +14,18 @@ export type SupplierPlatform =
   | 'cjdropship'
   | 'spocket'
   | 'zendrop'
+  | 'dhgate'
+  | 'banggood'
+  | 'geek'
+  | 'wish'
+  | 'shein'
+  | 'lightinthebox'
+  | 'miniinthebox'
+  | 'tomtop'
+  | 'newfrog'
+  | 'shopify'
+  | 'woocommerce'
+  | 'buymeonce'
 
 export interface Product {
   id?: string
