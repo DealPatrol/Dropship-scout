@@ -84,3 +84,119 @@ export interface SearchParams {
   customNiche: string
   userId?: string
 }
+
+// Fulfillment System Types
+export type StorePlatform = 'shopify' | 'woocommerce'
+export type OrderStatus = 'pending' | 'submitted' | 'shipped' | 'delivered' | 'failed'
+export type MarkupType = 'percentage' | 'fixed'
+
+export interface StoreConnection {
+  id: number
+  userId: string
+  platform: StorePlatform
+  storeName: string
+  storeUrl: string
+  accessToken: string
+  refreshToken?: string
+  isActive: boolean
+  webhooksConfigured: boolean
+  metadata?: Record<string, any>
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface SupplierCredential {
+  id: number
+  userId: string
+  supplier: SupplierPlatform
+  apiKey?: string
+  apiSecret?: string
+  email?: string
+  password?: string
+  metadata?: Record<string, any>
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ProductListing {
+  id: number
+  userId: string
+  storeConnectionId: number
+  storeProductId: string
+  title: string
+  description?: string
+  costPrice: number
+  sellingPrice: number
+  margin: number
+  supplier: SupplierPlatform
+  supplierProductId?: string
+  image?: string
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ShippingAddress {
+  firstName?: string
+  lastName?: string
+  street?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
+}
+
+export interface Order {
+  id: number
+  userId: string
+  storeConnectionId: number
+  storeOrderId: string
+  customerName: string
+  customerEmail: string
+  shippingAddress: ShippingAddress
+  totalAmount: number
+  totalCost: number
+  profit: number
+  status: OrderStatus
+  supplierOrderId?: string
+  trackingNumber?: string
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface OrderItem {
+  id: number
+  orderId: number
+  productListingId: number
+  quantity: number
+  unitCost: number
+  unitPrice: number
+  lineTotal: number
+  createdAt: Date
+}
+
+export interface PricingRule {
+  id: number
+  userId: string
+  name: string
+  description?: string
+  markupType: MarkupType
+  markupValue: number
+  minPrice?: number
+  maxPrice?: number
+  appliedToSuppliers?: SupplierPlatform[]
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface FulfillmentHistory {
+  id: number
+  orderId: number
+  status: string
+  message?: string
+  metadata?: Record<string, any>
+  createdAt: Date
+}
