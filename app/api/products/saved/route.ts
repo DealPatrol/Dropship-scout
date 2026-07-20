@@ -5,14 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { deleteSavedProduct, getSavedProducts, insertSavedProduct } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 
-// GET /api/products/saved?userId=xxx
-export async function GET(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+// GET /api/products/saved
+export async function GET() {
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const products = await getSavedProducts(userId)
+    const products = await getSavedProducts(user.id)
     return NextResponse.json({ products })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to load saved products'
@@ -21,15 +22,18 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/products/saved
-// Body: { userId, product }
+// Body: { product }
 export async function POST(req: NextRequest) {
-  const { userId, product } = await req.json()
-  if (!userId || !product) {
-    return NextResponse.json({ error: 'userId and product required' }, { status: 400 })
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { product } = await req.json()
+  if (!product) {
+    return NextResponse.json({ error: 'product required' }, { status: 400 })
   }
 
   try {
-    const id = await insertSavedProduct(userId, product)
+    const id = await insertSavedProduct(user.id, product)
     return NextResponse.json({ id })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to save product'
@@ -37,16 +41,18 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE /api/products/saved?id=xxx&userId=xxx
+// DELETE /api/products/saved?id=xxx
 export async function DELETE(req: NextRequest) {
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const id = req.nextUrl.searchParams.get('id')
-  const userId = req.nextUrl.searchParams.get('userId')
-  if (!id || !userId) {
-    return NextResponse.json({ error: 'id and userId required' }, { status: 400 })
+  if (!id) {
+    return NextResponse.json({ error: 'id required' }, { status: 400 })
   }
 
   try {
-    await deleteSavedProduct(userId, id)
+    await deleteSavedProduct(user.id, id)
     return NextResponse.json({ success: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to delete product'

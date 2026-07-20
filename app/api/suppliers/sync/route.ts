@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSavedProductsForSync, updateProductTracking } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 import { refreshProductInsight } from '@/lib/ai'
 import { SUPPLIERS, estimateMargin } from '@/lib/suppliers'
 import { SupplierPlatform } from '@/lib/types'
@@ -33,13 +34,15 @@ interface SyncResult {
 }
 
 // POST /api/suppliers/sync
-// Body: { userId, productIds? }  — omit productIds to sync all saved products
+// Body: { productIds? }  — omit productIds to sync all saved products
 export async function POST(req: NextRequest) {
   try {
-    const { userId, productIds } = await req.json()
-    if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+    const user = await getSession()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const products = await getSavedProductsForSync(userId, productIds)
+    const { productIds } = await req.json()
+
+    const products = await getSavedProductsForSync(user.id, productIds)
     if (!products?.length) return NextResponse.json({ error: 'No products found' }, { status: 404 })
 
     const results: SyncResult[] = await Promise.all(

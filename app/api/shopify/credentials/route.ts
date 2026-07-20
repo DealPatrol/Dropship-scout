@@ -4,15 +4,16 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { clearShopifyCredentials, getShopifyDomain, saveShopifyCredentials } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 
-// GET /api/shopify/credentials?userId=xxx
+// GET /api/shopify/credentials
 // Returns ONLY the domain (not the token) — so the UI can pre-fill the domain field
-export async function GET(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+export async function GET() {
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const domain = await getShopifyDomain(userId)
+    const domain = await getShopifyDomain(user.id)
     return NextResponse.json({ domain })
   } catch {
     return NextResponse.json({ domain: null })
@@ -20,15 +21,18 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/shopify/credentials
-// Body: { userId, domain, token }
+// Body: { domain, token }
 export async function POST(req: NextRequest) {
-  const { userId, domain, token } = await req.json()
-  if (!userId || !domain) {
-    return NextResponse.json({ error: 'userId and domain are required' }, { status: 400 })
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { domain, token } = await req.json()
+  if (!domain) {
+    return NextResponse.json({ error: 'domain is required' }, { status: 400 })
   }
 
   try {
-    await saveShopifyCredentials(userId, domain, token || null)
+    await saveShopifyCredentials(user.id, domain, token || null)
     return NextResponse.json({ success: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to save credentials'
@@ -36,13 +40,13 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE /api/shopify/credentials?userId=xxx
-export async function DELETE(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+// DELETE /api/shopify/credentials
+export async function DELETE() {
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    await clearShopifyCredentials(userId)
+    await clearShopifyCredentials(user.id)
     return NextResponse.json({ success: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to clear credentials'

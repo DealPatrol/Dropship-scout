@@ -1,19 +1,20 @@
 // app/api/analytics/route.ts
 // Returns dashboard stats for a logged-in user
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getAnalyticsData } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 
-// GET /api/analytics?userId=xxx
-export async function GET(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+// GET /api/analytics
+export async function GET() {
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let saved: Record<string, unknown>[]
   let history: Record<string, unknown>[]
   let session: Record<string, unknown> | null
   try {
-    const data = await getAnalyticsData(userId)
+    const data = await getAnalyticsData(user.id)
     saved = data.saved
     history = data.history
     session = data.session

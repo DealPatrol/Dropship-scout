@@ -4,22 +4,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { getSavedProducts, getSearchSession } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 import { Product } from '@/lib/types'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-// GET /api/products/recommendations?userId=xxx&limit=6
+// GET /api/products/recommendations?limit=6
 export async function GET(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
-  const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '6', 10), 12)
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+  const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '6', 10), 12)
 
   try {
     // Fetch saved products and most recent search session in parallel
     const [savedProducts, lastSession] = await Promise.all([
-      getSavedProducts(userId),
-      getSearchSession(userId),
+      getSavedProducts(user.id),
+      getSearchSession(user.id),
     ])
 
     const saved = savedProducts.slice(0, 20).map(p => ({

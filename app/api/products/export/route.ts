@@ -3,17 +3,18 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSavedProductRows } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 
-// GET /api/products/export?userId=xxx&format=shopify
+// GET /api/products/export?format=shopify
 export async function GET(req: NextRequest) {
-  const userId = req.nextUrl.searchParams.get('userId')
-  const format = req.nextUrl.searchParams.get('format') || 'shopify'
+  const user = await getSession()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+  const format = req.nextUrl.searchParams.get('format') || 'shopify'
 
   let data: Record<string, unknown>[]
   try {
-    data = await getSavedProductRows(userId)
+    data = await getSavedProductRows(user.id)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Export failed'
     return NextResponse.json({ error: message }, { status: 500 })
