@@ -26,8 +26,31 @@ function createClient() {
   })
 }
 
-export const sql: ReturnType<typeof postgres> =
-  globalThis.__dropshipSql ?? (globalThis.__dropshipSql = createClient())
+/**
+ * Returns the shared Postgres client, creating (and caching) it on first use.
+ * Deferring creation keeps `next build`'s page-data collection from requiring
+ * DATABASE_URL at import time — the client is only built when a query runs.
+ */
+function getSql(): ReturnType<typeof postgres> {
+  return globalThis.__dropshipSql ?? (globalThis.__dropshipSql = createClient())
+}
+
+// A lazy proxy so `import { sql }` doesn't instantiate the client at module
+// load. It behaves exactly like the postgres client: callable as a tagged
+// template (`sql\`...\``) and exposing methods like `sql.unsafe`/`sql.json`.
+export const sql: ReturnType<typeof postgres> = new Proxy(
+  function () {} as unknown as ReturnType<typeof postgres>,
+  {
+    apply(_target, _thisArg, args: unknown[]) {
+      return (getSql() as unknown as (...a: unknown[]) => unknown)(...args)
+    },
+    get(_target, prop, receiver) {
+      const client = getSql()
+      const value = Reflect.get(client as object, prop, receiver)
+      return typeof value === 'function' ? value.bind(client) : value
+    },
+  }
+)
 
 const SCHEMA_STATEMENTS = [
   `create table if not exists users (
