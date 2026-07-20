@@ -40,7 +40,7 @@ export function parseBuilderPrompt(prompt: string): BuilderCriteria {
   const marginMatch = lower.match(/(\d+)\s*%\s*(?:profit\s*)?margin/)
   const minMargin = marginMatch ? parseInt(marginMatch[1], 10) : undefined
 
-  const multiNicheOnly = /multi[- ]?niche|general store|(two|three|2|3)\s?(or more|\+)\s*niches/.test(lower)
+  const multiNicheOnly = /multi[- ]?niche|(two|three|2|3)\s?(or more|\+)\s*niches/.test(lower)
   const impulseOnly = /impulse|viral|tiktok/.test(lower)
 
   return { niches, count, maxPrice, minMargin, multiNicheOnly, impulseOnly, prompt }
