@@ -36,11 +36,14 @@ export async function createStoreConnection(data: {
   platform: StorePlatform
   storeName: string
   storeUrl: string
-  accessToken: string
+  accessToken?: string
   refreshToken?: string
   metadata?: Record<string, any>
 }): Promise<StoreConnection> {
   const userId = await getUserId()
+  
+  // Generate a webhook secret for this store
+  const webhookSecret = crypto.getRandomValues(new Uint8Array(32)).toString()
   
   const result = await db
     .insert(storeConnections)
@@ -49,10 +52,9 @@ export async function createStoreConnection(data: {
       platform: data.platform,
       storeName: data.storeName,
       storeUrl: data.storeUrl,
-      accessToken: data.accessToken,
+      accessToken: webhookSecret, // Store webhook secret instead of OAuth token
       refreshToken: data.refreshToken,
       metadata: data.metadata,
-      isActive: true,
       webhooksConfigured: false,
     })
     .returning()
