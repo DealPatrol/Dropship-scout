@@ -1,7 +1,7 @@
 // lib/types.ts
 // Shared TypeScript types for the entire application
 
-export type TrendLabel = '🔥 Hot' | '📈 Rising' | '✅ Stable' | '⚡ Viral'
+export type TrendLabel = '🔥 Hot' | '📈 Rising' | '✅ Stable' | '📉 Declining' | '⚡ Viral'
 export type CompetitionLevel = 'Low' | 'Medium' | 'High'
 export type PushStatus = 'success' | 'failed'
 
