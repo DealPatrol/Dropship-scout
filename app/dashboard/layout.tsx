@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import { DashboardShell } from '@/components/dashboard/dashboard-shell'
 
 export default async function DashboardLayout({
@@ -8,8 +7,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) redirect('/auth/login')
+  const user = await getSession()
 
-  return <DashboardShell user={session.user as any}>{children}</DashboardShell>
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  return <DashboardShell user={user}>{children}</DashboardShell>
 }

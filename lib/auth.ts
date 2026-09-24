@@ -1,40 +1,41 @@
-import { betterAuth } from 'better-auth'
-import { pool } from '@/lib/db/index'
+// lib/auth.ts
+// Server-side auth helpers: read the session in Server Components / route
+// handlers, and email/password account management against Postgres.
 
-export const auth = betterAuth({
-  database: pool,
-  baseURL:
-    process.env.BETTER_AUTH_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : process.env.V0_RUNTIME_URL),
-  emailAndPassword: {
-    enabled: true,
-    autoSignIn: true,
-  },
-  trustedOrigins: [
-    ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
-    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
-    ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`]
-      : []),
-  ],
-  session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
-  },
-  ...(process.env.NODE_ENV === 'development'
-    ? {
-        advanced: {
-          // In dev (v0 preview iframe), force cross-site cookies so the
-          // session cookie is stored by the browser.
-          defaultCookieAttributes: {
-            sameSite: 'none' as const,
-            secure: true,
-          },
-        },
-      }
-    : {}),
-})
+import { cookies } from 'next/headers'
+import bcrypt from 'bcryptjs'
+import { ensureSchema, sql } from './database'
+import { SESSION_COOKIE, verifySessionToken, type SessionUser } from './session'
+
+/** Current user from the session cookie, or null. */
+export async function getSession(): Promise<SessionUser | null> {
+  const token = cookies().get(SESSION_COOKIE)?.value
+  if (!token) return null
+  return verifySessionToken(token)
+}
+
+export async function createUser(email: string, password: string): Promise<SessionUser> {
+  await ensureSchema()
+  const passwordHash = await bcrypt.hash(password, 10)
+  const rows = await sql`
+    insert into users (email, password_hash)
+    values (${email.toLowerCase().trim()}, ${passwordHash})
+    on conflict (email) do nothing
+    returning id, email
+  `
+  if (rows.length === 0) {
+    throw new Error('An account with this email already exists')
+  }
+  return { id: rows[0].id, email: rows[0].email }
+}
+
+export async function verifyUser(email: string, password: string): Promise<SessionUser | null> {
+  await ensureSchema()
+  const rows = await sql`
+    select id, email, password_hash from users where email = ${email.toLowerCase().trim()}
+  `
+  if (rows.length === 0) return null
+  const valid = await bcrypt.compare(password, rows[0].password_hash)
+  if (!valid) return null
+  return { id: rows[0].id, email: rows[0].email }
+}
