@@ -120,8 +120,16 @@ export function ProductDetailView({ product, userId }: { product: CatalogProduct
               variant="outline"
               className="gap-2"
               onClick={async () => {
-                await catalog.addProducts([product.id])
-                toast({ title: 'Added to catalog', description: product.name })
+                try {
+                  await catalog.addProducts([product.id])
+                  toast({ title: 'Added to catalog', description: product.name })
+                } catch (error) {
+                  toast({
+                    title: 'Could not add product',
+                    description: error instanceof Error ? error.message : 'Catalog limit reached',
+                    variant: 'destructive',
+                  })
+                }
               }}
             >
               <Plus className="h-4 w-4" />
@@ -459,8 +467,16 @@ export function ProductDetailView({ product, userId }: { product: CatalogProduct
                       size="sm"
                       disabled={partnerInCatalog}
                       onClick={async () => {
-                        await catalog.addProducts([partner.id], 'suggestion')
-                        toast({ title: 'Added to catalog', description: partner.name })
+                        try {
+                          await catalog.addProducts([partner.id], 'suggestion')
+                          toast({ title: 'Added to catalog', description: partner.name })
+                        } catch (error) {
+                          toast({
+                            title: 'Could not add product',
+                            description: error instanceof Error ? error.message : 'Catalog limit reached',
+                            variant: 'destructive',
+                          })
+                        }
                       }}
                     >
                       {partnerInCatalog ? 'In Catalog' : '+ Add'}

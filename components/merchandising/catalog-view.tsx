@@ -336,8 +336,16 @@ export function CatalogView({ userId }: { userId: string }) {
                       <button
                         key={partner.id}
                         onClick={async () => {
-                          await catalog.addProducts([partner.id], 'suggestion')
-                          toast({ title: 'Added to catalog', description: partner.name })
+                          try {
+                            await catalog.addProducts([partner.id], 'suggestion')
+                            toast({ title: 'Added to catalog', description: partner.name })
+                          } catch (error) {
+                            toast({
+                              title: 'Could not add product',
+                              description: error instanceof Error ? error.message : 'Catalog limit reached',
+                              variant: 'destructive',
+                            })
+                          }
                         }}
                         className="text-xs px-2.5 py-1 rounded-full border border-primary/30 text-primary hover:bg-primary/10 transition-colors"
                       >

@@ -11,6 +11,8 @@ import type { CatalogItem, CatalogProduct } from './types'
 
 const STORAGE_KEY_PREFIX = 'repodrop-catalog'
 
+class CatalogApiError extends Error {}
+
 function storageKey(userId: string): string {
   return `${STORAGE_KEY_PREFIX}:${userId}`
 }
@@ -127,6 +129,10 @@ export function useCatalog(userId: string): UseCatalog {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ productIds: [item.productId], source: item.source }),
             })
+            if (res.status === 403) {
+              clearLocal(userId)
+              break
+            }
             if (!res.ok) throw new Error()
           }
 
@@ -167,6 +173,7 @@ export function useCatalog(userId: string): UseCatalog {
 
   const addProducts = useCallback(
     async (productIds: string[], source: CatalogItem['source'] = 'manual') => {
+      const previous = itemsRef.current
       const next = updateItems(current => mergeItems(current, toItems(productIds, source)))
 
       try {
@@ -175,15 +182,20 @@ export function useCatalog(userId: string): UseCatalog {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productIds, source }),
         })
-        if (!res.ok) throw new Error()
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          replaceItems(previous)
+          throw new CatalogApiError(data.error || 'Could not add products')
+        }
         setRemote(true)
         if (readLocal(userId) !== null) writeLocal(userId, next)
-      } catch {
+      } catch (error) {
+        if (error instanceof CatalogApiError) throw error
         setRemote(false)
         writeLocal(userId, itemsRef.current)
       }
     },
-    [updateItems, userId]
+    [replaceItems, updateItems, userId]
   )
 
   const removeProduct = useCallback(

@@ -31,7 +31,7 @@ export function parseBuilderPrompt(prompt: string): BuilderCriteria {
     NICHE_KEYWORDS[n.id].some(keyword => lower.includes(keyword))
   ).map(n => n.id)
 
-  const countMatch = lower.match(/(\d+)\s*(?:winning\s+)?products?/)
+  const countMatch = lower.match(/(\d+)\s+(?:[\w-]+\s+){0,3}products?/)
   const count = countMatch ? Math.min(Math.max(parseInt(countMatch[1], 10), 3), 100) : 25
 
   const priceMatch = lower.match(/under\s*\$?\s*(\d+)/)

@@ -99,8 +99,16 @@ export function PlannerView({ userId }: { userId: string }) {
                       size="sm"
                       disabled={inCatalog}
                       onClick={async () => {
-                        await catalog.addProducts([product.id], 'suggestion')
-                        toast({ title: 'Added to catalog', description: product.name })
+                        try {
+                          await catalog.addProducts([product.id], 'suggestion')
+                          toast({ title: 'Added to catalog', description: product.name })
+                        } catch (error) {
+                          toast({
+                            title: 'Could not add product',
+                            description: error instanceof Error ? error.message : 'Catalog limit reached',
+                            variant: 'destructive',
+                          })
+                        }
                       }}
                     >
                       {inCatalog ? 'In Catalog' : '+ Add'}

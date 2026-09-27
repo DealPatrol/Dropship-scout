@@ -113,8 +113,16 @@ export function ExplorerView({ userId }: { userId: string }) {
   }
 
   async function handleAdd(product: CatalogProduct) {
-    await catalog.addProducts([product.id])
-    toast({ title: 'Added to catalog', description: product.name })
+    try {
+      await catalog.addProducts([product.id])
+      toast({ title: 'Added to catalog', description: product.name })
+    } catch (error) {
+      toast({
+        title: 'Could not add product',
+        description: error instanceof Error ? error.message : 'Catalog limit reached',
+        variant: 'destructive',
+      })
+    }
   }
 
   async function handleSell(product: CatalogProduct) {
@@ -291,8 +299,16 @@ export function ExplorerView({ userId }: { userId: string }) {
               size="sm"
               onClick={async () => {
                 const ids = filtered.slice(0, 10).map(product => product.id)
-                await catalog.addProducts(ids)
-                toast({ title: 'Added top 10 to catalog', description: `${ids.length} products added` })
+                try {
+                  await catalog.addProducts(ids)
+                  toast({ title: 'Added top 10 to catalog', description: `${ids.length} products added` })
+                } catch (error) {
+                  toast({
+                    title: 'Could not add products',
+                    description: error instanceof Error ? error.message : 'Catalog limit reached',
+                    variant: 'destructive',
+                  })
+                }
               }}
             >
               + Add Top 10 to Catalog

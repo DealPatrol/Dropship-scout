@@ -38,7 +38,11 @@ export async function GET(req: NextRequest) {
       page: Number(req.nextUrl.searchParams.get('page') || 1),
       pageSize: Number(req.nextUrl.searchParams.get('pageSize') || 25),
     })
-    return NextResponse.json({ source: adapter.source, ...result })
+    return NextResponse.json({
+      source: adapter.source,
+      products: result.products,
+      total: result.total,
+    })
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Supplier search failed' },
