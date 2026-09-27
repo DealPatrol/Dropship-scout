@@ -7,16 +7,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import {
   addCatalogItems,
+  claimShopifyPush,
+  completeShopifyPush,
   getCatalogItemsForProducts,
   getShopifyCredentials,
   getUserPlan,
   logPushResult,
   markCatalogItemPushed,
-  releaseShopifyPush,
-  reserveShopifyPush,
 } from '@/lib/db'
 import { PLAN_LIMITS, PlanLimitError, planLimitMessage } from '@/lib/billing'
-import { buildShopifyPayload, pushProductToShopify } from '@/lib/fulfillment'
+import {
+  buildShopifyPayload,
+  pushProductToShopify,
+  shopifyProductHandle,
+} from '@/lib/fulfillment'
 import { getProduct } from '@/lib/merchandising/data'
 import { toPushableProduct } from '@/lib/merchandising/fulfillment'
 import { validateShopifyConnection } from '@/lib/shopify'
@@ -118,7 +122,45 @@ export async function POST(req: NextRequest) {
       continue
     }
 
-    if (!(await reserveShopifyPush(user.id, monthlyLimit))) {
+    const operationKey = shopifyProductHandle(pushable)
+    const claim = await claimShopifyPush(user.id, operationKey, monthlyLimit)
+    if (claim.state === 'existing') {
+      try {
+        await addCatalogItems(
+          user.id,
+          [productId],
+          'manual',
+          PLAN_LIMITS[plan].catalogProducts
+        )
+        await markCatalogItemPushed(user.id, productId, claim.shopifyProductId)
+        results.push({
+          productId,
+          name: product.name,
+          success: true,
+          shopifyId: claim.shopifyProductId,
+          alreadyPushed: true,
+        })
+      } catch (err) {
+        results.push({
+          productId,
+          name: product.name,
+          success: false,
+          shopifyId: claim.shopifyProductId,
+          error: err instanceof Error ? err.message : 'Could not reconcile catalog state',
+        })
+      }
+      continue
+    }
+    if (claim.state === 'in_progress') {
+      results.push({
+        productId,
+        name: product.name,
+        success: false,
+        error: 'This product push is already in progress.',
+      })
+      continue
+    }
+    if (claim.state === 'limit') {
       results.push({
         productId,
         name: product.name,
@@ -138,7 +180,12 @@ export async function POST(req: NextRequest) {
         PLAN_LIMITS[plan].catalogProducts
       )
     } catch (err) {
-      await releaseShopifyPush(user.id, monthlyLimit)
+      await completeShopifyPush({
+        userId: user.id,
+        operationKey,
+        success: false,
+        errorMessage: err instanceof Error ? err.message : 'Could not prepare catalog item',
+      })
       results.push({
         productId,
         name: product.name,
@@ -149,7 +196,13 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await pushProductToShopify(credentials.domain, credentials.token, pushable)
-    if (!result.success) await releaseShopifyPush(user.id, monthlyLimit)
+    await completeShopifyPush({
+      userId: user.id,
+      operationKey,
+      success: result.success,
+      shopifyProductId: result.shopifyId,
+      errorMessage: result.error,
+    })
 
     await logPushResult({
       userId: user.id,
@@ -178,6 +231,6 @@ export async function POST(req: NextRequest) {
     results.push({ productId, name: product.name, ...result })
   }
 
-  const pushed = dryRun ? 0 : results.filter(r => r.success && !r.alreadyPushed).length
+  const pushed = dryRun ? 0 : results.filter(r => r.success).length
   return NextResponse.json({ dryRun: Boolean(dryRun), pushed, total: requestedProductIds.length, results })
 }

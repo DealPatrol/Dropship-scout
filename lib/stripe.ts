@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto'
+import { createHash } from 'crypto'
 import Stripe from 'stripe'
 
 let stripeClient: Stripe | undefined
@@ -29,6 +29,9 @@ export function proPriceId(): string {
   return requiredEnv('STRIPE_PRO_PRICE_ID')
 }
 
-export function checkoutIntegrationIdentifier(): string {
-  return `dropship_scout_${randomBytes(6).toString('base64url').slice(0, 8).toLowerCase()}`
+export function checkoutIntegrationIdentifier(userId: string): string {
+  const bytes = createHash('sha256').update(userId).digest()
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz'
+  const suffix = Array.from(bytes.subarray(0, 8), byte => alphabet[byte % alphabet.length]).join('')
+  return `dropship_scout_${suffix}`
 }

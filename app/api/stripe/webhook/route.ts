@@ -14,27 +14,29 @@ async function processCheckout(session: Stripe.Checkout.Session, eventCreated: n
   const customerId = resourceId(session.customer)
   const subscriptionId = resourceId(session.subscription)
   if (!userId || !customerId || !subscriptionId) return
+  const currentSubscription = await getStripe().subscriptions.retrieve(subscriptionId)
 
   await updateStripeSubscription({
     userId,
     customerId,
     subscriptionId,
-    status: 'active',
-    plan: 'pro',
+    status: currentSubscription.status,
+    plan: planForSubscriptionStatus(currentSubscription.status),
     eventCreated,
   })
 }
 
 async function processSubscription(subscription: Stripe.Subscription, eventCreated: number) {
-  const customerId = resourceId(subscription.customer)
+  const currentSubscription = await getStripe().subscriptions.retrieve(subscription.id)
+  const customerId = resourceId(currentSubscription.customer)
   if (!customerId) return
 
   await updateStripeSubscription({
-    userId: subscription.metadata.userId || undefined,
+    userId: currentSubscription.metadata.userId || undefined,
     customerId,
-    subscriptionId: subscription.id,
-    status: subscription.status,
-    plan: planForSubscriptionStatus(subscription.status),
+    subscriptionId: currentSubscription.id,
+    status: currentSubscription.status,
+    plan: planForSubscriptionStatus(currentSubscription.status),
     eventCreated,
   })
 }

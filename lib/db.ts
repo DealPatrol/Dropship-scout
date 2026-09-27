@@ -91,7 +91,7 @@ export async function updateStripeSubscription(input: {
           stripe_event_created = ${input.eventCreated},
           plan = ${input.plan}
       where id = ${input.userId}
-        and stripe_event_created <= ${input.eventCreated}
+        and stripe_event_created < ${input.eventCreated}
     `
     return
   }
@@ -103,7 +103,7 @@ export async function updateStripeSubscription(input: {
         stripe_event_created = ${input.eventCreated},
         plan = ${input.plan}
     where stripe_customer_id = ${input.customerId}
-      and stripe_event_created <= ${input.eventCreated}
+      and stripe_event_created < ${input.eventCreated}
   `
 }
 
@@ -277,42 +277,105 @@ export async function getPushHistory(userId: string, limit: number) {
   `
 }
 
-export async function countSuccessfulPushesThisMonth(userId: string): Promise<number> {
+export type ShopifyPushClaim =
+  | { state: 'claimed' }
+  | { state: 'existing'; shopifyProductId: string }
+  | { state: 'in_progress' }
+  | { state: 'limit' }
+
+export async function claimShopifyPush(
+  userId: string,
+  operationKey: string,
+  limit: number | null
+): Promise<ShopifyPushClaim> {
   await ensureSchema()
-  const rows = await sql`
-    select count(*)::int as count
-    from push_history
-    where user_id = ${userId}
-      and status = 'success'
-      and pushed_at >= date_trunc('month', now())
-  `
-  return Number(rows[0]?.count ?? 0)
+  return sql.begin(async transaction => {
+    await transaction`
+      select pg_advisory_xact_lock(hashtext(${`${userId}:${operationKey}`}))
+    `
+    const rows = await transaction`
+      select status, shopify_product_id, reserved, updated_at
+      from shopify_push_operations
+      where user_id = ${userId} and operation_key = ${operationKey}
+      for update
+    `
+    const existing = rows[0]
+    if (existing?.status === 'success' && existing.shopify_product_id) {
+      return { state: 'existing', shopifyProductId: String(existing.shopify_product_id) } as const
+    }
+    if (
+      existing?.status === 'pending' &&
+      new Date(existing.updated_at).getTime() > Date.now() - 2 * 60 * 1000
+    ) {
+      return { state: 'in_progress' } as const
+    }
+
+    const alreadyReserved = Boolean(existing?.reserved)
+    if (!alreadyReserved && limit !== null) {
+      const usageRows = await transaction`
+        insert into usage_counters (user_id, usage_key, period_start, count)
+        values (${userId}, 'shopify_push', date_trunc('month', now())::date, 1)
+        on conflict (user_id, usage_key, period_start) do update
+          set count = usage_counters.count + 1
+          where usage_counters.count < ${limit}
+        returning count
+      `
+      if (usageRows.length === 0) return { state: 'limit' } as const
+    }
+
+    await transaction`
+      insert into shopify_push_operations (
+        user_id, operation_key, status, reserved, updated_at
+      ) values (${userId}, ${operationKey}, 'pending', true, now())
+      on conflict (user_id, operation_key) do update set
+        status = 'pending',
+        error_message = null,
+        reserved = true,
+        updated_at = now()
+    `
+    return { state: 'claimed' } as const
+  })
 }
 
-export async function reserveShopifyPush(userId: string, limit: number | null): Promise<boolean> {
-  if (limit === null) return true
+export async function completeShopifyPush(input: {
+  userId: string
+  operationKey: string
+  success: boolean
+  shopifyProductId?: string
+  errorMessage?: string
+}) {
   await ensureSchema()
-  const rows = await sql`
-    insert into usage_counters (user_id, usage_key, period_start, count)
-    values (${userId}, 'shopify_push', date_trunc('month', now())::date, 1)
-    on conflict (user_id, usage_key, period_start) do update
-      set count = usage_counters.count + 1
-      where usage_counters.count < ${limit}
-    returning count
-  `
-  return rows.length > 0
-}
+  await sql.begin(async transaction => {
+    await transaction`
+      select pg_advisory_xact_lock(hashtext(${`${input.userId}:${input.operationKey}`}))
+    `
+    const rows = await transaction`
+      select reserved from shopify_push_operations
+      where user_id = ${input.userId} and operation_key = ${input.operationKey}
+      for update
+    `
+    const reserved = Boolean(rows[0]?.reserved)
 
-export async function releaseShopifyPush(userId: string, limit: number | null) {
-  if (limit === null) return
-  await ensureSchema()
-  await sql`
-    update usage_counters
-    set count = greatest(count - 1, 0)
-    where user_id = ${userId}
-      and usage_key = 'shopify_push'
-      and period_start = date_trunc('month', now())::date
-  `
+    if (!input.success && reserved) {
+      await transaction`
+        update usage_counters
+        set count = greatest(count - 1, 0)
+        where user_id = ${input.userId}
+          and usage_key = 'shopify_push'
+          and period_start = date_trunc('month', now())::date
+      `
+    }
+
+    await transaction`
+      update shopify_push_operations
+      set status = ${input.success ? 'success' : 'failed'},
+          shopify_product_id = ${input.shopifyProductId || null},
+          error_message = ${input.errorMessage || null},
+          reserved = ${input.success},
+          updated_at = now()
+      where user_id = ${input.userId} and operation_key = ${input.operationKey}
+    `
+  })
 }
 
 // ─── Search sessions ─────────────────────────────────────────────────────────

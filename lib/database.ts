@@ -136,6 +136,16 @@ const SCHEMA_STATEMENTS = [
     count integer not null default 0,
     primary key (user_id, usage_key, period_start)
   )`,
+  `create table if not exists shopify_push_operations (
+    user_id uuid references users(id) on delete cascade,
+    operation_key text not null,
+    status text not null default 'pending',
+    shopify_product_id text,
+    error_message text,
+    reserved boolean not null default false,
+    updated_at timestamptz not null default now(),
+    primary key (user_id, operation_key)
+  )`,
 ]
 
 async function initSchema(): Promise<void> {

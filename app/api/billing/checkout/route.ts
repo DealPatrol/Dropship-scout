@@ -49,7 +49,7 @@ export async function POST() {
       client_reference_id: user.id,
       metadata: { userId: user.id },
       subscription_data: { metadata: { userId: user.id } },
-      integration_identifier: checkoutIntegrationIdentifier(),
+      integration_identifier: checkoutIntegrationIdentifier(user.id),
     }, {
       idempotencyKey: `dropship-scout-checkout-${user.id}-${priceId}-${checkoutWindow}`,
     })

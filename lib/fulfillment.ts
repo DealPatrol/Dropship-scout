@@ -81,6 +81,7 @@ export async function pushProductToShopify(
           Accept: 'application/json',
         },
         cache: 'no-store',
+        signal: AbortSignal.timeout(15_000),
       }
     )
     const existingBody = await existingResponse.json().catch(() => null)
@@ -102,6 +103,7 @@ export async function pushProductToShopify(
         'X-Shopify-Access-Token': token,
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15_000),
     })
 
     const json = await res.json().catch(() => null)

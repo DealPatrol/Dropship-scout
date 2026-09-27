@@ -4,13 +4,17 @@
 // user's stored credentials (Settings).
 
 import { NextRequest, NextResponse } from 'next/server'
-import { buildShopifyPayload, pushProductToShopify } from '@/lib/fulfillment'
 import {
+  buildShopifyPayload,
+  pushProductToShopify,
+  shopifyProductHandle,
+} from '@/lib/fulfillment'
+import {
+  claimShopifyPush,
+  completeShopifyPush,
   getShopifyCredentials,
   getUserPlan,
   logPushResult,
-  releaseShopifyPush,
-  reserveShopifyPush,
 } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { PLAN_LIMITS, planLimitMessage } from '@/lib/billing'
@@ -66,19 +70,40 @@ export async function POST(req: NextRequest) {
       })
       continue
     }
-    if (!(await reserveShopifyPush(user.id, monthlyLimit))) {
-      results.push({
-        name: p.name,
-        success: false,
-        error: monthlyLimit === null
-          ? 'Shopify push reservation failed'
-          : planLimitMessage('Shopify pushes per month', monthlyLimit),
-      })
-      continue
+    const operationKey = shopifyProductHandle(p)
+    const claim = await claimShopifyPush(user.id, operationKey, monthlyLimit)
+    switch (claim.state) {
+      case 'existing':
+        results.push({ name: p.name, success: true, shopifyId: claim.shopifyProductId })
+        continue
+      case 'in_progress':
+        results.push({ name: p.name, success: false, error: 'This product push is already in progress.' })
+        continue
+      case 'limit':
+        results.push({
+          name: p.name,
+          success: false,
+          error: monthlyLimit === null
+            ? 'Shopify push reservation failed'
+            : planLimitMessage('Shopify pushes per month', monthlyLimit),
+        })
+        continue
+      case 'claimed':
+        break
+      default: {
+        const exhaustive: never = claim
+        throw new Error(`Unhandled Shopify push claim: ${exhaustive}`)
+      }
     }
 
     const result = await pushProductToShopify(credentials.domain, credentials.token, p)
-    if (!result.success) await releaseShopifyPush(user.id, monthlyLimit)
+    await completeShopifyPush({
+      userId: user.id,
+      operationKey,
+      success: result.success,
+      shopifyProductId: result.shopifyId,
+      errorMessage: result.error,
+    })
 
     results.push({ name: p.name, ...result })
 
