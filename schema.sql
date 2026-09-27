@@ -75,6 +75,7 @@ create table if not exists catalog_items (
   added_at timestamptz default now(),
   pushed_at timestamptz,             -- set when listed on the user's store
   shopify_product_id text,           -- Shopify product id after push
+  shopify_domain text,               -- store scope for push idempotency
   unique (user_id, product_id)
 );
 

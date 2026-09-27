@@ -91,7 +91,7 @@ export async function updateStripeSubscription(input: {
           stripe_event_created = ${input.eventCreated},
           plan = ${input.plan}
       where id = ${input.userId}
-        and stripe_event_created < ${input.eventCreated}
+        and stripe_event_created <= ${input.eventCreated}
     `
     return
   }
@@ -103,7 +103,7 @@ export async function updateStripeSubscription(input: {
         stripe_event_created = ${input.eventCreated},
         plan = ${input.plan}
     where stripe_customer_id = ${input.customerId}
-      and stripe_event_created < ${input.eventCreated}
+      and stripe_event_created <= ${input.eventCreated}
   `
 }
 
@@ -412,7 +412,27 @@ export async function getSearchSession(userId: string) {
 
 export async function getCatalogItems(userId: string) {
   await ensureSchema()
-  return sql`select * from catalog_items where user_id = ${userId} order by added_at desc`
+  return sql`
+    select
+      catalog_items.id,
+      catalog_items.user_id,
+      catalog_items.product_id,
+      catalog_items.source,
+      catalog_items.added_at,
+      case
+        when catalog_items.shopify_domain = users.shopify_domain then catalog_items.pushed_at
+        else null
+      end as pushed_at,
+      case
+        when catalog_items.shopify_domain = users.shopify_domain then catalog_items.shopify_product_id
+        else null
+      end as shopify_product_id,
+      catalog_items.shopify_domain
+    from catalog_items
+    join users on users.id = catalog_items.user_id
+    where catalog_items.user_id = ${userId}
+    order by catalog_items.added_at desc
+  `
 }
 
 export async function countCatalogItems(userId: string): Promise<number> {
@@ -463,7 +483,7 @@ export async function addCatalogItems(
 export async function getCatalogItemsForProducts(userId: string, productIds: string[]) {
   await ensureSchema()
   return sql`
-    select product_id, pushed_at, shopify_product_id
+    select product_id, pushed_at, shopify_product_id, shopify_domain
     from catalog_items
     where user_id = ${userId} and product_id = any(${productIds})
   `
@@ -474,11 +494,18 @@ export async function removeCatalogItem(userId: string, productId: string) {
   await sql`delete from catalog_items where user_id = ${userId} and product_id = ${productId}`
 }
 
-export async function markCatalogItemPushed(userId: string, productId: string, shopifyProductId?: string) {
+export async function markCatalogItemPushed(
+  userId: string,
+  productId: string,
+  shopifyDomain: string,
+  shopifyProductId?: string
+) {
   await ensureSchema()
   await sql`
     update catalog_items
-    set pushed_at = now(), shopify_product_id = ${shopifyProductId || null}
+    set pushed_at = now(),
+        shopify_product_id = ${shopifyProductId || null},
+        shopify_domain = ${shopifyDomain}
     where user_id = ${userId} and product_id = ${productId}
   `
 }

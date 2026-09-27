@@ -79,7 +79,11 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  let existingItems: Map<string, { pushed_at?: string; shopify_product_id?: string }>
+  let existingItems: Map<string, {
+    pushed_at?: string
+    shopify_product_id?: string
+    shopify_domain?: string
+  }>
   try {
     const rows = await getCatalogItemsForProducts(user.id, requestedProductIds)
     existingItems = new Map(rows.map(row => [row.product_id, row]))
@@ -100,7 +104,10 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = existingItems.get(productId)
-    if (existing?.pushed_at || existing?.shopify_product_id) {
+    if (
+      existing?.shopify_domain === credentials.domain &&
+      (existing.pushed_at || existing.shopify_product_id)
+    ) {
       results.push({
         productId,
         name: product.name,
@@ -122,7 +129,7 @@ export async function POST(req: NextRequest) {
       continue
     }
 
-    const operationKey = shopifyProductHandle(pushable)
+    const operationKey = `${credentials.domain}:${shopifyProductHandle(pushable)}`
     const claim = await claimShopifyPush(user.id, operationKey, monthlyLimit)
     if (claim.state === 'existing') {
       try {
@@ -132,7 +139,12 @@ export async function POST(req: NextRequest) {
           'manual',
           PLAN_LIMITS[plan].catalogProducts
         )
-        await markCatalogItemPushed(user.id, productId, claim.shopifyProductId)
+        await markCatalogItemPushed(
+          user.id,
+          productId,
+          credentials.domain,
+          claim.shopifyProductId
+        )
         results.push({
           productId,
           name: product.name,
@@ -215,7 +227,12 @@ export async function POST(req: NextRequest) {
 
     if (result.success) {
       try {
-        await markCatalogItemPushed(user.id, productId, result.shopifyId)
+        await markCatalogItemPushed(
+          user.id,
+          productId,
+          credentials.domain,
+          result.shopifyId
+        )
       } catch (err) {
         results.push({
           productId,

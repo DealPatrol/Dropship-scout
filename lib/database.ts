@@ -121,8 +121,10 @@ const SCHEMA_STATEMENTS = [
     added_at timestamptz default now(),
     pushed_at timestamptz,
     shopify_product_id text,
+    shopify_domain text,
     unique (user_id, product_id)
   )`,
+  `alter table catalog_items add column if not exists shopify_domain text`,
   `create index if not exists catalog_items_user_id_idx on catalog_items(user_id)`,
   `create table if not exists stripe_events (
     event_id text primary key,

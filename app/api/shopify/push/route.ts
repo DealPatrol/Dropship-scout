@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       })
       continue
     }
-    const operationKey = shopifyProductHandle(p)
+    const operationKey = `${credentials.domain}:${shopifyProductHandle(p)}`
     const claim = await claimShopifyPush(user.id, operationKey, monthlyLimit)
     switch (claim.state) {
       case 'existing':
