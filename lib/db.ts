@@ -3,7 +3,7 @@
 
 import { ensureSchema, sql } from './database'
 import { decryptSecret, encryptSecret } from './secrets'
-import type { Plan } from './billing'
+import { PlanLimitError, planLimitMessage, type Plan } from './billing'
 import type { Product } from './types'
 
 // ─── Users / Shopify credentials ─────────────────────────────────────────────
@@ -79,6 +79,7 @@ export async function updateStripeSubscription(input: {
   subscriptionId: string
   status: string
   plan: Plan
+  eventCreated: number
 }) {
   await ensureSchema()
   if (input.userId) {
@@ -87,8 +88,10 @@ export async function updateStripeSubscription(input: {
       set stripe_customer_id = ${input.customerId},
           stripe_subscription_id = ${input.subscriptionId},
           stripe_subscription_status = ${input.status},
+          stripe_event_created = ${input.eventCreated},
           plan = ${input.plan}
       where id = ${input.userId}
+        and stripe_event_created <= ${input.eventCreated}
     `
     return
   }
@@ -97,8 +100,10 @@ export async function updateStripeSubscription(input: {
     update users
     set stripe_subscription_id = ${input.subscriptionId},
         stripe_subscription_status = ${input.status},
+        stripe_event_created = ${input.eventCreated},
         plan = ${input.plan}
     where stripe_customer_id = ${input.customerId}
+      and stripe_event_created <= ${input.eventCreated}
   `
 }
 
@@ -162,20 +167,36 @@ export async function getSavedProductRows(userId: string) {
   return sql`select * from saved_products where user_id = ${userId} order by score desc`
 }
 
-export async function insertSavedProduct(userId: string, product: Product): Promise<string> {
+export async function insertSavedProduct(
+  userId: string,
+  product: Product,
+  limit: number | null = null
+): Promise<string> {
   await ensureSchema()
-  const rows = await sql`
-    insert into saved_products (
-      user_id, name, category, trend, margin, sell_price, source_price,
-      monthly_sales, rating, competition, score, platforms, tags, ai_insight, image_url
-    ) values (
-      ${userId}, ${product.name}, ${product.category}, ${product.trend},
-      ${product.margin}, ${parseFloat(product.sellPrice)}, ${parseFloat(product.sourcePrice)},
-      ${product.monthlySales}, ${product.rating}, ${product.competition}, ${product.score},
-      ${product.platforms}, ${product.tags}, ${product.aiInsight}, ${product.imageUrl || ''}
-    ) returning id
-  `
-  return rows[0].id
+  return sql.begin(async transaction => {
+    await transaction`select pg_advisory_xact_lock(hashtext(${userId}))`
+    if (limit !== null) {
+      const countRows = await transaction`
+        select count(*)::int as count from saved_products where user_id = ${userId}
+      `
+      if (Number(countRows[0]?.count ?? 0) >= limit) {
+        throw new PlanLimitError(planLimitMessage('saved products', limit))
+      }
+    }
+
+    const rows = await transaction`
+      insert into saved_products (
+        user_id, name, category, trend, margin, sell_price, source_price,
+        monthly_sales, rating, competition, score, platforms, tags, ai_insight, image_url
+      ) values (
+        ${userId}, ${product.name}, ${product.category}, ${product.trend},
+        ${product.margin}, ${parseFloat(product.sellPrice)}, ${parseFloat(product.sourcePrice)},
+        ${product.monthlySales}, ${product.rating}, ${product.competition}, ${product.score},
+        ${product.platforms}, ${product.tags}, ${product.aiInsight}, ${product.imageUrl || ''}
+      ) returning id
+    `
+    return String(rows[0].id)
+  })
 }
 
 export async function deleteSavedProduct(userId: string, id: string) {
@@ -268,6 +289,32 @@ export async function countSuccessfulPushesThisMonth(userId: string): Promise<nu
   return Number(rows[0]?.count ?? 0)
 }
 
+export async function reserveShopifyPush(userId: string, limit: number | null): Promise<boolean> {
+  if (limit === null) return true
+  await ensureSchema()
+  const rows = await sql`
+    insert into usage_counters (user_id, usage_key, period_start, count)
+    values (${userId}, 'shopify_push', date_trunc('month', now())::date, 1)
+    on conflict (user_id, usage_key, period_start) do update
+      set count = usage_counters.count + 1
+      where usage_counters.count < ${limit}
+    returning count
+  `
+  return rows.length > 0
+}
+
+export async function releaseShopifyPush(userId: string, limit: number | null) {
+  if (limit === null) return
+  await ensureSchema()
+  await sql`
+    update usage_counters
+    set count = greatest(count - 1, 0)
+    where user_id = ${userId}
+      and usage_key = 'shopify_push'
+      and period_start = date_trunc('month', now())::date
+  `
+}
+
 // ─── Search sessions ─────────────────────────────────────────────────────────
 
 export async function upsertSearchSession(userId: string, session: {
@@ -312,15 +359,42 @@ export async function countCatalogItems(userId: string): Promise<number> {
 }
 
 /** Adds products to the catalog; returns how many were newly inserted. */
-export async function addCatalogItems(userId: string, productIds: string[], source: string): Promise<number> {
+export async function addCatalogItems(
+  userId: string,
+  productIds: string[],
+  source: string,
+  limit: number | null = null
+): Promise<number> {
   await ensureSchema()
-  const inserted = await sql`
-    insert into catalog_items (user_id, product_id, source)
-    select ${userId}, unnest(${productIds}::text[]), ${source}
-    on conflict (user_id, product_id) do nothing
-    returning id
-  `
-  return inserted.length
+  return sql.begin(async transaction => {
+    await transaction`select pg_advisory_xact_lock(hashtext(${userId}))`
+    if (limit !== null) {
+      const countRows = await transaction`
+        select count(*)::int as count from catalog_items where user_id = ${userId}
+      `
+      const incomingRows = await transaction`
+        select count(*)::int as count
+        from unnest(${productIds}::text[]) as requested(product_id)
+        where not exists (
+          select 1 from catalog_items
+          where user_id = ${userId} and product_id = requested.product_id
+        )
+      `
+      const current = Number(countRows[0]?.count ?? 0)
+      const incoming = Number(incomingRows[0]?.count ?? 0)
+      if (current + incoming > limit) {
+        throw new PlanLimitError(planLimitMessage('catalog products', limit))
+      }
+    }
+
+    const inserted = await transaction`
+      insert into catalog_items (user_id, product_id, source)
+      select ${userId}, unnest(${productIds}::text[]), ${source}
+      on conflict (user_id, product_id) do nothing
+      returning id
+    `
+    return inserted.length
+  })
 }
 
 export async function getCatalogItemsForProducts(userId: string, productIds: string[]) {

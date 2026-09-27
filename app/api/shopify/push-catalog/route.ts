@@ -7,14 +7,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import {
   addCatalogItems,
-  countSuccessfulPushesThisMonth,
   getCatalogItemsForProducts,
   getShopifyCredentials,
   getUserPlan,
   logPushResult,
   markCatalogItemPushed,
+  releaseShopifyPush,
+  reserveShopifyPush,
 } from '@/lib/db'
-import { PLAN_LIMITS, planLimitMessage } from '@/lib/billing'
+import { PLAN_LIMITS, PlanLimitError, planLimitMessage } from '@/lib/billing'
 import { buildShopifyPayload, pushProductToShopify } from '@/lib/fulfillment'
 import { getProduct } from '@/lib/merchandising/data'
 import { toPushableProduct } from '@/lib/merchandising/fulfillment'
@@ -86,7 +87,6 @@ export async function POST(req: NextRequest) {
   const results: PushResult[] = []
   const plan = await getUserPlan(user.id)
   const monthlyLimit = PLAN_LIMITS[plan].shopifyPushesPerMonth
-  let monthlyPushes = dryRun ? 0 : await countSuccessfulPushesThisMonth(user.id)
 
   for (const productId of requestedProductIds) {
     const product = getProduct(productId)
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       continue
     }
 
-    if (monthlyLimit !== null && monthlyPushes >= monthlyLimit) {
+    if (!(await reserveShopifyPush(user.id, monthlyLimit))) {
       results.push({
         productId,
         name: product.name,
@@ -128,7 +128,26 @@ export async function POST(req: NextRequest) {
       continue
     }
 
+    try {
+      await addCatalogItems(
+        user.id,
+        [productId],
+        'manual',
+        PLAN_LIMITS[plan].catalogProducts
+      )
+    } catch (err) {
+      await releaseShopifyPush(user.id, monthlyLimit)
+      results.push({
+        productId,
+        name: product.name,
+        success: false,
+        error: err instanceof PlanLimitError ? err.message : 'Could not prepare catalog item',
+      })
+      continue
+    }
+
     const result = await pushProductToShopify(credentials.domain, credentials.token, pushable)
+    if (!result.success) await releaseShopifyPush(user.id, monthlyLimit)
 
     await logPushResult({
       userId: user.id,
@@ -140,10 +159,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (result.success) {
-      monthlyPushes++
-      // Ensure the product is in the catalog, then mark it as pushed.
       try {
-        await addCatalogItems(user.id, [productId], 'manual')
         await markCatalogItemPushed(user.id, productId, result.shopifyId)
       } catch (err) {
         results.push({

@@ -25,6 +25,8 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
 }
 
+export class PlanLimitError extends Error {}
+
 const PRO_STATUSES = new Set(['active', 'trialing'])
 
 export function planForSubscriptionStatus(status: string | null | undefined): Plan {

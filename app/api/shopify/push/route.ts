@@ -6,10 +6,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { buildShopifyPayload, pushProductToShopify } from '@/lib/fulfillment'
 import {
-  countSuccessfulPushesThisMonth,
   getShopifyCredentials,
   getUserPlan,
   logPushResult,
+  releaseShopifyPush,
+  reserveShopifyPush,
 } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { PLAN_LIMITS, planLimitMessage } from '@/lib/billing'
@@ -55,7 +56,6 @@ export async function POST(req: NextRequest) {
   const results = []
   const plan = await getUserPlan(user.id)
   const monthlyLimit = PLAN_LIMITS[plan].shopifyPushesPerMonth
-  let monthlyPushes = dryRun ? 0 : await countSuccessfulPushesThisMonth(user.id)
 
   for (const p of products as Product[]) {
     if (dryRun) {
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       })
       continue
     }
-    if (monthlyLimit !== null && monthlyPushes >= monthlyLimit) {
+    if (!(await reserveShopifyPush(user.id, monthlyLimit))) {
       results.push({
         name: p.name,
         success: false,
@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await pushProductToShopify(credentials.domain, credentials.token, p)
+    if (!result.success) await releaseShopifyPush(user.id, monthlyLimit)
 
     results.push({ name: p.name, ...result })
 
@@ -87,7 +88,6 @@ export async function POST(req: NextRequest) {
       shopifyProductId: result.shopifyId,
       errorMessage: result.error,
     })
-    if (result.success) monthlyPushes++
   }
 
   const pushed = dryRun ? 0 : results.filter(r => r.success).length

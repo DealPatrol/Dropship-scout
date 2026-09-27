@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { limitExceeded, PLAN_LIMITS } from '@/lib/billing'
+import { limitExceeded, PLAN_LIMITS, planForSubscriptionStatus } from '@/lib/billing'
 import { validateSavedProduct } from '@/lib/saved-products'
 
 const product = {
@@ -33,5 +33,12 @@ describe('saved products', () => {
   it('enforces the free saved-product limit while Pro stays unlimited', () => {
     expect(limitExceeded(10, 1, PLAN_LIMITS.free.savedProducts)).toBe(true)
     expect(limitExceeded(10_000, 1, PLAN_LIMITS.pro.savedProducts)).toBe(false)
+  })
+
+  it('grants Pro only for active or trialing subscriptions', () => {
+    expect(planForSubscriptionStatus('active')).toBe('pro')
+    expect(planForSubscriptionStatus('trialing')).toBe('pro')
+    expect(planForSubscriptionStatus('past_due')).toBe('free')
+    expect(planForSubscriptionStatus('canceled')).toBe('free')
   })
 })

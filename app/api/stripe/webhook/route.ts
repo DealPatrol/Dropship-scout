@@ -9,7 +9,7 @@ function resourceId(value: string | { id: string } | null): string | null {
   return typeof value === 'string' ? value : value.id
 }
 
-async function processCheckout(session: Stripe.Checkout.Session) {
+async function processCheckout(session: Stripe.Checkout.Session, eventCreated: number) {
   const userId = session.metadata?.userId || session.client_reference_id || undefined
   const customerId = resourceId(session.customer)
   const subscriptionId = resourceId(session.subscription)
@@ -21,10 +21,11 @@ async function processCheckout(session: Stripe.Checkout.Session) {
     subscriptionId,
     status: 'active',
     plan: 'pro',
+    eventCreated,
   })
 }
 
-async function processSubscription(subscription: Stripe.Subscription) {
+async function processSubscription(subscription: Stripe.Subscription, eventCreated: number) {
   const customerId = resourceId(subscription.customer)
   if (!customerId) return
 
@@ -34,6 +35,7 @@ async function processSubscription(subscription: Stripe.Subscription) {
     subscriptionId: subscription.id,
     status: subscription.status,
     plan: planForSubscriptionStatus(subscription.status),
+    eventCreated,
   })
 }
 
@@ -60,13 +62,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (event.type === 'checkout.session.completed') {
-      await processCheckout(event.data.object)
+      await processCheckout(event.data.object, event.created)
     } else if (
       event.type === 'customer.subscription.created' ||
       event.type === 'customer.subscription.updated' ||
       event.type === 'customer.subscription.deleted'
     ) {
-      await processSubscription(event.data.object)
+      await processSubscription(event.data.object, event.created)
     }
 
     await recordStripeEvent(event.id, event.type)

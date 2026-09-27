@@ -63,12 +63,14 @@ const SCHEMA_STATEMENTS = [
     stripe_customer_id text unique,
     stripe_subscription_id text unique,
     stripe_subscription_status text,
+    stripe_event_created bigint not null default 0,
     created_at timestamptz default now()
   )`,
   `alter table users add column if not exists plan text not null default 'free'`,
   `alter table users add column if not exists stripe_customer_id text unique`,
   `alter table users add column if not exists stripe_subscription_id text unique`,
   `alter table users add column if not exists stripe_subscription_status text`,
+  `alter table users add column if not exists stripe_event_created bigint not null default 0`,
   `create table if not exists saved_products (
     id uuid primary key default gen_random_uuid(),
     user_id uuid references users(id) on delete cascade,
@@ -126,6 +128,13 @@ const SCHEMA_STATEMENTS = [
     event_id text primary key,
     event_type text not null,
     processed_at timestamptz default now()
+  )`,
+  `create table if not exists usage_counters (
+    user_id uuid references users(id) on delete cascade,
+    usage_key text not null,
+    period_start date not null,
+    count integer not null default 0,
+    primary key (user_id, usage_key, period_start)
   )`,
 ]
 

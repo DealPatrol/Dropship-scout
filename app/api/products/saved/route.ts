@@ -5,14 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  countSavedProducts,
   deleteSavedProduct,
   getSavedProducts,
   getUserPlan,
   insertSavedProduct,
 } from '@/lib/db'
 import { getSession } from '@/lib/auth'
-import { limitExceeded, PLAN_LIMITS, planLimitMessage } from '@/lib/billing'
+import { PLAN_LIMITS, PlanLimitError } from '@/lib/billing'
 import { validateSavedProduct } from '@/lib/saved-products'
 
 // GET /api/products/saved
@@ -48,17 +47,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const plan = await getUserPlan(user.id)
-    const current = await countSavedProducts(user.id)
     const limit = PLAN_LIMITS[plan].savedProducts
-    if (limitExceeded(current, 1, limit)) {
-      return NextResponse.json(
-        { error: planLimitMessage('saved products', limit as number), code: 'PLAN_LIMIT' },
-        { status: 403 }
-      )
-    }
-    const id = await insertSavedProduct(user.id, product)
+    const id = await insertSavedProduct(user.id, product, limit)
     return NextResponse.json({ id })
   } catch (err) {
+    if (err instanceof PlanLimitError) {
+      return NextResponse.json({ error: err.message, code: 'PLAN_LIMIT' }, { status: 403 })
+    }
     const message = err instanceof Error ? err.message : 'Failed to save product'
     return NextResponse.json({ error: message }, { status: 500 })
   }

@@ -14,6 +14,7 @@ create table if not exists users (
   stripe_customer_id text unique,
   stripe_subscription_id text unique,
   stripe_subscription_status text,
+  stripe_event_created bigint not null default 0,
   created_at timestamptz default now()
 );
 
@@ -84,4 +85,12 @@ create table if not exists stripe_events (
   event_id text primary key,
   event_type text not null,
   processed_at timestamptz default now()
+);
+
+create table if not exists usage_counters (
+  user_id uuid references users(id) on delete cascade,
+  usage_key text not null,
+  period_start date not null,
+  count integer not null default 0,
+  primary key (user_id, usage_key, period_start)
 );
