@@ -18,6 +18,7 @@ async function processCheckout(session: Stripe.Checkout.Session, eventCreated: n
   await reconcileStripeSubscription({
     userId,
     subscriptionId,
+    lockKey: `user:${userId}`,
     eventCreated,
     loadCurrent: async () => {
       const current = await getStripe().subscriptions.retrieve(subscriptionId)
@@ -35,9 +36,14 @@ async function processCheckout(session: Stripe.Checkout.Session, eventCreated: n
 }
 
 async function processSubscription(subscription: Stripe.Subscription, eventCreated: number) {
+  const eventUserId = subscription.metadata.userId || undefined
+  const eventCustomerId = resourceId(subscription.customer)
+  if (!eventUserId && !eventCustomerId) return
+
   await reconcileStripeSubscription({
-    userId: subscription.metadata.userId || undefined,
+    userId: eventUserId,
     subscriptionId: subscription.id,
+    lockKey: eventUserId ? `user:${eventUserId}` : `customer:${eventCustomerId}`,
     eventCreated,
     loadCurrent: async () => {
       const current = await getStripe().subscriptions.retrieve(subscription.id)

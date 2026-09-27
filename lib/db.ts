@@ -84,13 +84,14 @@ interface StripeSubscriptionState {
 export async function reconcileStripeSubscription(input: {
   userId?: string
   subscriptionId: string
+  lockKey: string
   eventCreated: number
   loadCurrent: () => Promise<StripeSubscriptionState>
 }) {
   await ensureSchema()
   await sql.begin(async transaction => {
     await transaction`
-      select pg_advisory_xact_lock(hashtext(${`stripe:${input.subscriptionId}`}))
+      select pg_advisory_xact_lock(hashtext(${`stripe:${input.lockKey}`}))
     `
     const current = await input.loadCurrent()
     const userId = input.userId || current.userId
