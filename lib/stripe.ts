@@ -12,6 +12,7 @@ function requiredEnv(name: string): string {
 export function getStripe(): Stripe {
   if (!stripeClient) {
     stripeClient = new Stripe(requiredEnv('STRIPE_SECRET_KEY'), {
+      timeout: 15_000,
       appInfo: {
         name: 'Dropship Scout',
         version: '1.0.0',

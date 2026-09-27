@@ -1,6 +1,6 @@
 import type Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
-import { hasStripeEvent, recordStripeEvent, updateStripeSubscription } from '@/lib/db'
+import { hasStripeEvent, reconcileStripeSubscription, recordStripeEvent } from '@/lib/db'
 import { planForSubscriptionStatus } from '@/lib/billing'
 import { getStripe, stripeWebhookSecret } from '@/lib/stripe'
 
@@ -14,30 +14,43 @@ async function processCheckout(session: Stripe.Checkout.Session, eventCreated: n
   const customerId = resourceId(session.customer)
   const subscriptionId = resourceId(session.subscription)
   if (!userId || !customerId || !subscriptionId) return
-  const currentSubscription = await getStripe().subscriptions.retrieve(subscriptionId)
 
-  await updateStripeSubscription({
+  await reconcileStripeSubscription({
     userId,
-    customerId,
     subscriptionId,
-    status: currentSubscription.status,
-    plan: planForSubscriptionStatus(currentSubscription.status),
     eventCreated,
+    loadCurrent: async () => {
+      const current = await getStripe().subscriptions.retrieve(subscriptionId)
+      const currentCustomerId = resourceId(current.customer)
+      if (!currentCustomerId) throw new Error('Stripe subscription has no customer')
+      return {
+        userId: current.metadata.userId || undefined,
+        customerId: currentCustomerId,
+        subscriptionId: current.id,
+        status: current.status,
+        plan: planForSubscriptionStatus(current.status),
+      }
+    },
   })
 }
 
 async function processSubscription(subscription: Stripe.Subscription, eventCreated: number) {
-  const currentSubscription = await getStripe().subscriptions.retrieve(subscription.id)
-  const customerId = resourceId(currentSubscription.customer)
-  if (!customerId) return
-
-  await updateStripeSubscription({
-    userId: currentSubscription.metadata.userId || undefined,
-    customerId,
-    subscriptionId: currentSubscription.id,
-    status: currentSubscription.status,
-    plan: planForSubscriptionStatus(currentSubscription.status),
+  await reconcileStripeSubscription({
+    userId: subscription.metadata.userId || undefined,
+    subscriptionId: subscription.id,
     eventCreated,
+    loadCurrent: async () => {
+      const current = await getStripe().subscriptions.retrieve(subscription.id)
+      const customerId = resourceId(current.customer)
+      if (!customerId) throw new Error('Stripe subscription has no customer')
+      return {
+        userId: current.metadata.userId || undefined,
+        customerId,
+        subscriptionId: current.id,
+        status: current.status,
+        plan: planForSubscriptionStatus(current.status),
+      }
+    },
   })
 }
 

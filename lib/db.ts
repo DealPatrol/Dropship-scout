@@ -73,38 +73,52 @@ export async function setStripeCustomer(userId: string, customerId: string) {
   await sql`update users set stripe_customer_id = ${customerId} where id = ${userId}`
 }
 
-export async function updateStripeSubscription(input: {
+interface StripeSubscriptionState {
   userId?: string
   customerId: string
   subscriptionId: string
   status: string
   plan: Plan
+}
+
+export async function reconcileStripeSubscription(input: {
+  userId?: string
+  subscriptionId: string
   eventCreated: number
+  loadCurrent: () => Promise<StripeSubscriptionState>
 }) {
   await ensureSchema()
-  if (input.userId) {
-    await sql`
+  await sql.begin(async transaction => {
+    await transaction`
+      select pg_advisory_xact_lock(hashtext(${`stripe:${input.subscriptionId}`}))
+    `
+    const current = await input.loadCurrent()
+    const userId = input.userId || current.userId
+
+    if (userId) {
+      await transaction`
+        update users
+        set stripe_customer_id = ${current.customerId},
+            stripe_subscription_id = ${current.subscriptionId},
+            stripe_subscription_status = ${current.status},
+            stripe_event_created = ${input.eventCreated},
+            plan = ${current.plan}
+        where id = ${userId}
+          and stripe_event_created <= ${input.eventCreated}
+      `
+      return
+    }
+
+    await transaction`
       update users
-      set stripe_customer_id = ${input.customerId},
-          stripe_subscription_id = ${input.subscriptionId},
-          stripe_subscription_status = ${input.status},
+      set stripe_subscription_id = ${current.subscriptionId},
+          stripe_subscription_status = ${current.status},
           stripe_event_created = ${input.eventCreated},
-          plan = ${input.plan}
-      where id = ${input.userId}
+          plan = ${current.plan}
+      where stripe_customer_id = ${current.customerId}
         and stripe_event_created <= ${input.eventCreated}
     `
-    return
-  }
-
-  await sql`
-    update users
-    set stripe_subscription_id = ${input.subscriptionId},
-        stripe_subscription_status = ${input.status},
-        stripe_event_created = ${input.eventCreated},
-        plan = ${input.plan}
-    where stripe_customer_id = ${input.customerId}
-      and stripe_event_created <= ${input.eventCreated}
-  `
+  })
 }
 
 export async function recordStripeEvent(eventId: string, eventType: string): Promise<boolean> {
