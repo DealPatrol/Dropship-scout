@@ -6,6 +6,25 @@ import { Product, PushHistoryEntry, SearchSession, SearchParams } from './types'
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL || ''
 
+export interface ShopifyPushItemResult {
+  name: string
+  success: boolean
+  shopifyId?: string
+  error?: string
+  preview?: {
+    title: string
+    status: string
+    variants: { price: string }[]
+  }
+}
+
+export interface ShopifyPushResult {
+  dryRun?: boolean
+  pushed: number
+  total: number
+  results: ShopifyPushItemResult[]
+}
+
 // ─── Products ────────────────────────────────────────────────────────────────
 
 export async function searchProducts(params: SearchParams): Promise<Product[]> {
@@ -50,11 +69,9 @@ export async function deleteSavedProduct(userId: string, id: string): Promise<vo
 // ─── Shopify ─────────────────────────────────────────────────────────────────
 
 export async function pushToShopify(params: {
-  domain: string
-  token: string
   products: Product[]
-  userId?: string
-}): Promise<{ pushed: number; total: number; results: unknown[] }> {
+  dryRun?: boolean
+}): Promise<ShopifyPushResult> {
   const res = await fetch(`${BASE}/api/shopify/push`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

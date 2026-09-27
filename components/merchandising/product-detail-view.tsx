@@ -71,9 +71,29 @@ export function ProductDetailView({ product, userId }: { product: CatalogProduct
     }
     setPushing(true)
     try {
+      const preview = await catalog.pushToStore([product.id], true)
+      const previewResult = preview.results?.[0]
+      if (!previewResult?.success) {
+        toast({
+          title: 'Preview failed',
+          description: previewResult?.error || preview.error || 'Could not preview the listing.',
+          variant: 'destructive',
+        })
+        return
+      }
+      const price = previewResult.preview?.variants[0]?.price
+      if (!window.confirm(
+        `Dry-run preview: no Shopify product has been created.\n\n${previewResult.preview?.title || product.name}${price ? ` — $${price}` : ''}\n\nCreate this listing?`
+      )) return
+
       const result = await catalog.pushToStore([product.id])
-      if (result.error || result.pushed === 0) {
-        toast({ title: 'Push failed', description: result.error || 'Could not list the product.', variant: 'destructive' })
+      const failed = result.results?.find(item => !item.success)
+      if (result.error || result.pushed === 0 || failed) {
+        toast({
+          title: 'Push failed',
+          description: failed?.error || result.error || 'Could not list the product.',
+          variant: 'destructive',
+        })
       } else {
         toast({ title: 'Live on your store 🎉', description: `${product.name} is now listed on ${catalog.shopifyDomain}` })
       }

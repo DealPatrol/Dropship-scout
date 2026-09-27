@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getSavedProducts, deleteSavedProduct, pushToShopify, getShopifyDomain } from '@/lib/api'
+import type { ShopifyPushResult } from '@/lib/api'
 import type { Product } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -41,7 +42,8 @@ export function SavedProductsView({ userId }: SavedProductsViewProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [pushing, setPushing] = useState(false)
-  const [pushResult, setPushResult] = useState<{ pushed: number; total: number } | null>(null)
+  const [pushResult, setPushResult] = useState<ShopifyPushResult | null>(null)
+  const [pushError, setPushError] = useState<string | null>(null)
   const [shopifyDomain, setShopifyDomain] = useState<string | null>(null)
 
   const loadProducts = useCallback(async () => {
@@ -94,17 +96,27 @@ export function SavedProductsView({ userId }: SavedProductsViewProps) {
     if (!shopifyDomain || selected.size === 0) return
     setPushing(true)
     setPushResult(null)
+    setPushError(null)
     const selectedProducts = products.filter(p => p.id && selected.has(p.id))
     try {
-      const result = await pushToShopify({
-        domain: shopifyDomain,
-        token: '',
-        products: selectedProducts,
-        userId,
+      const preview = await pushToShopify({ products: selectedProducts, dryRun: true })
+      const previewFailures = preview.results.filter(result => !result.success)
+      if (previewFailures.length > 0) {
+        setPushError(previewFailures.map(result => `${result.name}: ${result.error}`).join('; '))
+        return
+      }
+
+      const lines = preview.results.map(result => {
+        const price = result.preview?.variants[0]?.price
+        return `• ${result.preview?.title || result.name}${price ? ` — $${price}` : ''}`
       })
-      setPushResult({ pushed: result.pushed, total: result.total })
-    } catch {
-      // ignore
+      if (!window.confirm(
+        `Dry-run preview: no Shopify products have been created.\n\n${lines.join('\n')}\n\nCreate these listings?`
+      )) return
+
+      setPushResult(await pushToShopify({ products: selectedProducts }))
+    } catch (err) {
+      setPushError(err instanceof Error ? err.message : 'Shopify push failed')
     } finally {
       setPushing(false)
     }
@@ -164,7 +176,7 @@ export function SavedProductsView({ userId }: SavedProductsViewProps) {
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Push {selected.size} to Shopify
+                Preview & push {selected.size}
               </>
             )}
           </Button>
@@ -178,9 +190,26 @@ export function SavedProductsView({ userId }: SavedProductsViewProps) {
       </div>
 
       {pushResult && (
-        <div className="mb-4 flex items-center gap-2 text-sm text-green-400 bg-green-400/10 border border-green-400/20 rounded-md px-4 py-2">
+        <div className={cn(
+          'mb-4 flex items-start gap-2 text-sm rounded-md border px-4 py-2',
+          pushResult.results.some(result => !result.success)
+            ? 'text-destructive bg-destructive/10 border-destructive/20'
+            : 'text-green-400 bg-green-400/10 border-green-400/20'
+        )}>
           <CheckCircle className="h-4 w-4" />
-          Pushed {pushResult.pushed} of {pushResult.total} products to Shopify
+          <div>
+            <p>Pushed {pushResult.pushed} of {pushResult.total} products to Shopify</p>
+            {pushResult.results.filter(result => !result.success).map(result => (
+              <p key={result.name}>{result.name}: {result.error}</p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {pushError && (
+        <div className="mb-4 flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-4 py-2">
+          <AlertCircle className="h-4 w-4" />
+          {pushError}
         </div>
       )}
 
