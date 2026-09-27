@@ -10,6 +10,11 @@ create table if not exists users (
   password_hash text not null,
   shopify_domain text,
   shopify_token_enc text,        -- server-side only, never exposed to client
+  plan text not null default 'free',
+  stripe_customer_id text unique,
+  stripe_subscription_id text unique,
+  stripe_subscription_status text,
+  stripe_event_created bigint not null default 0,
   created_at timestamptz default now()
 );
 
@@ -70,7 +75,34 @@ create table if not exists catalog_items (
   added_at timestamptz default now(),
   pushed_at timestamptz,             -- set when listed on the user's store
   shopify_product_id text,           -- Shopify product id after push
+  shopify_domain text,               -- store scope for push idempotency
   unique (user_id, product_id)
 );
 
 create index if not exists catalog_items_user_id_idx on catalog_items(user_id);
+
+-- Stripe webhook idempotency
+create table if not exists stripe_events (
+  event_id text primary key,
+  event_type text not null,
+  processed_at timestamptz default now()
+);
+
+create table if not exists usage_counters (
+  user_id uuid references users(id) on delete cascade,
+  usage_key text not null,
+  period_start date not null,
+  count integer not null default 0,
+  primary key (user_id, usage_key, period_start)
+);
+
+create table if not exists shopify_push_operations (
+  user_id uuid references users(id) on delete cascade,
+  operation_key text not null,
+  status text not null default 'pending',
+  shopify_product_id text,
+  error_message text,
+  reserved boolean not null default false,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, operation_key)
+);

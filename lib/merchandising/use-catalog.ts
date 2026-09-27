@@ -11,6 +11,8 @@ import type { CatalogItem, CatalogProduct } from './types'
 
 const STORAGE_KEY_PREFIX = 'repodrop-catalog'
 
+class CatalogApiError extends Error {}
+
 function storageKey(userId: string): string {
   return `${STORAGE_KEY_PREFIX}:${userId}`
 }
@@ -59,6 +61,14 @@ export interface PushToStoreResult {
   pushed: number
   total: number
   error?: string
+  dryRun?: boolean
+  results?: {
+    productId: string
+    name?: string
+    success: boolean
+    error?: string
+    preview?: { title: string; status: string; variants: { price: string }[] }
+  }[]
 }
 
 export interface UseCatalog {
@@ -73,7 +83,7 @@ export interface UseCatalog {
   addProducts: (productIds: string[], source?: CatalogItem['source']) => Promise<void>
   removeProduct: (productId: string) => Promise<void>
   runBuilder: (prompt: string) => Promise<{ summary: string; added: number }>
-  pushToStore: (productIds: string[]) => Promise<PushToStoreResult>
+  pushToStore: (productIds: string[], dryRun?: boolean) => Promise<PushToStoreResult>
 }
 
 export function useCatalog(userId: string): UseCatalog {
@@ -119,6 +129,10 @@ export function useCatalog(userId: string): UseCatalog {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ productIds: [item.productId], source: item.source }),
             })
+            if (res.status === 403) {
+              clearLocal(userId)
+              break
+            }
             if (!res.ok) throw new Error()
           }
 
@@ -159,6 +173,7 @@ export function useCatalog(userId: string): UseCatalog {
 
   const addProducts = useCallback(
     async (productIds: string[], source: CatalogItem['source'] = 'manual') => {
+      const previous = itemsRef.current
       const next = updateItems(current => mergeItems(current, toItems(productIds, source)))
 
       try {
@@ -167,15 +182,20 @@ export function useCatalog(userId: string): UseCatalog {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productIds, source }),
         })
-        if (!res.ok) throw new Error()
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          replaceItems(previous)
+          throw new CatalogApiError(data.error || 'Could not add products')
+        }
         setRemote(true)
         if (readLocal(userId) !== null) writeLocal(userId, next)
-      } catch {
+      } catch (error) {
+        if (error instanceof CatalogApiError) throw error
         setRemote(false)
         writeLocal(userId, itemsRef.current)
       }
     },
-    [updateItems, userId]
+    [replaceItems, updateItems, userId]
   )
 
   const removeProduct = useCallback(
@@ -222,15 +242,24 @@ export function useCatalog(userId: string): UseCatalog {
   )
 
   const pushToStore = useCallback(
-    async (productIds: string[]): Promise<PushToStoreResult> => {
+    async (productIds: string[], dryRun = false): Promise<PushToStoreResult> => {
       try {
         const res = await fetch('/api/shopify/push-catalog', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productIds }),
+          body: JSON.stringify({ productIds, dryRun }),
         })
         const data = await res.json()
         if (!res.ok) return { pushed: 0, total: productIds.length, error: data.error }
+
+        if (dryRun) {
+          return {
+            dryRun: true,
+            pushed: 0,
+            total: data.total,
+            results: data.results,
+          }
+        }
 
         const pushedNow = new Map(
           (data.results as { productId: string; success: boolean; shopifyId?: string }[])
@@ -250,7 +279,7 @@ export function useCatalog(userId: string): UseCatalog {
           )
         )
         if (!remote) writeLocal(userId, next)
-        return { pushed: data.pushed, total: data.total }
+        return { pushed: data.pushed, total: data.total, results: data.results }
       } catch {
         return {
           pushed: 0,

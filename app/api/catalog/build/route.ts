@@ -6,7 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { getSession } from '@/lib/auth'
-import { addCatalogItems } from '@/lib/db'
+import { addCatalogItems, getUserPlan } from '@/lib/db'
+import { PLAN_LIMITS, PlanLimitError, planLimitMessage } from '@/lib/billing'
 import { buildCatalog, parseBuilderPrompt } from '@/lib/merchandising/builder'
 import { NICHES } from '@/lib/merchandising/data'
 import type { BuilderCriteria } from '@/lib/merchandising/types'
@@ -65,14 +66,27 @@ export async function POST(req: NextRequest) {
   }
 
   const criteria = (await parseWithClaude(prompt)) ?? parseBuilderPrompt(prompt)
+  const plan = await getUserPlan(user.id)
+  const buildLimit = PLAN_LIMITS[plan].catalogBuildSize
+  if (buildLimit !== null && criteria.count > buildLimit) {
+    return NextResponse.json(
+      { error: planLimitMessage('products per catalog build', buildLimit), code: 'PLAN_LIMIT' },
+      { status: 403 }
+    )
+  }
+
   const result = buildCatalog(criteria)
   const productIds = result.products.map(product => product.id)
   let added = 0
 
   if (productIds.length > 0) {
     try {
-      added = await addCatalogItems(user.id, productIds, 'ai_builder')
+      const catalogLimit = PLAN_LIMITS[plan].catalogProducts
+      added = await addCatalogItems(user.id, productIds, 'ai_builder', catalogLimit)
     } catch (err) {
+      if (err instanceof PlanLimitError) {
+        return NextResponse.json({ error: err.message, code: 'PLAN_LIMIT' }, { status: 403 })
+      }
       const message = err instanceof Error ? err.message : 'Failed to save catalog'
       return NextResponse.json({ error: message }, { status: 500 })
     }

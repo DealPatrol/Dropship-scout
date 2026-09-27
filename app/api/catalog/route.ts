@@ -6,7 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
-import { addCatalogItems, getCatalogItems, removeCatalogItem } from '@/lib/db'
+import { addCatalogItems, getCatalogItems, getUserPlan, removeCatalogItem } from '@/lib/db'
+import { PLAN_LIMITS, PlanLimitError } from '@/lib/billing'
 import { getProduct } from '@/lib/merchandising/data'
 
 // GET /api/catalog
@@ -55,9 +56,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const added = await addCatalogItems(user.id, validIds, source || 'manual')
+    const plan = await getUserPlan(user.id)
+    const limit = PLAN_LIMITS[plan].catalogProducts
+    const added = await addCatalogItems(user.id, validIds, source || 'manual', limit)
     return NextResponse.json({ added })
   } catch (err) {
+    if (err instanceof PlanLimitError) {
+      return NextResponse.json({ error: err.message, code: 'PLAN_LIMIT' }, { status: 403 })
+    }
     const message = err instanceof Error ? err.message : 'Failed to add products'
     return NextResponse.json({ error: message }, { status: 500 })
   }

@@ -85,10 +85,35 @@ export function CatalogView({ userId }: { userId: string }) {
     return false
   }
 
+  async function confirmPreview(productIds: string[]): Promise<boolean> {
+    const preview = await catalog.pushToStore(productIds, true)
+    if (preview.error) {
+      toast({ title: 'Preview failed', description: preview.error, variant: 'destructive' })
+      return false
+    }
+    const failures = preview.results?.filter(result => !result.success) ?? []
+    if (failures.length > 0) {
+      toast({
+        title: 'Preview found errors',
+        description: failures.map(result => `${result.name || result.productId}: ${result.error}`).join('; '),
+        variant: 'destructive',
+      })
+      return false
+    }
+    const lines = (preview.results ?? []).map(result => {
+      const price = result.preview?.variants[0]?.price
+      return `• ${result.preview?.title || result.name}${price ? ` — $${price}` : ''}`
+    })
+    return window.confirm(
+      `Dry-run preview: no Shopify products have been created.\n\n${lines.join('\n')}\n\nCreate these listings?`
+    )
+  }
+
   async function handlePushOne(productId: string, name: string) {
     if (!requireStore()) return
     setPushingId(productId)
     try {
+      if (!(await confirmPreview([productId]))) return
       const result = await catalog.pushToStore([productId])
       if (result.error || result.pushed === 0) {
         toast({ title: 'Push failed', description: result.error || 'Could not list the product.', variant: 'destructive' })
@@ -104,7 +129,9 @@ export function CatalogView({ userId }: { userId: string }) {
     if (!requireStore() || unpushed.length === 0) return
     setPushingAll(true)
     try {
-      const result = await catalog.pushToStore(unpushed.map(product => product.id))
+      const productIds = unpushed.map(product => product.id)
+      if (!(await confirmPreview(productIds))) return
+      const result = await catalog.pushToStore(productIds)
       if (result.error || result.pushed === 0) {
         toast({
           title: 'Push failed',
@@ -112,9 +139,13 @@ export function CatalogView({ userId }: { userId: string }) {
           variant: 'destructive',
         })
       } else {
+        const failures = result.results?.filter(item => !item.success) ?? []
         toast({
           title: `Listed ${result.pushed} of ${result.total} products`,
-          description: `Now live on ${catalog.shopifyDomain}`,
+          description: failures.length > 0
+            ? failures.map(item => `${item.name || item.productId}: ${item.error}`).join('; ')
+            : `Now live on ${catalog.shopifyDomain}`,
+          variant: failures.length > 0 ? 'destructive' : 'default',
         })
       }
     } finally {
@@ -305,8 +336,16 @@ export function CatalogView({ userId }: { userId: string }) {
                       <button
                         key={partner.id}
                         onClick={async () => {
-                          await catalog.addProducts([partner.id], 'suggestion')
-                          toast({ title: 'Added to catalog', description: partner.name })
+                          try {
+                            await catalog.addProducts([partner.id], 'suggestion')
+                            toast({ title: 'Added to catalog', description: partner.name })
+                          } catch (error) {
+                            toast({
+                              title: 'Could not add product',
+                              description: error instanceof Error ? error.message : 'Catalog limit reached',
+                              variant: 'destructive',
+                            })
+                          }
                         }}
                         className="text-xs px-2.5 py-1 rounded-full border border-primary/30 text-primary hover:bg-primary/10 transition-colors"
                       >

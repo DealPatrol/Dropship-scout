@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { marginPercent, NICHES, PRODUCTS } from '@/lib/merchandising/data'
+import { CATALOG_SOURCE, marginPercent, NICHES, PRODUCTS } from '@/lib/merchandising/data'
 import { opportunityScore } from '@/lib/merchandising/scoring'
 import { matchesTimingFilter, TIMING_FILTERS } from '@/lib/merchandising/seasonal'
 import { useCatalog } from '@/lib/merchandising/use-catalog'
@@ -113,8 +113,16 @@ export function ExplorerView({ userId }: { userId: string }) {
   }
 
   async function handleAdd(product: CatalogProduct) {
-    await catalog.addProducts([product.id])
-    toast({ title: 'Added to catalog', description: product.name })
+    try {
+      await catalog.addProducts([product.id])
+      toast({ title: 'Added to catalog', description: product.name })
+    } catch (error) {
+      toast({
+        title: 'Could not add product',
+        description: error instanceof Error ? error.message : 'Catalog limit reached',
+        variant: 'destructive',
+      })
+    }
   }
 
   async function handleSell(product: CatalogProduct) {
@@ -128,9 +136,29 @@ export function ExplorerView({ userId }: { userId: string }) {
     }
     setPushingId(product.id)
     try {
+      const preview = await catalog.pushToStore([product.id], true)
+      const previewResult = preview.results?.[0]
+      if (!previewResult?.success) {
+        toast({
+          title: 'Preview failed',
+          description: previewResult?.error || preview.error || 'Could not preview the listing.',
+          variant: 'destructive',
+        })
+        return
+      }
+      const price = previewResult.preview?.variants[0]?.price
+      if (!window.confirm(
+        `Dry-run preview: no Shopify product has been created.\n\n${previewResult.preview?.title || product.name}${price ? ` — $${price}` : ''}\n\nCreate this listing?`
+      )) return
+
       const result = await catalog.pushToStore([product.id])
-      if (result.error || result.pushed === 0) {
-        toast({ title: 'Push failed', description: result.error || 'Could not list the product.', variant: 'destructive' })
+      const failed = result.results?.find(item => !item.success)
+      if (result.error || result.pushed === 0 || failed) {
+        toast({
+          title: 'Push failed',
+          description: failed?.error || result.error || 'Could not list the product.',
+          variant: 'destructive',
+        })
       } else {
         toast({ title: 'Live on your store 🎉', description: `${product.name} is now listed on ${catalog.shopifyDomain}` })
       }
@@ -165,6 +193,11 @@ export function ExplorerView({ userId }: { userId: string }) {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mb-4 rounded-md border border-yellow-400/30 bg-yellow-400/5 px-3 py-2">
+        <p className="text-xs font-medium text-yellow-300">{CATALOG_SOURCE.label}</p>
+        <p className="text-xs text-muted-foreground">{CATALOG_SOURCE.description}</p>
       </div>
 
       {/* Niche selector */}
@@ -266,8 +299,16 @@ export function ExplorerView({ userId }: { userId: string }) {
               size="sm"
               onClick={async () => {
                 const ids = filtered.slice(0, 10).map(product => product.id)
-                await catalog.addProducts(ids)
-                toast({ title: 'Added top 10 to catalog', description: `${ids.length} products added` })
+                try {
+                  await catalog.addProducts(ids)
+                  toast({ title: 'Added top 10 to catalog', description: `${ids.length} products added` })
+                } catch (error) {
+                  toast({
+                    title: 'Could not add products',
+                    description: error instanceof Error ? error.message : 'Catalog limit reached',
+                    variant: 'destructive',
+                  })
+                }
               }}
             >
               + Add Top 10 to Catalog

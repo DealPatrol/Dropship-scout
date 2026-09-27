@@ -2,12 +2,14 @@
 // Fulfillment order management — formats products for Shopify and tracks order state
 
 import { Product } from './types'
+import { shopifyApiVersion, shopifyErrorMessage } from './shopify'
 
 export interface ShopifyProductPayload {
   product: {
     title: string
     body_html: string
     vendor: string
+    handle: string
     product_type: string
     tags: string
     status: string
@@ -33,6 +35,7 @@ export function buildShopifyPayload(product: Product): ShopifyProductPayload {
   return {
     product: {
       title: product.name,
+      handle: shopifyProductHandle(product),
       body_html: `<p>${product.aiInsight}</p><p><strong>Rating:</strong> ${product.rating}/5 &nbsp;|&nbsp; <strong>Monthly Sales:</strong> ${product.monthlySales}</p>`,
       vendor: 'DropShip Scout',
       product_type: product.category,
@@ -52,6 +55,16 @@ export function buildShopifyPayload(product: Product): ShopifyProductPayload {
   }
 }
 
+export function shopifyProductHandle(product: Product): string {
+  const source = product.id || product.name
+  const slug = source
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 180)
+  return `dropship-scout-${slug || 'product'}`
+}
+
 export async function pushProductToShopify(
   domain: string,
   token: string,
@@ -59,20 +72,45 @@ export async function pushProductToShopify(
 ): Promise<{ success: boolean; shopifyId?: string; error?: string }> {
   try {
     const payload = buildShopifyPayload(product)
-    const res = await fetch(`https://${domain}/admin/api/2024-01/products.json`, {
+    const handle = payload.product.handle
+    const existingResponse = await fetch(
+      `https://${domain}/admin/api/${shopifyApiVersion()}/products.json?handle=${encodeURIComponent(handle)}&fields=id,handle&limit=1`,
+      {
+        headers: {
+          'X-Shopify-Access-Token': token,
+          Accept: 'application/json',
+        },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(15_000),
+      }
+    )
+    const existingBody = await existingResponse.json().catch(() => null)
+    if (!existingResponse.ok) {
+      return {
+        success: false,
+        error: `Could not check for an existing Shopify listing: ${shopifyErrorMessage(existingBody, existingResponse.status)}`,
+      }
+    }
+    const existingId = existingBody?.products?.[0]?.id
+    if (existingId) {
+      return { success: true, shopifyId: String(existingId) }
+    }
+
+    const res = await fetch(`https://${domain}/admin/api/${shopifyApiVersion()}/products.json`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Shopify-Access-Token': token,
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15_000),
     })
 
-    const json = await res.json()
+    const json = await res.json().catch(() => null)
     if (res.ok) {
       return { success: true, shopifyId: String(json.product?.id || '') }
     }
-    return { success: false, error: JSON.stringify(json?.errors || 'Unknown Shopify error') }
+    return { success: false, error: shopifyErrorMessage(json, res.status) }
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }

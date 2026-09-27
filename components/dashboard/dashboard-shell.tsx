@@ -36,10 +36,11 @@ const navItems = [
 
 interface DashboardShellProps {
   user: SessionUser
+  plan: 'free' | 'pro'
   children: React.ReactNode
 }
 
-export function DashboardShell({ user, children }: DashboardShellProps) {
+export function DashboardShell({ user, plan, children }: DashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -102,7 +103,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
             <p className="text-xs font-medium text-foreground truncate">
               {user.email}
             </p>
-            <p className="text-xs text-muted-foreground">Free plan</p>
+            <p className="text-xs text-muted-foreground capitalize">{plan} plan</p>
           </div>
         </div>
         <button

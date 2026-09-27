@@ -4,9 +4,21 @@
 // user's stored credentials (Settings).
 
 import { NextRequest, NextResponse } from 'next/server'
-import { pushProductToShopify } from '@/lib/fulfillment'
-import { getShopifyCredentials, logPushResult } from '@/lib/db'
+import {
+  buildShopifyPayload,
+  pushProductToShopify,
+  shopifyProductHandle,
+} from '@/lib/fulfillment'
+import {
+  claimShopifyPush,
+  completeShopifyPush,
+  getShopifyCredentials,
+  getUserPlan,
+  logPushResult,
+} from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { PLAN_LIMITS, planLimitMessage } from '@/lib/billing'
+import { validateShopifyConnection } from '@/lib/shopify'
 import { Product } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
@@ -14,7 +26,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { products } = body
+  const { products, dryRun = false } = body
 
   if (!products?.length) {
     return NextResponse.json({ error: 'products are required' }, { status: 400 })
@@ -28,10 +40,70 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const connection = await validateShopifyConnection(credentials.domain, credentials.token)
+  if (!connection.valid) {
+    return NextResponse.json(
+      {
+        error: connection.error,
+        pushed: 0,
+        total: products.length,
+        results: products.map((product: Product) => ({
+          name: product.name,
+          success: false,
+          error: connection.error,
+        })),
+      },
+      { status: 400 }
+    )
+  }
+
   const results = []
+  const plan = await getUserPlan(user.id)
+  const monthlyLimit = PLAN_LIMITS[plan].shopifyPushesPerMonth
 
   for (const p of products as Product[]) {
+    if (dryRun) {
+      results.push({
+        name: p.name,
+        success: true,
+        preview: buildShopifyPayload(p).product,
+      })
+      continue
+    }
+    const operationKey = `${credentials.domain}:${shopifyProductHandle(p)}`
+    const claim = await claimShopifyPush(user.id, operationKey, monthlyLimit)
+    switch (claim.state) {
+      case 'existing':
+        results.push({ name: p.name, success: true, shopifyId: claim.shopifyProductId })
+        continue
+      case 'in_progress':
+        results.push({ name: p.name, success: false, error: 'This product push is already in progress.' })
+        continue
+      case 'limit':
+        results.push({
+          name: p.name,
+          success: false,
+          error: monthlyLimit === null
+            ? 'Shopify push reservation failed'
+            : planLimitMessage('Shopify pushes per month', monthlyLimit),
+        })
+        continue
+      case 'claimed':
+        break
+      default: {
+        const exhaustive: never = claim
+        throw new Error(`Unhandled Shopify push claim: ${exhaustive}`)
+      }
+    }
+
     const result = await pushProductToShopify(credentials.domain, credentials.token, p)
+    await completeShopifyPush({
+      userId: user.id,
+      operationKey,
+      success: result.success,
+      shopifyProductId: result.shopifyId,
+      errorMessage: result.error,
+    })
 
     results.push({ name: p.name, ...result })
 
@@ -45,6 +117,6 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  const pushed = results.filter(r => r.success).length
-  return NextResponse.json({ pushed, total: products.length, results })
+  const pushed = dryRun ? 0 : results.filter(r => r.success).length
+  return NextResponse.json({ dryRun: Boolean(dryRun), pushed, total: products.length, results })
 }

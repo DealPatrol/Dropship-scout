@@ -4,27 +4,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateProducts } from '@/lib/ai'
 import { upsertSearchSession } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
-    const { platforms, category, sortBy, customNiche, userId } = await req.json()
+    const user = await getSession()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { platforms, category, sortBy, customNiche } = await req.json()
 
     if (!platforms?.length) {
       return NextResponse.json({ error: 'Select at least one platform' }, { status: 400 })
     }
 
-    const products = await generateProducts({ platforms, category, sortBy, customNiche, userId })
+    const products = await generateProducts({ platforms, category, sortBy, customNiche })
 
-    // If user is logged in, save the search session to DB
-    if (userId) {
-      await upsertSearchSession(userId, {
-        platforms,
-        category,
-        sortBy,
-        customNiche,
-        results: products,
-      })
-    }
+    await upsertSearchSession(user.id, {
+      platforms,
+      category,
+      sortBy,
+      customNiche,
+      results: products,
+    })
 
     return NextResponse.json({ products })
   } catch (err: unknown) {

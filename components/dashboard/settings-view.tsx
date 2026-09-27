@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, CheckCircle, ShoppingBag, User, Shield } from 'lucide-react'
+import { Loader2, CheckCircle, CreditCard, ShoppingBag, User, Shield } from 'lucide-react'
 
 interface SettingsViewProps {
   userId: string
@@ -20,6 +20,9 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
   const [savedSuccess, setSavedSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [plan, setPlan] = useState<'free' | 'pro'>('free')
+  const [hasStripeCustomer, setHasStripeCustomer] = useState(false)
+  const [billingLoading, setBillingLoading] = useState(false)
 
   const loadCredentials = useCallback(async () => {
     try {
@@ -33,6 +36,16 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
   }, [userId])
 
   useEffect(() => { loadCredentials() }, [loadCredentials])
+
+  useEffect(() => {
+    fetch('/api/billing/status')
+      .then(response => response.json())
+      .then(data => {
+        setPlan(data.plan === 'pro' ? 'pro' : 'free')
+        setHasStripeCustomer(Boolean(data.hasCustomer))
+      })
+      .catch(() => undefined)
+  }, [])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -48,6 +61,23 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
       setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleBilling() {
+    setBillingLoading(true)
+    setError(null)
+    try {
+      const endpoint = plan === 'pro' || hasStripeCustomer
+        ? '/api/billing/portal'
+        : '/api/billing/checkout'
+      const response = await fetch(endpoint, { method: 'POST' })
+      const data = await response.json()
+      if (!response.ok || !data.url) throw new Error(data.error || 'Could not open billing')
+      window.location.assign(data.url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not open billing')
+      setBillingLoading(false)
     }
   }
 
@@ -74,6 +104,27 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
               <Label>Email</Label>
               <Input value={userEmail} disabled className="opacity-70 cursor-not-allowed" />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-primary" />
+              Billing
+            </CardTitle>
+            <CardDescription>
+              {plan === 'pro'
+                ? 'Pro includes unlimited saved products, catalogs, builds, Shopify pushes, and live supplier adapters.'
+                : 'Free includes 10 saved products, 25 catalog products, 10 products per build, and 3 Shopify pushes per month.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between gap-4">
+            <span className="text-sm font-medium capitalize">{plan} plan</span>
+            <Button onClick={handleBilling} disabled={billingLoading} variant={plan === 'pro' ? 'outline' : 'default'}>
+              {billingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {plan === 'pro' || hasStripeCustomer ? 'Manage billing' : 'Upgrade to Pro'}
+            </Button>
           </CardContent>
         </Card>
 
@@ -123,7 +174,7 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
                     placeholder={domain ? 'Leave blank to keep existing token' : 'shpat_xxxxxxxxxxxx'}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Create a Custom App in your Shopify Admin and copy the Admin API access token.
+                    Create a Custom App with product write permission. The token is validated with Shopify before it is saved.
                   </p>
                 </div>
 

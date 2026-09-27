@@ -7,14 +7,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import {
   addCatalogItems,
+  claimShopifyPush,
+  completeShopifyPush,
   getCatalogItemsForProducts,
   getShopifyCredentials,
+  getUserPlan,
   logPushResult,
   markCatalogItemPushed,
 } from '@/lib/db'
-import { pushProductToShopify } from '@/lib/fulfillment'
+import { PLAN_LIMITS, PlanLimitError, planLimitMessage } from '@/lib/billing'
+import {
+  buildShopifyPayload,
+  pushProductToShopify,
+  shopifyProductHandle,
+} from '@/lib/fulfillment'
 import { getProduct } from '@/lib/merchandising/data'
 import { toPushableProduct } from '@/lib/merchandising/fulfillment'
+import { validateShopifyConnection } from '@/lib/shopify'
+import type { ShopifyProductPayload } from '@/lib/fulfillment'
 
 interface PushResult {
   productId: string
@@ -23,6 +33,7 @@ interface PushResult {
   shopifyId?: string
   error?: string
   alreadyPushed?: boolean
+  preview?: ShopifyProductPayload['product']
 }
 
 // POST /api/shopify/push-catalog
@@ -31,7 +42,7 @@ export async function POST(req: NextRequest) {
   const user = await getSession()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { productIds } = await req.json()
+  const { productIds, dryRun = false } = await req.json()
   if (!Array.isArray(productIds) || productIds.length === 0) {
     return NextResponse.json({ error: 'productIds required' }, { status: 400 })
   }
@@ -51,7 +62,28 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  let existingItems: Map<string, { pushed_at?: string; shopify_product_id?: string }>
+  const connection = await validateShopifyConnection(credentials.domain, credentials.token)
+  if (!connection.valid) {
+    return NextResponse.json(
+      {
+        error: connection.error,
+        pushed: 0,
+        total: requestedProductIds.length,
+        results: requestedProductIds.map(productId => ({
+          productId,
+          success: false,
+          error: connection.error,
+        })),
+      },
+      { status: 400 }
+    )
+  }
+
+  let existingItems: Map<string, {
+    pushed_at?: string
+    shopify_product_id?: string
+    shopify_domain?: string
+  }>
   try {
     const rows = await getCatalogItemsForProducts(user.id, requestedProductIds)
     existingItems = new Map(rows.map(row => [row.product_id, row]))
@@ -61,6 +93,8 @@ export async function POST(req: NextRequest) {
   }
 
   const results: PushResult[] = []
+  const plan = await getUserPlan(user.id)
+  const monthlyLimit = PLAN_LIMITS[plan].shopifyPushesPerMonth
 
   for (const productId of requestedProductIds) {
     const product = getProduct(productId)
@@ -70,7 +104,10 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = existingItems.get(productId)
-    if (existing?.pushed_at || existing?.shopify_product_id) {
+    if (
+      existing?.shopify_domain === credentials.domain &&
+      (existing.pushed_at || existing.shopify_product_id)
+    ) {
       results.push({
         productId,
         name: product.name,
@@ -82,7 +119,102 @@ export async function POST(req: NextRequest) {
     }
 
     const pushable = toPushableProduct(product)
+    if (dryRun) {
+      results.push({
+        productId,
+        name: product.name,
+        success: true,
+        preview: buildShopifyPayload(pushable).product,
+      })
+      continue
+    }
+
+    const operationKey = `${credentials.domain}:${shopifyProductHandle(pushable)}`
+    const claim = await claimShopifyPush(user.id, operationKey, monthlyLimit)
+    if (claim.state === 'existing') {
+      try {
+        await addCatalogItems(
+          user.id,
+          [productId],
+          'manual',
+          PLAN_LIMITS[plan].catalogProducts
+        )
+        await markCatalogItemPushed(
+          user.id,
+          productId,
+          credentials.domain,
+          claim.shopifyProductId
+        )
+        results.push({
+          productId,
+          name: product.name,
+          success: true,
+          shopifyId: claim.shopifyProductId,
+          alreadyPushed: true,
+        })
+      } catch (err) {
+        results.push({
+          productId,
+          name: product.name,
+          success: false,
+          shopifyId: claim.shopifyProductId,
+          error: err instanceof Error ? err.message : 'Could not reconcile catalog state',
+        })
+      }
+      continue
+    }
+    if (claim.state === 'in_progress') {
+      results.push({
+        productId,
+        name: product.name,
+        success: false,
+        error: 'This product push is already in progress.',
+      })
+      continue
+    }
+    if (claim.state === 'limit') {
+      results.push({
+        productId,
+        name: product.name,
+        success: false,
+        error: monthlyLimit === null
+          ? 'Shopify push reservation failed'
+          : planLimitMessage('Shopify pushes per month', monthlyLimit),
+      })
+      continue
+    }
+
+    try {
+      await addCatalogItems(
+        user.id,
+        [productId],
+        'manual',
+        PLAN_LIMITS[plan].catalogProducts
+      )
+    } catch (err) {
+      await completeShopifyPush({
+        userId: user.id,
+        operationKey,
+        success: false,
+        errorMessage: err instanceof Error ? err.message : 'Could not prepare catalog item',
+      })
+      results.push({
+        productId,
+        name: product.name,
+        success: false,
+        error: err instanceof PlanLimitError ? err.message : 'Could not prepare catalog item',
+      })
+      continue
+    }
+
     const result = await pushProductToShopify(credentials.domain, credentials.token, pushable)
+    await completeShopifyPush({
+      userId: user.id,
+      operationKey,
+      success: result.success,
+      shopifyProductId: result.shopifyId,
+      errorMessage: result.error,
+    })
 
     await logPushResult({
       userId: user.id,
@@ -94,10 +226,13 @@ export async function POST(req: NextRequest) {
     })
 
     if (result.success) {
-      // Ensure the product is in the catalog, then mark it as pushed.
       try {
-        await addCatalogItems(user.id, [productId], 'manual')
-        await markCatalogItemPushed(user.id, productId, result.shopifyId)
+        await markCatalogItemPushed(
+          user.id,
+          productId,
+          credentials.domain,
+          result.shopifyId
+        )
       } catch (err) {
         results.push({
           productId,
@@ -113,6 +248,6 @@ export async function POST(req: NextRequest) {
     results.push({ productId, name: product.name, ...result })
   }
 
-  const pushed = results.filter(r => r.success).length
-  return NextResponse.json({ pushed, total: requestedProductIds.length, results })
+  const pushed = dryRun ? 0 : results.filter(r => r.success).length
+  return NextResponse.json({ dryRun: Boolean(dryRun), pushed, total: requestedProductIds.length, results })
 }
