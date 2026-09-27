@@ -123,7 +123,9 @@ export async function POST(req: NextRequest) {
         productId,
         name: product.name,
         success: false,
-        error: planLimitMessage('Shopify pushes per month', monthlyLimit),
+        error: monthlyLimit === null
+          ? 'Shopify push reservation failed'
+          : planLimitMessage('Shopify pushes per month', monthlyLimit),
       })
       continue
     }
