@@ -2,6 +2,7 @@
 // Fulfillment order management — formats products for Shopify and tracks order state
 
 import { Product } from './types'
+import { shopifyApiVersion, shopifyErrorMessage } from './shopify'
 
 export interface ShopifyProductPayload {
   product: {
@@ -59,7 +60,7 @@ export async function pushProductToShopify(
 ): Promise<{ success: boolean; shopifyId?: string; error?: string }> {
   try {
     const payload = buildShopifyPayload(product)
-    const res = await fetch(`https://${domain}/admin/api/2024-01/products.json`, {
+    const res = await fetch(`https://${domain}/admin/api/${shopifyApiVersion()}/products.json`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,11 +69,11 @@ export async function pushProductToShopify(
       body: JSON.stringify(payload),
     })
 
-    const json = await res.json()
+    const json = await res.json().catch(() => null)
     if (res.ok) {
       return { success: true, shopifyId: String(json.product?.id || '') }
     }
-    return { success: false, error: JSON.stringify(json?.errors || 'Unknown Shopify error') }
+    return { success: false, error: shopifyErrorMessage(json, res.status) }
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }

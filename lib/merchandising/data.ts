@@ -13,6 +13,12 @@ import type {
   NicheId,
 } from './types'
 
+export const CATALOG_SOURCE = {
+  id: 'demo',
+  label: 'Built-in demo catalog',
+  description: 'Curated sample data; prices, demand, ratings, and supplier availability are not live.',
+} as const
+
 export const NICHES: Niche[] = [
   { id: 'pets', label: 'Pets', emoji: '🐶', description: 'Accessories and care products for dog and cat owners' },
   { id: 'home', label: 'Home & Kitchen', emoji: '🏠', description: 'Everyday upgrades for living spaces and kitchens' },

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
+import { getUserProfile } from '@/lib/db'
 import { DashboardShell } from '@/components/dashboard/dashboard-shell'
 
 export default async function DashboardLayout({
@@ -13,5 +14,8 @@ export default async function DashboardLayout({
     redirect('/auth/login')
   }
 
-  return <DashboardShell user={user}>{children}</DashboardShell>
+  const profile = await getUserProfile(user.id)
+  const plan = profile?.plan === 'pro' ? 'pro' : 'free'
+
+  return <DashboardShell user={user} plan={plan}>{children}</DashboardShell>
 }

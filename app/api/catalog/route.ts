@@ -6,7 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
-import { addCatalogItems, getCatalogItems, removeCatalogItem } from '@/lib/db'
+import { addCatalogItems, getCatalogItems, getUserPlan, removeCatalogItem } from '@/lib/db'
+import { limitExceeded, PLAN_LIMITS, planLimitMessage } from '@/lib/billing'
 import { getProduct } from '@/lib/merchandising/data'
 
 // GET /api/catalog
@@ -55,6 +56,19 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const [plan, existingItems] = await Promise.all([
+      getUserPlan(user.id),
+      getCatalogItems(user.id),
+    ])
+    const existingIds = new Set(existingItems.map(item => String(item.product_id)))
+    const incoming = validIds.filter(productId => !existingIds.has(productId)).length
+    const limit = PLAN_LIMITS[plan].catalogProducts
+    if (limitExceeded(existingItems.length, incoming, limit)) {
+      return NextResponse.json(
+        { error: planLimitMessage('catalog products', limit as number), code: 'PLAN_LIMIT' },
+        { status: 403 }
+      )
+    }
     const added = await addCatalogItems(user.id, validIds, source || 'manual')
     return NextResponse.json({ added })
   } catch (err) {

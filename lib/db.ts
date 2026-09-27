@@ -2,13 +2,18 @@
 // All database queries in one place — plain SQL against Postgres.
 
 import { ensureSchema, sql } from './database'
+import { decryptSecret, encryptSecret } from './secrets'
+import type { Plan } from './billing'
 import type { Product } from './types'
 
 // ─── Users / Shopify credentials ─────────────────────────────────────────────
 
 export async function getUserProfile(userId: string) {
   await ensureSchema()
-  const rows = await sql`select id, email, shopify_domain, created_at from users where id = ${userId}`
+  const rows = await sql`
+    select id, email, shopify_domain, plan, stripe_subscription_status, created_at
+    from users where id = ${userId}
+  `
   return rows[0] ?? null
 }
 
@@ -21,7 +26,11 @@ export async function getShopifyDomain(userId: string): Promise<string | null> {
 export async function saveShopifyCredentials(userId: string, domain: string, token: string | null) {
   await ensureSchema()
   if (token) {
-    await sql`update users set shopify_domain = ${domain}, shopify_token_enc = ${token} where id = ${userId}`
+    const encryptedToken = encryptSecret(token)
+    await sql`
+      update users set shopify_domain = ${domain}, shopify_token_enc = ${encryptedToken}
+      where id = ${userId}
+    `
   } else {
     await sql`update users set shopify_domain = ${domain} where id = ${userId}`
   }
@@ -39,7 +48,75 @@ export async function getShopifyCredentials(
   const rows = await sql`select shopify_domain, shopify_token_enc from users where id = ${userId}`
   const row = rows[0]
   if (!row?.shopify_domain || !row?.shopify_token_enc) return null
-  return { domain: row.shopify_domain, token: row.shopify_token_enc }
+  return { domain: row.shopify_domain, token: decryptSecret(row.shopify_token_enc) }
+}
+
+// ─── Billing ────────────────────────────────────────────────────────────────
+
+export async function getUserPlan(userId: string): Promise<Plan> {
+  await ensureSchema()
+  const rows = await sql`select plan from users where id = ${userId}`
+  return rows[0]?.plan === 'pro' ? 'pro' : 'free'
+}
+
+export async function getBillingProfile(userId: string) {
+  await ensureSchema()
+  const rows = await sql`
+    select plan, stripe_customer_id, stripe_subscription_id, stripe_subscription_status
+    from users where id = ${userId}
+  `
+  return rows[0] ?? null
+}
+
+export async function setStripeCustomer(userId: string, customerId: string) {
+  await ensureSchema()
+  await sql`update users set stripe_customer_id = ${customerId} where id = ${userId}`
+}
+
+export async function updateStripeSubscription(input: {
+  userId?: string
+  customerId: string
+  subscriptionId: string
+  status: string
+  plan: Plan
+}) {
+  await ensureSchema()
+  if (input.userId) {
+    await sql`
+      update users
+      set stripe_customer_id = ${input.customerId},
+          stripe_subscription_id = ${input.subscriptionId},
+          stripe_subscription_status = ${input.status},
+          plan = ${input.plan}
+      where id = ${input.userId}
+    `
+    return
+  }
+
+  await sql`
+    update users
+    set stripe_subscription_id = ${input.subscriptionId},
+        stripe_subscription_status = ${input.status},
+        plan = ${input.plan}
+    where stripe_customer_id = ${input.customerId}
+  `
+}
+
+export async function recordStripeEvent(eventId: string, eventType: string): Promise<boolean> {
+  await ensureSchema()
+  const rows = await sql`
+    insert into stripe_events (event_id, event_type)
+    values (${eventId}, ${eventType})
+    on conflict (event_id) do nothing
+    returning event_id
+  `
+  return rows.length > 0
+}
+
+export async function hasStripeEvent(eventId: string): Promise<boolean> {
+  await ensureSchema()
+  const rows = await sql`select 1 from stripe_events where event_id = ${eventId}`
+  return rows.length > 0
 }
 
 // ─── Saved products ──────────────────────────────────────────────────────────
@@ -72,6 +149,12 @@ export async function getSavedProducts(userId: string): Promise<Product[]> {
     select * from saved_products where user_id = ${userId} order by saved_at desc
   `
   return rows.map(rowToProduct)
+}
+
+export async function countSavedProducts(userId: string): Promise<number> {
+  await ensureSchema()
+  const rows = await sql`select count(*)::int as count from saved_products where user_id = ${userId}`
+  return Number(rows[0]?.count ?? 0)
 }
 
 export async function getSavedProductRows(userId: string) {
@@ -173,6 +256,18 @@ export async function getPushHistory(userId: string, limit: number) {
   `
 }
 
+export async function countSuccessfulPushesThisMonth(userId: string): Promise<number> {
+  await ensureSchema()
+  const rows = await sql`
+    select count(*)::int as count
+    from push_history
+    where user_id = ${userId}
+      and status = 'success'
+      and pushed_at >= date_trunc('month', now())
+  `
+  return Number(rows[0]?.count ?? 0)
+}
+
 // ─── Search sessions ─────────────────────────────────────────────────────────
 
 export async function upsertSearchSession(userId: string, session: {
@@ -208,6 +303,12 @@ export async function getSearchSession(userId: string) {
 export async function getCatalogItems(userId: string) {
   await ensureSchema()
   return sql`select * from catalog_items where user_id = ${userId} order by added_at desc`
+}
+
+export async function countCatalogItems(userId: string): Promise<number> {
+  await ensureSchema()
+  const rows = await sql`select count(*)::int as count from catalog_items where user_id = ${userId}`
+  return Number(rows[0]?.count ?? 0)
 }
 
 /** Adds products to the catalog; returns how many were newly inserted. */

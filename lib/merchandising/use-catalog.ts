@@ -59,6 +59,14 @@ export interface PushToStoreResult {
   pushed: number
   total: number
   error?: string
+  dryRun?: boolean
+  results?: {
+    productId: string
+    name?: string
+    success: boolean
+    error?: string
+    preview?: { title: string; status: string; variants: { price: string }[] }
+  }[]
 }
 
 export interface UseCatalog {
@@ -73,7 +81,7 @@ export interface UseCatalog {
   addProducts: (productIds: string[], source?: CatalogItem['source']) => Promise<void>
   removeProduct: (productId: string) => Promise<void>
   runBuilder: (prompt: string) => Promise<{ summary: string; added: number }>
-  pushToStore: (productIds: string[]) => Promise<PushToStoreResult>
+  pushToStore: (productIds: string[], dryRun?: boolean) => Promise<PushToStoreResult>
 }
 
 export function useCatalog(userId: string): UseCatalog {
@@ -222,15 +230,24 @@ export function useCatalog(userId: string): UseCatalog {
   )
 
   const pushToStore = useCallback(
-    async (productIds: string[]): Promise<PushToStoreResult> => {
+    async (productIds: string[], dryRun = false): Promise<PushToStoreResult> => {
       try {
         const res = await fetch('/api/shopify/push-catalog', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productIds }),
+          body: JSON.stringify({ productIds, dryRun }),
         })
         const data = await res.json()
         if (!res.ok) return { pushed: 0, total: productIds.length, error: data.error }
+
+        if (dryRun) {
+          return {
+            dryRun: true,
+            pushed: 0,
+            total: data.total,
+            results: data.results,
+          }
+        }
 
         const pushedNow = new Map(
           (data.results as { productId: string; success: boolean; shopifyId?: string }[])
@@ -250,7 +267,7 @@ export function useCatalog(userId: string): UseCatalog {
           )
         )
         if (!remote) writeLocal(userId, next)
-        return { pushed: data.pushed, total: data.total }
+        return { pushed: data.pushed, total: data.total, results: data.results }
       } catch {
         return {
           pushed: 0,

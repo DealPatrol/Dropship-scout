@@ -4,8 +4,16 @@
 // DELETE: remove a saved product
 
 import { NextRequest, NextResponse } from 'next/server'
-import { deleteSavedProduct, getSavedProducts, insertSavedProduct } from '@/lib/db'
+import {
+  countSavedProducts,
+  deleteSavedProduct,
+  getSavedProducts,
+  getUserPlan,
+  insertSavedProduct,
+} from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { limitExceeded, PLAN_LIMITS, planLimitMessage } from '@/lib/billing'
+import { validateSavedProduct } from '@/lib/saved-products'
 
 // GET /api/products/saved
 export async function GET() {
@@ -27,12 +35,27 @@ export async function POST(req: NextRequest) {
   const user = await getSession()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { product } = await req.json()
-  if (!product) {
-    return NextResponse.json({ error: 'product required' }, { status: 400 })
+  const { product: rawProduct } = await req.json()
+  let product
+  try {
+    product = validateSavedProduct(rawProduct)
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Invalid product' },
+      { status: 400 }
+    )
   }
 
   try {
+    const plan = await getUserPlan(user.id)
+    const current = await countSavedProducts(user.id)
+    const limit = PLAN_LIMITS[plan].savedProducts
+    if (limitExceeded(current, 1, limit)) {
+      return NextResponse.json(
+        { error: planLimitMessage('saved products', limit as number), code: 'PLAN_LIMIT' },
+        { status: 403 }
+      )
+    }
     const id = await insertSavedProduct(user.id, product)
     return NextResponse.json({ id })
   } catch (err) {

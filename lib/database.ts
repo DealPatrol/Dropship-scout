@@ -59,8 +59,16 @@ const SCHEMA_STATEMENTS = [
     password_hash text not null,
     shopify_domain text,
     shopify_token_enc text,
+    plan text not null default 'free',
+    stripe_customer_id text unique,
+    stripe_subscription_id text unique,
+    stripe_subscription_status text,
     created_at timestamptz default now()
   )`,
+  `alter table users add column if not exists plan text not null default 'free'`,
+  `alter table users add column if not exists stripe_customer_id text unique`,
+  `alter table users add column if not exists stripe_subscription_id text unique`,
+  `alter table users add column if not exists stripe_subscription_status text`,
   `create table if not exists saved_products (
     id uuid primary key default gen_random_uuid(),
     user_id uuid references users(id) on delete cascade,
@@ -114,6 +122,11 @@ const SCHEMA_STATEMENTS = [
     unique (user_id, product_id)
   )`,
   `create index if not exists catalog_items_user_id_idx on catalog_items(user_id)`,
+  `create table if not exists stripe_events (
+    event_id text primary key,
+    event_type text not null,
+    processed_at timestamptz default now()
+  )`,
 ]
 
 async function initSchema(): Promise<void> {

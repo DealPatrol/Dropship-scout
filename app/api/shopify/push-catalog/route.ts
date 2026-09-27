@@ -7,14 +7,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import {
   addCatalogItems,
+  countSuccessfulPushesThisMonth,
   getCatalogItemsForProducts,
   getShopifyCredentials,
+  getUserPlan,
   logPushResult,
   markCatalogItemPushed,
 } from '@/lib/db'
-import { pushProductToShopify } from '@/lib/fulfillment'
+import { PLAN_LIMITS, planLimitMessage } from '@/lib/billing'
+import { buildShopifyPayload, pushProductToShopify } from '@/lib/fulfillment'
 import { getProduct } from '@/lib/merchandising/data'
 import { toPushableProduct } from '@/lib/merchandising/fulfillment'
+import { validateShopifyConnection } from '@/lib/shopify'
+import type { ShopifyProductPayload } from '@/lib/fulfillment'
 
 interface PushResult {
   productId: string
@@ -23,6 +28,7 @@ interface PushResult {
   shopifyId?: string
   error?: string
   alreadyPushed?: boolean
+  preview?: ShopifyProductPayload['product']
 }
 
 // POST /api/shopify/push-catalog
@@ -31,7 +37,7 @@ export async function POST(req: NextRequest) {
   const user = await getSession()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { productIds } = await req.json()
+  const { productIds, dryRun = false } = await req.json()
   if (!Array.isArray(productIds) || productIds.length === 0) {
     return NextResponse.json({ error: 'productIds required' }, { status: 400 })
   }
@@ -51,6 +57,23 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const connection = await validateShopifyConnection(credentials.domain, credentials.token)
+  if (!connection.valid) {
+    return NextResponse.json(
+      {
+        error: connection.error,
+        pushed: 0,
+        total: requestedProductIds.length,
+        results: requestedProductIds.map(productId => ({
+          productId,
+          success: false,
+          error: connection.error,
+        })),
+      },
+      { status: 400 }
+    )
+  }
+
   let existingItems: Map<string, { pushed_at?: string; shopify_product_id?: string }>
   try {
     const rows = await getCatalogItemsForProducts(user.id, requestedProductIds)
@@ -61,6 +84,9 @@ export async function POST(req: NextRequest) {
   }
 
   const results: PushResult[] = []
+  const plan = await getUserPlan(user.id)
+  const monthlyLimit = PLAN_LIMITS[plan].shopifyPushesPerMonth
+  let monthlyPushes = dryRun ? 0 : await countSuccessfulPushesThisMonth(user.id)
 
   for (const productId of requestedProductIds) {
     const product = getProduct(productId)
@@ -82,6 +108,26 @@ export async function POST(req: NextRequest) {
     }
 
     const pushable = toPushableProduct(product)
+    if (dryRun) {
+      results.push({
+        productId,
+        name: product.name,
+        success: true,
+        preview: buildShopifyPayload(pushable).product,
+      })
+      continue
+    }
+
+    if (monthlyLimit !== null && monthlyPushes >= monthlyLimit) {
+      results.push({
+        productId,
+        name: product.name,
+        success: false,
+        error: planLimitMessage('Shopify pushes per month', monthlyLimit),
+      })
+      continue
+    }
+
     const result = await pushProductToShopify(credentials.domain, credentials.token, pushable)
 
     await logPushResult({
@@ -94,6 +140,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (result.success) {
+      monthlyPushes++
       // Ensure the product is in the catalog, then mark it as pushed.
       try {
         await addCatalogItems(user.id, [productId], 'manual')
@@ -113,6 +160,6 @@ export async function POST(req: NextRequest) {
     results.push({ productId, name: product.name, ...result })
   }
 
-  const pushed = results.filter(r => r.success).length
-  return NextResponse.json({ pushed, total: requestedProductIds.length, results })
+  const pushed = dryRun ? 0 : results.filter(r => r.success && !r.alreadyPushed).length
+  return NextResponse.json({ dryRun: Boolean(dryRun), pushed, total: requestedProductIds.length, results })
 }

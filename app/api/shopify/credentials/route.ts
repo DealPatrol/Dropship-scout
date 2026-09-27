@@ -3,8 +3,14 @@
 // Token is stored server-side in Postgres and never sent back to the browser.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { clearShopifyCredentials, getShopifyDomain, saveShopifyCredentials } from '@/lib/db'
+import {
+  clearShopifyCredentials,
+  getShopifyCredentials,
+  getShopifyDomain,
+  saveShopifyCredentials,
+} from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { normalizeShopifyDomain, validateShopifyConnection } from '@/lib/shopify'
 
 // GET /api/shopify/credentials
 // Returns ONLY the domain (not the token) — so the UI can pre-fill the domain field
@@ -32,8 +38,29 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await saveShopifyCredentials(user.id, domain, token || null)
-    return NextResponse.json({ success: true })
+    const normalizedDomain = normalizeShopifyDomain(String(domain))
+    const existing = await getShopifyCredentials(user.id)
+    const tokenToValidate = token || (
+      existing?.domain === normalizedDomain ? existing.token : null
+    )
+    if (!tokenToValidate) {
+      return NextResponse.json(
+        { error: 'An access token is required when connecting or changing stores' },
+        { status: 400 }
+      )
+    }
+
+    const validation = await validateShopifyConnection(normalizedDomain, tokenToValidate)
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
+    }
+
+    await saveShopifyCredentials(user.id, normalizedDomain, token || null)
+    return NextResponse.json({
+      success: true,
+      domain: normalizedDomain,
+      shopName: validation.shopName,
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to save credentials'
     return NextResponse.json({ error: message }, { status: 500 })

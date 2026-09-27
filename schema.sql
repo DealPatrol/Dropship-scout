@@ -10,6 +10,10 @@ create table if not exists users (
   password_hash text not null,
   shopify_domain text,
   shopify_token_enc text,        -- server-side only, never exposed to client
+  plan text not null default 'free',
+  stripe_customer_id text unique,
+  stripe_subscription_id text unique,
+  stripe_subscription_status text,
   created_at timestamptz default now()
 );
 
@@ -74,3 +78,10 @@ create table if not exists catalog_items (
 );
 
 create index if not exists catalog_items_user_id_idx on catalog_items(user_id);
+
+-- Stripe webhook idempotency
+create table if not exists stripe_events (
+  event_id text primary key,
+  event_type text not null,
+  processed_at timestamptz default now()
+);
