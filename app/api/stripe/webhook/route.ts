@@ -1,7 +1,10 @@
 import type Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
+import { compensateRefundedCharge, fulfillCheckoutSession } from '@/lib/commerce/process-order'
 import { hasStripeEvent, reconcileStripeSubscription, recordStripeEvent } from '@/lib/db'
 import { planForSubscriptionStatus } from '@/lib/billing'
+import { recipientTransfersStatus, retrieveRecipientAccount } from '@/lib/connect'
+import { setConnectAccount, userIdForConnectAccount } from '@/lib/store-db'
 import { getStripe, stripeWebhookSecret } from '@/lib/stripe'
 
 function resourceId(value: string | { id: string } | null): string | null {
@@ -82,8 +85,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, duplicate: true })
     }
 
+    const eventType = event.type as string
     if (event.type === 'checkout.session.completed') {
-      await processCheckout(event.data.object, event.created)
+      const session = event.data.object
+      if (session.metadata?.kind === 'storefront') {
+        await fulfillCheckoutSession(session)
+      } else {
+        await processCheckout(session, event.created)
+      }
+    } else if (eventType === 'charge.refunded') {
+      const charge = event.data.object as Stripe.Charge
+      const paymentIntentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id
+      if (paymentIntentId && charge.metadata?.kind === 'storefront') {
+        await compensateRefundedCharge(paymentIntentId)
+      } else if (paymentIntentId) {
+        const paymentIntent = await getStripe().paymentIntents.retrieve(paymentIntentId)
+        if (paymentIntent.metadata?.kind === 'storefront') {
+          await compensateRefundedCharge(paymentIntentId)
+        }
+      }
+    } else if (eventType === 'v2.core.account.updated' || event.type === 'account.updated') {
+      const accountId = (event.data.object as { id?: string }).id
+      if (accountId?.startsWith('acct_')) {
+        const userId = await userIdForConnectAccount(accountId)
+        if (userId) {
+          const account = await retrieveRecipientAccount(accountId)
+          await setConnectAccount(userId, accountId, recipientTransfersStatus(account))
+        }
+      }
     } else if (
       event.type === 'customer.subscription.created' ||
       event.type === 'customer.subscription.updated' ||

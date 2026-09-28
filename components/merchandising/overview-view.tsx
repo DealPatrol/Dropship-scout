@@ -19,9 +19,11 @@ import {
   CalendarDays,
   Compass,
   Package,
+  Plug,
   Search,
   ShoppingBag,
   Sparkles,
+  Store,
   TrendingDown,
 } from 'lucide-react'
 
@@ -281,6 +283,16 @@ export function OverviewView({ userId, email }: { userId: string; email: string 
           <Search className="h-5 w-5 text-primary" />
           <span className="text-sm font-medium text-foreground">AI Search</span>
           <span className="text-xs text-muted-foreground">Research live with AI</span>
+        </Link>
+        <Link href="/dashboard/store" className="rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors flex flex-col gap-1.5">
+          <Store className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium text-foreground">Your store</span>
+          <span className="text-xs text-muted-foreground">Publish the hosted storefront</span>
+        </Link>
+        <Link href="/dashboard/channels" className="rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors flex flex-col gap-1.5">
+          <Plug className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium text-foreground">Sales channels</span>
+          <span className="text-xs text-muted-foreground">Shopify and WooCommerce</span>
         </Link>
       </div>
     </div>

@@ -14,6 +14,8 @@
 
 The adapter calls CJ's `/product/list` endpoint with the token in the `CJ-Access-Token` header. CJ does not supply every merchandising metric used by Dropship Scout. Missing demand, rating, competition, and trend values are set to neutral/unknown values and must be validated before a listing is published.
 
+The discovery `demo` source is research data. It cannot be published on a hosted storefront. Selling uses the order adapters in `lib/supplier-api` (CJ, Printful, Printify, and direct suppliers). See `docs/commerce.md`.
+
 ## Add another supplier
 
 Implement `SupplierDataAdapter`, add its source ID to `SupplierSourceId`, register it in `getSupplierAdapter` and `listSupplierSources`, and add server-only environment variables to both example env files. Do not silently merge live and demo metrics.

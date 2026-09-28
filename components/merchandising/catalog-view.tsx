@@ -160,6 +160,9 @@ export function CatalogView({ userId }: { userId: string }) {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">My Store Catalog</h1>
           <p className="text-sm text-muted-foreground mt-1">
+            Research catalog only. Sell real supplier products from Suppliers and Your store. Shopify push stays optional.
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">
             {catalog.products.length > 0
               ? `${catalog.products.length} products · ${Array.from(nicheCounts.entries()).map(([id, count]) => `${NICHE_MAP[id as keyof typeof NICHE_MAP]?.label ?? id} (${count})`).join(' · ')}`
               : 'Build your perfect product catalog — by hand or with the AI builder'}
