@@ -3,6 +3,7 @@
 // Protected by CRON_SECRET header (set in vercel.json + env vars)
 
 import { NextRequest, NextResponse } from 'next/server'
+import { pullConnectedChannelOrders } from '@/lib/channels/sync'
 import { refreshSupplierTracking } from '@/lib/commerce/process-order'
 import { getStaleTrackedProducts, updateProductTracking } from '@/lib/db'
 import { refreshProductInsight } from '@/lib/ai'
@@ -50,11 +51,19 @@ export async function GET(req: NextRequest) {
       console.error('Supplier tracking poll failed:', error instanceof Error ? error.message : error)
     }
 
+    let channels = { shops: 0, imported: 0 }
+    try {
+      channels = await pullConnectedChannelOrders()
+    } catch (error) {
+      console.error('Channel order pull failed:', error instanceof Error ? error.message : error)
+    }
+
     return NextResponse.json({
       ok: true,
       processed: products?.length || 0,
       updated,
       tracking,
+      channels,
       timestamp: new Date().toISOString(),
     })
   } catch (err: unknown) {

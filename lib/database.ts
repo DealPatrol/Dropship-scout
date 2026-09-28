@@ -153,6 +153,9 @@ const SCHEMA_STATEMENTS = [
   `alter table users add column if not exists store_published boolean not null default false`,
   `alter table users add column if not exists stripe_account_id text`,
   `alter table users add column if not exists connect_transfers_status text`,
+  `alter table users add column if not exists woocommerce_url text`,
+  `alter table users add column if not exists woocommerce_key_enc text`,
+  `alter table users add column if not exists woocommerce_secret_enc text`,
   `create unique index if not exists users_store_slug_uidx on users (store_slug) where store_slug is not null`,
   `create unique index if not exists users_stripe_account_uidx on users (stripe_account_id) where stripe_account_id is not null`,
   `create table if not exists supplier_profiles (
@@ -198,6 +201,9 @@ const SCHEMA_STATEMENTS = [
     unique (seller_user_id, supplier_product_id),
     unique (seller_user_id, slug)
   )`,
+  `alter table store_listings add column if not exists shopify_product_id text`,
+  `alter table store_listings add column if not exists shopify_variant_id text`,
+  `alter table store_listings add column if not exists woocommerce_product_id text`,
   `create index if not exists store_listings_seller_idx on store_listings(seller_user_id)`,
   `create table if not exists store_orders (
     id uuid primary key default gen_random_uuid(),
@@ -221,9 +227,16 @@ const SCHEMA_STATEMENTS = [
     stripe_charge_id text,
     failure_reason text,
     sandbox boolean not null default true,
+    channel text not null default 'hosted',
+    external_order_id text,
+    payout_mode text not null default 'stripe_transfers',
     created_at timestamptz default now(),
     updated_at timestamptz default now()
   )`,
+  `alter table store_orders add column if not exists channel text not null default 'hosted'`,
+  `alter table store_orders add column if not exists external_order_id text`,
+  `alter table store_orders add column if not exists payout_mode text not null default 'stripe_transfers'`,
+  `create unique index if not exists store_orders_channel_external_uidx on store_orders (seller_user_id, channel, external_order_id) where external_order_id is not null`,
   `create index if not exists store_orders_seller_idx on store_orders(seller_user_id)`,
   `create table if not exists store_order_items (
     id uuid primary key default gen_random_uuid(),

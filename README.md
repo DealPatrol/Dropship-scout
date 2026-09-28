@@ -22,6 +22,7 @@ Requires Node.js 22.14+, pnpm, and a Postgres database (Neon works).
 | `AUTH_SECRET` | Runtime | Long random signing key for login session cookies. Keep the same value between deployments. |
 | `ANTHROPIC_API_KEY` | Optional | Enables AI search and prompt interpretation. Built-in discovery and catalog work without it. |
 | `NEXT_PUBLIC_APP_URL` | Recommended | Public app URL, such as `http://localhost:3000` locally or the Vercel domain. |
+| `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical origin for metadata, the sitemap, and Open Graph. Set this to the custom domain when it is attached. Falls back to `NEXT_PUBLIC_APP_URL`. |
 | `CRON_SECRET` | Runtime | Authorizes `/api/cron/track`; the route refuses to run when it is missing. |
 | `STRIPE_SECRET_KEY` | Billing | Restricted Stripe server key for Customers, Checkout, and Billing Portal. |
 | `STRIPE_PRO_PRICE_ID` | Billing | Recurring Price ID for the separate Dropship Scout Pro product. |
@@ -75,6 +76,14 @@ Free accounts can save 10 products, keep 25 research-catalog products, build 10 
 
 Webhook signatures are verified and event IDs are stored for idempotency. Stripe Tax is not enabled automatically: before charging customers in a jurisdiction where tax is required, configure registrations and recurring-payment tax collection in Stripe.
 
+## Sales channels
+
+The hosted storefront is the default. **Sales channels** can also connect Shopify and WooCommerce. The token or API key is validated with that platform before it is saved. Sync sends published store listings. Pull imports paid Shopify orders or processing WooCommerce orders into supplier fulfillment.
+
+Those channel orders record the same cost split and do not create a Stripe transfer, because the customer paid the external shop. Import stays paused while `SUPPLIER_ORDERS_MODE=live`, so a channel order cannot bill CJ, Printful, or Printify from the platform wallet. Etsy, eBay, and TikTok Shop are listed as coming soon: their APIs exist, and connecting them needs an approved partner app this deployment does not start.
+
+Research-catalog pushes to Shopify still live on My Catalog and use the same saved Shopify token.
+
 ## Shopify setup (optional)
 
-Shopify is not part of signup, the hosted storefront, or fulfillment. To also push research listings to an existing shop, open Settings and save the shop domain and a Custom App Admin API access token with product write permission. Dropship Scout validates the token before encrypting it at rest. Every push first shows a dry-run preview, validates the connection again, and reports failures per product.
+Open **Sales channels**, enter the `myshopify.com` domain, and save a Custom App Admin API token with `write_products`, `read_orders`, and `write_orders`. Dropship Scout calls `shop.json` before encrypting the token. WooCommerce uses an HTTPS store URL and a REST API consumer key with read/write access to products and orders.

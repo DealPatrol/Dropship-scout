@@ -25,6 +25,8 @@ export interface RouteItem {
   title: string
 }
 
+export type PayoutMode = 'stripe_transfers' | 'channel_collected'
+
 export interface RouteOrderInput {
   orderId: string
   paymentIntentId: string
@@ -36,6 +38,12 @@ export interface RouteOrderInput {
   platformFeeBps: number
   groups: RouteGroup[]
   address: ShippingAddress
+  /**
+   * Hosted checkout collects the charge and creates Connect transfers.
+   * External channels already collected the customer payment, so the split is
+   * recorded and no Stripe transfer is created.
+   */
+  payoutMode?: PayoutMode
 }
 
 export interface PlaceOrderResult {
@@ -186,8 +194,13 @@ async function refundAndUnwind(
   }
 }
 
+function platformCollected(input: RouteOrderInput): boolean {
+  return (input.payoutMode ?? 'stripe_transfers') === 'stripe_transfers'
+}
+
 export async function routePaidOrder(input: RouteOrderInput, ports: RoutePorts): Promise<RouteResult> {
   const warnings: string[] = []
+  const transferOnPlatform = platformCollected(input)
   const catalogCosts = new Map(input.groups.map(group => [group.id, group.costCents]))
   const preview = calculatePayoutSplit({
     grossCents: input.grossCents,
@@ -203,7 +216,7 @@ export async function routePaidOrder(input: RouteOrderInput, ports: RoutePorts):
       supplierRejected: false,
     }, warnings)
   }
-  if (preview.sellerTransferCents > 0 && !input.sellerAccountId) {
+  if (transferOnPlatform && preview.sellerTransferCents > 0 && !input.sellerAccountId) {
     return refundAndUnwind(input, ports, [], 'Seller payout account is not ready.', {
       outOfStock: false,
       supplierRejected: false,
@@ -267,7 +280,7 @@ export async function routePaidOrder(input: RouteOrderInput, ports: RoutePorts):
       warnings
     )
   }
-  if (split.sellerTransferCents > 0 && !input.sellerAccountId) {
+  if (transferOnPlatform && split.sellerTransferCents > 0 && !input.sellerAccountId) {
     return refundAndUnwind(input, ports, accepted, 'Seller payout account is not ready.', {
       outOfStock: false,
       supplierRejected: false,
@@ -275,8 +288,11 @@ export async function routePaidOrder(input: RouteOrderInput, ports: RoutePorts):
   }
 
   const transfers: RecordedTransfer[] = []
+  if (!transferOnPlatform) {
+    warnings.push('Customer paid on an external channel. The split is recorded and no Stripe transfer is created.')
+  }
   try {
-    if (split.sellerTransferCents > 0 && input.sellerAccountId) {
+    if (transferOnPlatform && split.sellerTransferCents > 0 && input.sellerAccountId) {
       const transfer = await ports.payments.transfer({
         amountCents: split.sellerTransferCents,
         destinationAccountId: input.sellerAccountId,

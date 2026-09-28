@@ -63,6 +63,9 @@ export interface ListingRecord {
   supplierAccountId: string | null
   supplierTransfersStatus: string | null
   supplierName: string | null
+  shopifyProductId: string | null
+  shopifyVariantId: string | null
+  woocommerceProductId: string | null
 }
 
 export interface PublicStore {
@@ -93,7 +96,7 @@ function listingSelect() {
   return sql`
     select
       l.id, l.seller_user_id, l.title, l.description, l.price_cents, l.slug, l.published,
-      l.supplier_product_id,
+      l.supplier_product_id, l.shopify_product_id, l.shopify_variant_id, l.woocommerce_product_id,
       p.provider, p.cost_cents, p.shipping_cents, p.image_url, p.available,
       p.external_id, p.variant_id, p.supplier_profile_id,
       sp.display_name as supplier_name,
@@ -131,6 +134,9 @@ function mapListing(row: Record<string, unknown>): ListingRecord {
     supplierAccountId: row.supplier_account_id ? String(row.supplier_account_id) : null,
     supplierTransfersStatus: row.supplier_transfers_status ? String(row.supplier_transfers_status) : null,
     supplierName: row.supplier_name ? String(row.supplier_name) : null,
+    shopifyProductId: row.shopify_product_id ? String(row.shopify_product_id) : null,
+    shopifyVariantId: row.shopify_variant_id ? String(row.shopify_variant_id) : null,
+    woocommerceProductId: row.woocommerce_product_id ? String(row.woocommerce_product_id) : null,
   }
 }
 
@@ -707,6 +713,8 @@ export interface SellerOrderSummary {
   createdAt: string
   trackingNumber: string | null
   trackingUrl: string | null
+  channel: string
+  payoutMode: string
 }
 
 export async function listSellerOrders(sellerUserId: string): Promise<SellerOrderSummary[]> {
@@ -714,6 +722,7 @@ export async function listSellerOrders(sellerUserId: string): Promise<SellerOrde
   const rows = await sql`
     select o.id, o.public_token, o.status, o.customer_email, o.gross_cents, o.seller_transfer_cents,
            o.supplier_cost_cents, o.platform_fee_cents, o.stripe_fee_cents, o.failure_reason, o.created_at,
+           o.channel, o.payout_mode,
            (select tracking_number from fulfillment_jobs j where j.order_id = o.id and j.tracking_number is not null limit 1) as tracking_number,
            (select tracking_url from fulfillment_jobs j where j.order_id = o.id and j.tracking_url is not null limit 1) as tracking_url
     from store_orders o
@@ -735,6 +744,8 @@ export async function listSellerOrders(sellerUserId: string): Promise<SellerOrde
     createdAt: new Date(String(row.created_at)).toISOString(),
     trackingNumber: row.tracking_number ? String(row.tracking_number) : null,
     trackingUrl: row.tracking_url ? String(row.tracking_url) : null,
+    channel: row.channel ? String(row.channel) : 'hosted',
+    payoutMode: row.payout_mode ? String(row.payout_mode) : 'stripe_transfers',
   }))
 }
 
@@ -792,7 +803,7 @@ export async function getPublicOrder(token: string): Promise<PublicOrder | null>
 export async function getOrderForSeller(sellerUserId: string, orderId: string) {
   await ensureSchema()
   const rows = await sql`
-    select id, status, stripe_payment_intent_id
+    select id, status, stripe_payment_intent_id, channel, external_order_id, payout_mode
     from store_orders
     where id = ${orderId}::uuid and seller_user_id = ${sellerUserId}::uuid
   `
@@ -802,6 +813,9 @@ export async function getOrderForSeller(sellerUserId: string, orderId: string) {
     id: String(row.id),
     status: String(row.status),
     paymentIntentId: row.stripe_payment_intent_id ? String(row.stripe_payment_intent_id) : null,
+    channel: row.channel ? String(row.channel) : 'hosted',
+    externalOrderId: row.external_order_id ? String(row.external_order_id) : null,
+    payoutMode: row.payout_mode ? String(row.payout_mode) : 'stripe_transfers',
   }
 }
 

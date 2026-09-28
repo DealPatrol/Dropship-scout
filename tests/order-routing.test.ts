@@ -283,6 +283,26 @@ describe('routePaidOrder', () => {
     expect(calls.refunds).toEqual(['store-refund-order-1'])
   })
 
+  it('records a channel order without creating Stripe transfers', async () => {
+    const { ports: adapters, calls } = ports(() => ({
+      status: 'accepted',
+      externalOrderId: 'cj-100',
+      sandbox: true,
+    }))
+
+    const result = await routePaidOrder(
+      order({ sellerAccountId: null, payoutMode: 'channel_collected' }),
+      adapters
+    )
+
+    expect(result.status).toBe('fulfilled')
+    if (result.status !== 'fulfilled') return
+    expect(result.transfers).toEqual([])
+    expect(calls.transfers).toEqual([])
+    expect(calls.placed).toEqual(['cj'])
+    expect(result.warnings.join(' ')).toContain('external channel')
+  })
+
   it('does not call the supplier when the seller cannot be paid', async () => {
     const { ports: adapters, calls } = ports(() => ({
       status: 'accepted',

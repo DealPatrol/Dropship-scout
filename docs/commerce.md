@@ -71,6 +71,14 @@ Set these in Vercel for project `dropship-scout` (Production and Preview). Keep 
 
 `STRIPE_FEE_BPS`, `STRIPE_FEE_FIXED_CENTS`, `QUOTE_*`, and the `*_API_BASE_URL` overrides have defaults. They are listed in `.env.example`.
 
+## Sales channels
+
+Shopify and WooCommerce are optional. Credentials are saved only after the platform API accepts them. Published listings can be synced, and paid or processing orders can be pulled into the same supplier placement path.
+
+The customer payment for those orders stays on the channel. `routePaidOrder` records the split with `payoutMode: channel_collected` and does not create a Stripe transfer. While `SUPPLIER_ORDERS_MODE=live`, channel import is paused so the platform does not pay a supplier for a charge it did not collect. Etsy, eBay, and TikTok Shop stay marked coming soon until an approved partner app exists.
+
+Set `NEXT_PUBLIC_SITE_URL` to the public origin, including a custom domain, so canonical URLs, Open Graph, and `sitemap.xml` use that host.
+
 ## What still needs a person
 
 - Turn on **Stripe Connect** for the platform in test mode and finish the platform profile. Accounts v2 has to be available on that account. Sellers and direct suppliers then complete Express onboarding with Stripe's test data (test phone, test bank, document uploads Stripe accepts in test mode). Transfers stay `pending` until `stripe_transfers` is `active`.

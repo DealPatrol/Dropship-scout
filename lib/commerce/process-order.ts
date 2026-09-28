@@ -1,4 +1,5 @@
 import type Stripe from 'stripe'
+import type { ShippingAddress } from '@/lib/commerce/types'
 import { assertCommercePaymentsAllowed, platformFeeBps, supplierOrdersMode } from '@/lib/commerce/modes'
 import { readPaidCharge } from '@/lib/commerce/checkout-address'
 import {
@@ -242,6 +243,89 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session): 
       ? 'supplier_rejected'
       : 'refunded'
   await saveRefundedOrder(orderId, status, result.reason)
+}
+
+export async function fulfillExternalOrder(input: {
+  orderId: string
+  externalPaymentId: string
+  grossCents: number
+  feeCents: number
+  address: ShippingAddress
+  refund: () => Promise<void>
+}): Promise<{ status: 'fulfilled' | 'refunded' | 'failed' | 'skipped'; reason?: string }> {
+  const claimed = await claimOrder(input.orderId)
+  if (!claimed) return { status: 'skipped', reason: 'This channel order is already being fulfilled.' }
+  if (input.grossCents !== claimed.grossCents) {
+    await input.refund()
+    await saveRefundedOrder(input.orderId, 'refunded', 'Paid amount does not match the order total.')
+    return { status: 'refunded', reason: 'Paid amount does not match the order total.' }
+  }
+
+  await markOrderPayment({
+    orderId: input.orderId,
+    paymentIntentId: input.externalPaymentId,
+    chargeId: input.externalPaymentId,
+    address: input.address,
+    grossCents: input.grossCents,
+  })
+
+  const groups = groupsFrom(claimed)
+  const channelPayments: PaymentPort = {
+    async refund() {
+      await input.refund()
+    },
+    async transfer() {
+      throw new Error('External channel orders do not create Stripe transfers.')
+    },
+    async reverseTransfer() {
+      throw new Error('External channel orders have no Stripe transfer to reverse.')
+    },
+  }
+  const result = await routePaidOrder(
+    {
+      orderId: input.orderId,
+      paymentIntentId: input.externalPaymentId,
+      sellerAccountId: claimed.sellerAccountId,
+      grossCents: claimed.grossCents,
+      merchandiseCents: claimed.merchandiseCents,
+      stripeFeeCents: input.feeCents,
+      platformFeeBps: platformFeeBps(),
+      groups,
+      address: input.address,
+      payoutMode: 'channel_collected',
+    },
+    { suppliers: suppliers(), payments: channelPayments }
+  )
+
+  if (result.status === 'fulfilled') {
+    await saveFulfilledOrder({
+      orderId: input.orderId,
+      stripeFeeCents: result.split.stripeFeeCents,
+      platformFeeCents: result.split.platformFeeCents,
+      supplierCostCents: result.split.supplierCostCents,
+      sellerTransferCents: result.split.sellerTransferCents,
+      supplierTransferCents: 0,
+      sandbox: supplierOrdersMode() !== 'live',
+      jobs: result.fulfillments.map(job => ({
+        groupKey: job.groupId,
+        provider: job.provider,
+        supplierProfileId: groups.find(group => group.id === job.groupId)?.supplierProfileId ?? null,
+        externalOrderId: job.externalOrderId,
+        sandbox: job.sandbox,
+      })),
+      transfers: [],
+    })
+    await notifyDirectSuppliers(input.orderId, groups)
+    return { status: 'fulfilled' }
+  }
+
+  const status = result.status === 'failed'
+    ? 'failed'
+    : result.supplierRejected || result.outOfStock
+      ? 'supplier_rejected'
+      : 'refunded'
+  await saveRefundedOrder(input.orderId, status, result.reason)
+  return { status: result.status === 'failed' ? 'failed' : 'refunded', reason: result.reason }
 }
 
 export async function compensateRefundedCharge(paymentIntentId: string): Promise<void> {

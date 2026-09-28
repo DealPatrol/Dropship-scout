@@ -233,6 +233,19 @@ create table if not exists payout_transfers (
   created_at timestamptz default now()
 );
 
+alter table users add column if not exists woocommerce_url text;
+alter table users add column if not exists woocommerce_key_enc text;
+alter table users add column if not exists woocommerce_secret_enc text;
+alter table store_listings add column if not exists shopify_product_id text;
+alter table store_listings add column if not exists shopify_variant_id text;
+alter table store_listings add column if not exists woocommerce_product_id text;
+alter table store_orders add column if not exists channel text not null default 'hosted';
+alter table store_orders add column if not exists external_order_id text;
+alter table store_orders add column if not exists payout_mode text not null default 'stripe_transfers';
+create unique index if not exists store_orders_channel_external_uidx
+  on store_orders (seller_user_id, channel, external_order_id)
+  where external_order_id is not null;
+
 create table if not exists supplier_notifications (
   id uuid primary key default gen_random_uuid(),
   supplier_profile_id uuid not null references supplier_profiles(id) on delete cascade,
