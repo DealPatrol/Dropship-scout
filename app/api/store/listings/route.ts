@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
   if (!product || !product.available) {
     return NextResponse.json({ error: 'That supplier product is not available.' }, { status: 404 })
   }
-  if (product.provider === 'direct' && !product.supplierProfileId) {
-    return NextResponse.json({ error: 'Direct supplier product is incomplete.' }, { status: 400 })
+  if (product.provider === 'direct' && (!product.supplierProfileId || product.supplierTransfersStatus !== 'active' || !product.supplierAccountId)) {
+    return NextResponse.json({ error: 'This direct supplier has not finished payout setup.' }, { status: 409 })
   }
   const plan = await getUserPlan(user.id)
   const limit = PLAN_LIMITS[plan].catalogProducts
@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     shippingCents: product.shippingCents,
     platformFeeBps: platformFeeBps(),
     settlement: settlementFor(product.provider),
+    destinationAccountId: product.supplierAccountId,
   })
   if (!assessment.ok) {
     return NextResponse.json({ error: assessment.reason || 'Price does not cover supplier cost and fees.' }, { status: 400 })

@@ -39,6 +39,8 @@ export interface SupplierProductRecord {
   stock: number | null
   available: boolean
   supplierName: string | null
+  supplierAccountId: string | null
+  supplierTransfersStatus: string | null
 }
 
 export interface ListingRecord {
@@ -289,6 +291,8 @@ function mapProduct(row: Record<string, unknown>): SupplierProductRecord {
     stock: row.stock === null || row.stock === undefined ? null : Number(row.stock),
     available: Boolean(row.available),
     supplierName: row.supplier_name ? String(row.supplier_name) : null,
+    supplierAccountId: row.supplier_account_id ? String(row.supplier_account_id) : null,
+    supplierTransfersStatus: row.supplier_transfers_status ? String(row.supplier_transfers_status) : null,
   }
 }
 
@@ -332,9 +336,12 @@ export async function listDirectCatalog(): Promise<SupplierProductRecord[]> {
 export async function getSupplierProduct(id: string): Promise<SupplierProductRecord | null> {
   await ensureSchema()
   const rows = await sql`
-    select p.*, sp.display_name as supplier_name
+    select p.*, sp.display_name as supplier_name,
+           su.stripe_account_id as supplier_account_id,
+           su.connect_transfers_status as supplier_transfers_status
     from supplier_products p
     left join supplier_profiles sp on sp.id = p.supplier_profile_id
+    left join users su on su.id = sp.user_id
     where p.id = ${id}::uuid
   `
   return rows[0] ? mapProduct(rows[0]) : null
