@@ -136,7 +136,7 @@ export function SettingsView({ userId, userEmail }: SettingsViewProps) {
               Shopify Integration
             </CardTitle>
             <CardDescription>
-              Connect your Shopify store to push products directly from your saved list.
+              Optional. The hosted storefront does not need Shopify. Connect a shop only if you still want to push listings there.
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -3,6 +3,7 @@
 // Protected by CRON_SECRET header (set in vercel.json + env vars)
 
 import { NextRequest, NextResponse } from 'next/server'
+import { refreshSupplierTracking } from '@/lib/commerce/process-order'
 import { getStaleTrackedProducts, updateProductTracking } from '@/lib/db'
 import { refreshProductInsight } from '@/lib/ai'
 
@@ -42,10 +43,18 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    let tracking = { checked: 0, updated: 0 }
+    try {
+      tracking = await refreshSupplierTracking()
+    } catch (error) {
+      console.error('Supplier tracking poll failed:', error instanceof Error ? error.message : error)
+    }
+
     return NextResponse.json({
       ok: true,
       processed: products?.length || 0,
       updated,
+      tracking,
       timestamp: new Date().toISOString(),
     })
   } catch (err: unknown) {

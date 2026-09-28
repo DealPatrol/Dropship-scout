@@ -19,12 +19,19 @@ import {
   Compass,
   ShoppingBag,
   CalendarDays,
+  Store,
+  Truck,
+  Package,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+  { href: '/dashboard/store', label: 'Your store', icon: Store, exact: false },
+  { href: '/dashboard/suppliers', label: 'Suppliers', icon: Package, exact: false },
+  { href: '/dashboard/orders', label: 'Orders', icon: Truck, exact: false },
+  { href: '/dashboard/supplier-desk', label: 'Supplier desk', icon: ShoppingBag, exact: false },
   { href: '/dashboard/explore', label: 'Product Explorer', icon: Compass, exact: false },
   { href: '/dashboard/catalog', label: 'My Catalog', icon: ShoppingBag, exact: false },
   { href: '/dashboard/planner', label: 'Seasonal Planner', icon: CalendarDays, exact: false },

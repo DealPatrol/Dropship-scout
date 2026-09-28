@@ -18,7 +18,7 @@ const features = [
     icon: Search,
     title: 'AI-Powered Research',
     description:
-      'Claude AI scans AliExpress, Amazon, Temu, and 5 more platforms to surface products with the highest margin potential.',
+      'Research products, then sell them on a storefront hosted by Dropship Scout. No Shopify account required.',
   },
   {
     icon: TrendingUp,
@@ -28,9 +28,9 @@ const features = [
   },
   {
     icon: ShoppingBag,
-    title: 'One-Click Shopify Push',
+    title: 'Hosted storefront',
     description:
-      'Push winning products directly to your Shopify store. Your access token is encrypted and never exposed to the browser.',
+      'Publish product pages, a cart, and Stripe checkout on your own store link. Shopify stays optional.',
   },
   {
     icon: BarChart3,
@@ -55,7 +55,7 @@ const features = [
 const stats = [
   { value: '8', label: 'Supplier platforms' },
   { value: '10s', label: 'Average search time' },
-  { value: '100%', label: 'Shopify compatible' },
+  { value: 'Stripe', label: 'Hosted checkout' },
   { value: 'AI', label: 'Powered by Claude' },
 ]
 
@@ -97,7 +97,7 @@ export default function LandingPage() {
           products in seconds.
         </h1>
         <p className="mt-5 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed text-pretty">
-          AI scans 8 supplier platforms, analyzes margins and competition, then pushes your best picks straight to Shopify.
+          Sign up, import products from a real supplier, and sell on a storefront this app hosts. Payouts split automatically.
         </p>
 
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -132,7 +132,7 @@ export default function LandingPage() {
             Everything you need to find and sell winning products
           </h2>
           <p className="mt-3 text-muted-foreground text-pretty">
-            From product discovery to Shopify listing — all in one dashboard.
+            From product discovery to a hosted storefront — Shopify is optional.
           </p>
         </div>
 
@@ -172,7 +172,7 @@ export default function LandingPage() {
                 {[
                   'Unlimited AI product searches',
                   'Save products to your vault',
-                  'Push to Shopify with one click',
+                  'Hosted storefront, cart, and checkout',
                   'Push history & analytics',
                 ].map(item => (
                   <li key={item} className="flex items-center gap-2 text-sm text-foreground">

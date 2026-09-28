@@ -8,7 +8,7 @@ const _inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 export const metadata: Metadata = {
   title: 'Dropship Scout — AI-Powered Product Research',
   description:
-    'Find winning dropshipping products in seconds with AI. Analyze trends, margins, and push directly to your Shopify store.',
+    'Find products, import them from a real supplier, and sell on a hosted storefront. Shopify is optional.',
   keywords: ['dropshipping', 'product research', 'shopify', 'ai', 'ecommerce'],
   openGraph: {
     title: 'Dropship Scout',
