@@ -17,8 +17,5 @@ export const SITE_NAME = 'Dropship Scout'
 
 export const FOUNDER_NAME = 'Cole Collins'
 
-/**
- * Public address on Cole Collins's GitHub account (DealPatrol).
- * No Dropship Scout inbox is published; replace this when one is.
- */
-export const ORGANIZATION_EMAIL = '118781133+DealPatrol@users.noreply.github.com'
+/** Owner inbox used in public Organization structured data. */
+export const ORGANIZATION_EMAIL = 'colecollins763@gmail.com'
