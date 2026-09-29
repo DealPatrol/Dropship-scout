@@ -1,6 +1,8 @@
 export interface Guide {
   slug: string
   title: string
+  /** Document title. With the site suffix this stays within 60 characters. */
+  metaTitle: string
   description: string
   intent: string
   sections: { heading: string; paragraphs: string[] }[]
@@ -10,6 +12,7 @@ export const GUIDES: Guide[] = [
   {
     slug: 'dropshipping-without-shopify',
     title: 'Dropshipping without Shopify',
+    metaTitle: 'Dropshipping without Shopify',
     description: 'How to sell supplier products with a hosted storefront, cart, and Stripe checkout instead of opening a Shopify store.',
     intent: 'dropshipping without Shopify',
     sections: [
@@ -38,6 +41,7 @@ export const GUIDES: Guide[] = [
   {
     slug: 'cjdropshipping-alternative',
     title: 'A CJ Dropshipping path that does not start with Shopify',
+    metaTitle: 'CJ Dropshipping without Shopify',
     description: 'What CJ Dropshipping is good for, and how a hosted storefront uses the CJ API without replacing CJ as the warehouse.',
     intent: 'CJ Dropshipping alternative',
     sections: [
@@ -60,6 +64,7 @@ export const GUIDES: Guide[] = [
   {
     slug: 'printful-vs-printify',
     title: 'Printful vs Printify for a hosted dropshipping store',
+    metaTitle: 'Printful vs Printify',
     description: 'How Printful and Printify differ when you import designed products and place sandbox orders from Dropship Scout.',
     intent: 'Printful vs Printify dropshipping',
     sections: [
@@ -82,6 +87,7 @@ export const GUIDES: Guide[] = [
   {
     slug: 'supplier-payouts',
     title: 'How dropshipping payouts split a Stripe charge',
+    metaTitle: 'Dropshipping payout split',
     description: 'What the seller, the supplier, and the platform each receive when a customer pays on a hosted storefront.',
     intent: 'dropshipping payout split',
     sections: [
@@ -104,6 +110,7 @@ export const GUIDES: Guide[] = [
   {
     slug: 'direct-supplier-onboarding',
     title: 'How an independent supplier joins a dropshipping platform',
+    metaTitle: 'Direct supplier onboarding',
     description: 'The direct-supplier path: onboard, publish cost and stock, and receive orders without a marketplace API.',
     intent: 'direct supplier dropshipping',
     sections: [
@@ -152,5 +159,23 @@ export const FAQ_ITEMS = [
   {
     question: 'What does the free plan include?',
     answer: 'Free accounts can save 10 products, keep 25 research-catalog products, and publish 25 hosted listings. Pro removes those limits. Supplier API import for the storefront uses the platform keys and is available to signed-in sellers.',
+  },
+]
+
+function faqByQuestion(question: string): { question: string; answer: string } {
+  const item = FAQ_ITEMS.find(entry => entry.question === question)
+  if (!item) throw new Error(`Missing FAQ: ${question}`)
+  return item
+}
+
+/** Questions rendered in the homepage "Common questions" block. */
+export const HOME_FAQ = FAQ_ITEMS.slice(0, 3)
+
+/** Questions rendered on /pricing. Pro has no published monthly price. */
+export const PRICING_FAQ = [
+  faqByQuestion('What does the free plan include?'),
+  {
+    question: 'How is Pro billed?',
+    answer: 'Pro is billed through Stripe at the price configured for the Dropship Scout Pro product.',
   },
 ]

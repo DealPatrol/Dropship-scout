@@ -1,11 +1,28 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { AddToCartButton } from '@/components/storefront/add-to-cart-button'
 import { StoreFrame } from '@/components/storefront/store-frame'
 import { formatCents } from '@/lib/commerce/money'
-import { getPublishedListing } from '@/lib/store-db'
+import { metadataTitle, storeShouldIndex } from '@/lib/seo'
+import { getPublishedListing, getPublishedStore } from '@/lib/store-db'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: { slug: string; listingId: string } }): Promise<Metadata> {
+  const store = await getPublishedStore(params.slug)
+  const listing = store?.listings.find(item => item.id === params.listingId)
+  if (!store || !listing) return { title: 'Product', robots: { index: false, follow: false } }
+  const description = listing.description || `${listing.title} on ${store.storeName}.`
+  return {
+    title: metadataTitle(listing.title),
+    description,
+    alternates: { canonical: `/store/${store.storeSlug}/products/${listing.id}` },
+    robots: storeShouldIndex(store.storeSlug, store.listings.length)
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
+  }
+}
 
 export default async function ProductPage({ params }: { params: { slug: string; listingId: string } }) {
   const listing = await getPublishedListing(params.slug, params.listingId)

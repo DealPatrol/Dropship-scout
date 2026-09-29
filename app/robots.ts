@@ -9,6 +9,5 @@ export default function robots(): MetadataRoute.Robots {
       disallow: ['/dashboard', '/api/', '/auth/', '/store/*/cart', '/store/*/checkout', '/store/*/orders'],
     },
     sitemap: `${siteUrl()}/sitemap.xml`,
-    host: siteUrl(),
   }
 }

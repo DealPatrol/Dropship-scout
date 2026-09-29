@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { FAQ_ITEMS } from '@/lib/marketing/content'
+import { faqPageJsonLd } from '@/lib/seo'
 
 export const metadata: Metadata = {
   title: 'FAQ',
@@ -11,12 +12,7 @@ export const metadata: Metadata = {
 export default function FaqPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS.map(item => ({
-      '@type': 'Question',
-      name: item.question,
-      acceptedAnswer: { '@type': 'Answer', text: item.answer },
-    })),
+    ...faqPageJsonLd(FAQ_ITEMS),
   }
   return (
     <SiteFrame>

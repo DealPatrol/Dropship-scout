@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { ArrowRight, CheckCircle, ShoppingBag, Store, Truck, Wallet } from 'lucide-react'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { Button } from '@/components/ui/button'
-import { FAQ_ITEMS } from '@/lib/marketing/content'
-import { siteUrl } from '@/lib/site'
+import { HOME_FAQ } from '@/lib/marketing/content'
+import { faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd } from '@/lib/seo'
 
 const features = [
   {
@@ -32,20 +32,9 @@ export default function LandingPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      {
-        '@type': 'Organization',
-        name: 'Dropship Scout',
-        url: siteUrl(),
-      },
-      {
-        '@type': 'SoftwareApplication',
-        name: 'Dropship Scout',
-        applicationCategory: 'BusinessApplication',
-        operatingSystem: 'Web',
-        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-        description: 'Hosted dropshipping storefront with supplier fulfillment and Stripe Connect payouts.',
-        url: siteUrl(),
-      },
+      organizationJsonLd(),
+      softwareApplicationJsonLd(),
+      faqPageJsonLd(HOME_FAQ),
     ],
   }
 
@@ -111,7 +100,7 @@ export default function LandingPage() {
       <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <h2 className="text-2xl font-bold">Common questions</h2>
         <div className="mt-6 flex flex-col gap-4">
-          {FAQ_ITEMS.slice(0, 3).map(item => (
+          {HOME_FAQ.map(item => (
             <article key={item.question}>
               <h3 className="font-medium">{item.question}</h3>
               <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{item.answer}</p>
