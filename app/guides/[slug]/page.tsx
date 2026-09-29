@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { GUIDES, guideBySlug } from '@/lib/marketing/content'
-import { siteUrl } from '@/lib/site'
+import { breadcrumbJsonLd, documentTitle, metadataTitle, OG_IMAGE_PATH } from '@/lib/seo'
+import { absoluteUrl } from '@/lib/site'
 
 export function generateStaticParams() {
   return GUIDES.map(guide => ({ slug: guide.slug }))
@@ -12,11 +13,18 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const guide = guideBySlug(params.slug)
   if (!guide) return { title: 'Guide' }
+  const title = documentTitle(guide.metaTitle)
   return {
-    title: guide.title,
+    title: metadataTitle(guide.metaTitle),
     description: guide.description,
     alternates: { canonical: `/guides/${guide.slug}` },
-    openGraph: { title: guide.title, description: guide.description, type: 'article' },
+    openGraph: {
+      title,
+      description: guide.description,
+      type: 'article',
+      url: `/guides/${guide.slug}`,
+      images: [OG_IMAGE_PATH],
+    },
   }
 }
 
@@ -25,11 +33,20 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
   if (!guide) notFound()
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: guide.title,
-    description: guide.description,
-    mainEntityOfPage: `${siteUrl()}/guides/${guide.slug}`,
-    author: { '@type': 'Organization', name: 'Dropship Scout' },
+    '@graph': [
+      {
+        '@type': 'Article',
+        headline: guide.title,
+        description: guide.description,
+        mainEntityOfPage: absoluteUrl(`/guides/${guide.slug}`),
+        author: { '@type': 'Organization', name: 'Dropship Scout' },
+      },
+      breadcrumbJsonLd([
+        { name: 'Home', path: '/' },
+        { name: 'Guides', path: '/guides' },
+        { name: guide.title, path: `/guides/${guide.slug}` },
+      ]),
+    ],
   }
   return (
     <SiteFrame>

@@ -1,11 +1,27 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { StoreFrame } from '@/components/storefront/store-frame'
 import { formatCents } from '@/lib/commerce/money'
+import { metadataTitle, storeShouldIndex } from '@/lib/seo'
 import { getPublishedStore } from '@/lib/store-db'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const store = await getPublishedStore(params.slug)
+  if (!store) return { title: 'Store', robots: { index: false, follow: false } }
+  const description = 'Products are fulfilled by the connected supplier after checkout.'
+  return {
+    title: metadataTitle(store.storeName),
+    description,
+    alternates: { canonical: `/store/${store.storeSlug}` },
+    robots: storeShouldIndex(store.storeSlug, store.listings.length)
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
+  }
+}
 
 export default async function StorePage({ params }: { params: { slug: string } }) {
   const store = await getPublishedStore(params.slug)

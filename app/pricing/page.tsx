@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { Button } from '@/components/ui/button'
 import { PLAN_LIMITS } from '@/lib/billing'
+import { PRICING_FAQ } from '@/lib/marketing/content'
+import { faqPageJsonLd, freeOfferJsonLd } from '@/lib/seo'
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -12,8 +14,13 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   const free = PLAN_LIMITS.free
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [freeOfferJsonLd(), faqPageJsonLd(PRICING_FAQ)],
+  }
   return (
     <SiteFrame>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
         <h1 className="text-4xl font-bold tracking-tight">Pricing</h1>
         <p className="mt-4 text-muted-foreground max-w-2xl">
@@ -45,6 +52,17 @@ export default function PricingPage() {
             <Link href="/dashboard/settings" className="inline-block mt-6"><Button variant="outline">Upgrade from Settings</Button></Link>
           </section>
         </div>
+        <section className="mt-16 max-w-3xl">
+          <h2 className="text-2xl font-bold">Pricing questions</h2>
+          <div className="mt-6 flex flex-col gap-6">
+            {PRICING_FAQ.map(item => (
+              <article key={item.question}>
+                <h3 className="text-lg font-semibold">{item.question}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.answer}</p>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </SiteFrame>
   )
