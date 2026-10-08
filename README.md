@@ -22,10 +22,11 @@ Requires Node.js 22.14+, pnpm, and a Postgres database (Neon works).
 | `AUTH_SECRET` | Runtime | Long random signing key for login session cookies. Keep the same value between deployments. |
 | `ANTHROPIC_API_KEY` | Optional | Enables AI search and prompt interpretation. Built-in discovery and catalog work without it. |
 | `NEXT_PUBLIC_APP_URL` | Recommended | Public app URL, such as `http://localhost:3000` locally or the Vercel domain. |
-| `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical origin for metadata, the sitemap, and Open Graph. Set this to the custom domain when it is attached. Falls back to `NEXT_PUBLIC_APP_URL`. |
+| `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical origin for metadata, the sitemap, Open Graph, and Stripe return URLs. Set this to `https://getdropshipscout.com` in production. Falls back to `NEXT_PUBLIC_APP_URL`, then that domain. |
 | `CRON_SECRET` | Runtime | Authorizes `/api/cron/track`; the route refuses to run when it is missing. |
 | `STRIPE_SECRET_KEY` | Billing | Restricted Stripe server key for Customers, Checkout, and Billing Portal. |
-| `STRIPE_PRO_PRICE_ID` | Billing | Recurring Price ID for the separate Dropship Scout Pro product. |
+| `STRIPE_PRO_PRICE_ID` | Billing | Recurring Price ID for the monthly Dropship Scout Pro product. |
+| `STRIPE_PRO_ANNUAL_PRICE_ID` | Optional billing | Recurring yearly Price ID. When set, pricing offers annual checkout with the same Pro limits. |
 | `STRIPE_WEBHOOK_SECRET` | Billing | Signing secret for `/api/stripe/webhook`. |
 | `CJ_API_ACCESS_TOKEN` | Optional, Pro | Enables the live CJ Dropshipping supplier adapter. |
 | `CJ_API_BASE_URL` | Optional | CJ API v2 base URL; normally keep the documented default. |
@@ -64,12 +65,16 @@ Import this repository into Vercel as a Next.js project. Select pnpm and use `pn
 
 The included hourly cron calls `/api/cron/track`. Set a long random `CRON_SECRET`; Vercel Cron automatically sends it as `Authorization: Bearer <CRON_SECRET>`. Local calls must send the same header. A missing secret returns `503`, not an unprotected successful run.
 
+Vercel Web Analytics is included with `@vercel/analytics`. Enable Web Analytics on the Vercel project. No extra key is required. Signup buttons emit `signup-click`. A successful call that returns a Stripe Checkout URL emits `checkout-started`.
+
+Public research pages live under `/research`, with a sample-catalog preview at `/research/preview` and a no-signup product idea checker at `/research/idea-checker`. Those pages do not publish order counts or revenue. The checker uses the default platform fee and card-fee estimate, not live sales. Pro checkout starts from `/pricing` after signup or sign-in (`?plan=pro`, optional `&interval=year`). `POST /api/watch` stores a products-to-watch email in `watch_subscribers`. The app does not send that email.
+
 ## Stripe subscriptions
 
 Free accounts can save 10 products, keep 25 research-catalog products, build 10 products at a time, push 3 Shopify products per calendar month, and publish 25 hosted-store listings. Pro removes those limits. Live CJ/Printful/Printify import uses the platform API keys and is available to every signed-in seller; the older discovery adapter for CJ remains Pro-only.
 
-1. In Stripe, create a dedicated **Dropship Scout Pro** Product with a recurring Price.
-2. Set `STRIPE_PRO_PRICE_ID` and a restricted `STRIPE_SECRET_KEY`.
+1. In Stripe, create a dedicated **Dropship Scout Pro** Product with a recurring monthly Price. Optionally add a yearly Price on the same product.
+2. Set `STRIPE_PRO_PRICE_ID` and a restricted `STRIPE_SECRET_KEY`. Set `STRIPE_PRO_ANNUAL_PRICE_ID` only when the yearly Price exists.
 3. Register `POST /api/stripe/webhook` and subscribe to `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `charge.refunded`, and `account.updated`. Storefront checkouts and Connect payout status use the same endpoint.
 4. Set that endpoint's signing secret as `STRIPE_WEBHOOK_SECRET`.
 5. Configure and enable the Stripe Customer Portal.

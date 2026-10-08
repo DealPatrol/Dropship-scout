@@ -1,15 +1,28 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
+import { parseBillingInterval, publicCheckoutError } from '@/lib/billing'
 import { getBillingProfile, setStripeCustomer } from '@/lib/db'
+import { siteUrl } from '@/lib/site'
 import {
   checkoutIntegrationIdentifier,
   getStripe,
-  proPriceId,
+  priceIdForInterval,
 } from '@/lib/stripe'
 
-export async function POST() {
+export async function POST(request: Request) {
   const user = await getSession()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const raw = await request.text()
+  let interval = parseBillingInterval(undefined)
+  if (raw.trim()) {
+    try {
+      const body = JSON.parse(raw) as { interval?: unknown }
+      interval = parseBillingInterval(body?.interval)
+    } catch {
+      return NextResponse.json({ error: 'Checkout interval was not valid JSON.' }, { status: 400 })
+    }
+  }
 
   try {
     const stripe = getStripe()
@@ -37,8 +50,8 @@ export async function POST() {
       await setStripeCustomer(user.id, customerId)
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const priceId = proPriceId()
+    const appUrl = siteUrl()
+    const priceId = priceIdForInterval(interval)
     const checkoutWindow = Math.floor(Date.now() / (60 * 60 * 1000))
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -47,8 +60,8 @@ export async function POST() {
       success_url: `${appUrl}/dashboard/settings?billing=success`,
       cancel_url: `${appUrl}/dashboard/settings?billing=cancelled`,
       client_reference_id: user.id,
-      metadata: { userId: user.id },
-      subscription_data: { metadata: { userId: user.id } },
+      metadata: { userId: user.id, interval },
+      subscription_data: { metadata: { userId: user.id, interval } },
       integration_identifier: checkoutIntegrationIdentifier(user.id),
     }, {
       idempotencyKey: `dropship-scout-checkout-${user.id}-${priceId}-${checkoutWindow}`,
@@ -56,9 +69,7 @@ export async function POST() {
 
     return NextResponse.json({ url: session.url })
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Could not start checkout' },
-      { status: 500 }
-    )
+    const failure = publicCheckoutError(err)
+    return NextResponse.json({ error: failure.message }, { status: failure.status })
   }
 }

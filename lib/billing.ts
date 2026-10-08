@@ -1,5 +1,32 @@
 export type Plan = 'free' | 'pro'
 
+export type BillingInterval = 'month' | 'year'
+
+export function parseBillingInterval(value: unknown): BillingInterval {
+  return value === 'year' ? 'year' : 'month'
+}
+
+export function proAuthHref(path: '/auth/sign-up' | '/auth/login', interval: BillingInterval): string {
+  return interval === 'year' ? `${path}?plan=pro&interval=year` : `${path}?plan=pro`
+}
+
+export function settingsCheckoutSearch(interval: BillingInterval): string {
+  return interval === 'year' ? '?checkout=1&interval=year' : '?checkout=1'
+}
+
+/** Picks the Stripe Price id. Throws the same missing-env error shape as the Stripe client. */
+export function selectProPriceId(
+  interval: BillingInterval,
+  prices: { month: string; year: string | null }
+): string {
+  if (interval === 'year') {
+    if (!prices.year) throw new Error('Missing required environment variable: STRIPE_PRO_ANNUAL_PRICE_ID')
+    return prices.year
+  }
+  if (!prices.month) throw new Error('Missing required environment variable: STRIPE_PRO_PRICE_ID')
+  return prices.month
+}
+
 export interface PlanLimits {
   savedProducts: number | null
   catalogProducts: number | null
@@ -39,4 +66,16 @@ export function limitExceeded(current: number, incoming: number, limit: number |
 
 export function planLimitMessage(resource: string, limit: number): string {
   return `Free plan limit reached: ${limit} ${resource}. Upgrade to Pro for unlimited access.`
+}
+
+/** Buyer-facing checkout failure. Does not include env var names or secrets. */
+export function publicCheckoutError(err: unknown): { message: string; status: number } {
+  const message = err instanceof Error ? err.message : 'Could not start checkout'
+  if (message.startsWith('Missing required environment variable:')) {
+    return {
+      message: 'Pro checkout is not configured yet. Stripe billing keys are missing on this deployment.',
+      status: 503,
+    }
+  }
+  return { message, status: 500 }
 }

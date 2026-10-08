@@ -1,6 +1,14 @@
 import Link from 'next/link'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { Button } from '@/components/ui/button'
+import { pageMetadata } from '@/lib/seo'
+
+export const metadata = pageMetadata({
+  title: 'Page not found',
+  description: 'That page is not on Dropship Scout.',
+  path: '/404',
+  noIndex: true,
+})
 
 export default function NotFound() {
   return (

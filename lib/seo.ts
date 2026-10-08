@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { absoluteUrl, FOUNDER_NAME, ORGANIZATION_EMAIL, SITE_NAME, siteUrl } from '@/lib/site'
 
 export const TITLE_SUFFIX = ` · ${SITE_NAME}`
@@ -65,9 +66,49 @@ export function softwareApplicationJsonLd() {
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
     offers: freeOfferJsonLd(),
-    description: 'Hosted dropshipping storefront with supplier fulfillment and Stripe Connect payouts.',
+    description:
+      'Dropshipping product research with a sample catalog, supplier import, and an optional hosted storefront. Free plan included. Pro is billed in Stripe.',
     url: siteUrl(),
   }
+}
+
+export function pageMetadata(input: {
+  title: string
+  description: string
+  path: string
+  noIndex?: boolean
+  type?: 'website' | 'article'
+  imagePath?: string
+}): Metadata {
+  const title = metadataTitle(input.title)
+  const socialTitle = documentTitle(input.title)
+  const imagePath = input.imagePath ?? OG_IMAGE_PATH
+  return {
+    title,
+    description: input.description,
+    alternates: { canonical: input.path },
+    robots: input.noIndex
+      ? { index: false, follow: false }
+      : { index: true, follow: true },
+    openGraph: {
+      title: socialTitle,
+      description: input.description,
+      type: input.type ?? 'website',
+      url: input.path,
+      siteName: SITE_NAME,
+      images: [{ url: imagePath, width: 1200, height: 630, alt: socialTitle }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: socialTitle,
+      description: input.description,
+      images: [imagePath],
+    },
+  }
+}
+
+export function jsonLdGraph(nodes: object[]) {
+  return { '@context': 'https://schema.org', '@graph': nodes }
 }
 
 export function breadcrumbJsonLd(items: { name: string; path: string }[]) {

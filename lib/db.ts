@@ -527,6 +527,15 @@ export async function markCatalogItemPushed(
 
 // ─── Analytics ───────────────────────────────────────────────────────────────
 
+export async function saveWatchSubscriber(email: string, source: string): Promise<void> {
+  await ensureSchema()
+  await sql`
+    insert into watch_subscribers (email, source)
+    values (${email}, ${source})
+    on conflict (email) do nothing
+  `
+}
+
 export async function getAnalyticsData(userId: string) {
   await ensureSchema()
   const [saved, history, session] = await Promise.all([

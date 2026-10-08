@@ -1,8 +1,11 @@
 import Link from 'next/link'
 import { Radar } from 'lucide-react'
+import { SignupLink } from '@/components/marketing/signup-link'
+import { WatchForm } from '@/components/marketing/watch-form'
 import { Button } from '@/components/ui/button'
 
 const links = [
+  { href: '/research', label: 'Research' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/faq', label: 'FAQ' },
   { href: '/guides', label: 'Guides' },
@@ -30,7 +33,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/auth/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
-            <Link href="/auth/sign-up"><Button size="sm">Get started free</Button></Link>
+            <SignupLink href="/auth/sign-up" location="header"><Button size="sm">Get started free</Button></SignupLink>
           </div>
         </div>
         <nav aria-label="Mobile" className="md:hidden border-t border-border px-4 py-2 flex gap-4 text-sm text-muted-foreground">
@@ -44,18 +47,26 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 grid gap-6 sm:grid-cols-3">
           <div>
             <p className="font-medium">Dropship Scout</p>
-            <p className="text-sm text-muted-foreground mt-2">A hosted storefront for products a real supplier can fulfill.</p>
+            <p className="text-sm text-muted-foreground mt-2">Product research for dropshipping, with a hosted store when a supplier can fulfill the order.</p>
           </div>
           <div className="flex flex-col gap-2 text-sm">
+            <Link href="/research" className="text-muted-foreground hover:text-foreground">Research</Link>
+            <Link href="/research/idea-checker" className="text-muted-foreground hover:text-foreground">Product idea checker</Link>
+            <Link href="/research/preview" className="text-muted-foreground hover:text-foreground">Free preview</Link>
             <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/faq" className="text-muted-foreground hover:text-foreground">FAQ</Link>
             <Link href="/guides" className="text-muted-foreground hover:text-foreground">Guides</Link>
           </div>
           <div className="flex flex-col gap-2 text-sm">
-            <Link href="/guides/dropshipping-without-shopify" className="text-muted-foreground hover:text-foreground">Dropshipping without Shopify</Link>
-            <Link href="/guides/cjdropshipping-alternative" className="text-muted-foreground hover:text-foreground">CJ Dropshipping and a hosted store</Link>
-            <Link href="/auth/sign-up" className="text-muted-foreground hover:text-foreground">Create an account</Link>
+            <Link href="/research/winning-dropshipping-products" className="text-muted-foreground hover:text-foreground">Winning dropshipping products</Link>
+            <Link href="/research/dropshipping-product-research-tool" className="text-muted-foreground hover:text-foreground">Product research tool</Link>
+            <Link href="/research/shopify-product-research" className="text-muted-foreground hover:text-foreground">Shopify product research</Link>
+            <Link href="/research/tiktok-trending-products-to-sell" className="text-muted-foreground hover:text-foreground">TikTok products to sell</Link>
+            <SignupLink href="/auth/sign-up" location="footer" className="text-muted-foreground hover:text-foreground">Create an account</SignupLink>
           </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
+          <WatchForm source="footer" />
         </div>
       </footer>
     </div>

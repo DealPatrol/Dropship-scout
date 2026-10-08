@@ -1,4 +1,4 @@
-const DEFAULT_SITE_URL = 'https://dropship-scout.vercel.app'
+const DEFAULT_SITE_URL = 'https://getdropshipscout.com'
 
 /** Public origin used for canonical URLs, sitemap, and Open Graph. */
 export function siteUrl(): string {

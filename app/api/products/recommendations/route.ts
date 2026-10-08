@@ -97,8 +97,13 @@ Rules:
 - Prioritise products with margin ≥ 35% and score ≥ 7.0
 - Use only platform IDs from: aliexpress, amazon, temu, walmart, ebay, cjdropship, spocket, zendrop
 
+Rules for every object:
+- Set monthlySales to the exact string "Not verified".
+- Do not invent unit sales, order counts, revenue, or "k" volume figures in any field.
+- Prices are rough planning numbers, not live quotes. Say that in aiInsight.
+
 Return ONLY a valid JSON array with ${limit} objects. No markdown, no backticks, no explanation.
-[{"name":"Specific product name","category":"Category","trend":"🔥 Hot","margin":42,"sellPrice":"34.99","sourcePrice":"12.00","monthlySales":"2.8k","rating":4.5,"competition":"Low","score":8.1,"platforms":["aliexpress"],"tags":["trending"],"aiInsight":"2-3 sentence expert insight.","imageUrl":""}]
+[{"name":"Specific product name","category":"Category","trend":"🔥 Hot","margin":42,"sellPrice":"34.99","sourcePrice":"12.00","monthlySales":"Not verified","rating":4.5,"competition":"Low","score":8.1,"platforms":["aliexpress"],"tags":["gift"],"aiInsight":"Who it is for, and that prices are estimates rather than measured sales.","imageUrl":""}]
 trend: "🔥 Hot"|"📈 Rising"|"✅ Stable"|"⚡ Viral"
 competition: "Low"|"Medium"|"High"`
 }

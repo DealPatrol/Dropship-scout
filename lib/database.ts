@@ -282,6 +282,12 @@ const SCHEMA_STATEMENTS = [
     error text,
     created_at timestamptz default now()
   )`,
+  `create table if not exists watch_subscribers (
+    id uuid primary key default gen_random_uuid(),
+    email text unique not null,
+    source text not null default 'products-to-watch',
+    created_at timestamptz default now()
+  )`,
   `create table if not exists supplier_notifications (
     id uuid primary key default gen_random_uuid(),
     supplier_profile_id uuid not null references supplier_profiles(id) on delete cascade,

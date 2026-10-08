@@ -1,29 +1,21 @@
 import type { Metadata, Viewport } from 'next'
+import { Analytics } from '@vercel/analytics/next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
-import { siteUrl } from '@/lib/site'
+import { SITE_NAME, siteUrl } from '@/lib/site'
 
 const _inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: 'Dropship Scout — hosted dropshipping storefront',
-    template: '%s · Dropship Scout',
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
   },
   description:
-    'Sign up, import products from a real supplier, and sell on a hosted storefront with Stripe checkout. Shopify is optional.',
-  keywords: ['dropshipping', 'dropshipping without shopify', 'cjdropshipping', 'printful', 'printify', 'hosted storefront'],
-  openGraph: {
-    title: 'Dropship Scout',
-    description: 'Hosted dropshipping storefront with supplier fulfillment and automatic payouts.',
-    type: 'website',
-    url: '/',
-    siteName: 'Dropship Scout',
-  },
-  twitter: { card: 'summary_large_image', title: 'Dropship Scout', description: 'Hosted dropshipping storefront with supplier fulfillment.' },
-  alternates: { canonical: '/' },
+    'Dropshipping product research with a sample catalog, supplier import, and an optional hosted store. Pro is billed in Stripe.',
+  applicationName: SITE_NAME,
 }
 
 export const viewport: Viewport = {
@@ -37,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${_inter.variable} dark`}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Toaster>{children}</Toaster>
+        <Analytics />
       </body>
     </html>
   )

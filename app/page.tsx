@@ -1,15 +1,24 @@
 import Link from 'next/link'
-import { ArrowRight, CheckCircle, ShoppingBag, Store, Truck, Wallet } from 'lucide-react'
+import { ArrowRight, CheckCircle, Search, ShoppingBag, Store, Truck } from 'lucide-react'
+import { JsonLd } from '@/components/marketing/json-ld'
+import { SignupLink } from '@/components/marketing/signup-link'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { Button } from '@/components/ui/button'
 import { HOME_FAQ } from '@/lib/marketing/content'
-import { faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd } from '@/lib/seo'
+import { allIntentPages } from '@/lib/marketing/intent'
+import { faqPageJsonLd, jsonLdGraph, organizationJsonLd, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
+
+export const metadata = pageMetadata({
+  title: 'Dropshipping product research',
+  description: 'Research what to dropship with a sample catalog you can filter by season and niche, then import a real supplier. Free plan included. Pro checks out in Stripe.',
+  path: '/',
+})
 
 const features = [
   {
-    icon: Store,
-    title: 'Hosted storefront',
-    description: 'Product pages, a cart, and Stripe Checkout on a link this app serves. Publishing does not require another ecommerce account.',
+    icon: Search,
+    title: 'Product research',
+    description: 'Filter a labeled sample catalog by niche and season, then save the products you are actually quoting. The public preview does not require an account.',
   },
   {
     icon: Truck,
@@ -17,46 +26,47 @@ const features = [
     description: 'Import from CJ Dropshipping, Printful, or Printify, or list a product from a direct supplier who joined the platform.',
   },
   {
-    icon: Wallet,
-    title: 'Automatic payout split',
-    description: 'After payment, the supplier order is placed and the charge is split. The seller receives what remains after supplier cost, Stripe fees, and the platform fee.',
+    icon: Store,
+    title: 'Hosted storefront',
+    description: 'Product pages, a cart, and Stripe Checkout on a link this app serves. Publishing does not require another ecommerce account.',
   },
   {
     icon: ShoppingBag,
-    title: 'Optional sales channels',
-    description: 'Shopify and WooCommerce can sync the published catalog and pull orders. Etsy, eBay, and TikTok Shop are listed only as coming soon.',
+    title: 'Optional Shopify',
+    description: 'Push researched listings to Shopify when you want that channel. Free accounts get a monthly cap. Pro removes it.',
   },
 ]
 
 export default function LandingPage() {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      organizationJsonLd(),
-      softwareApplicationJsonLd(),
-      faqPageJsonLd(HOME_FAQ),
-    ],
-  }
+  const featured = allIntentPages().slice(0, 6)
+  const jsonLd = jsonLdGraph([
+    organizationJsonLd(),
+    softwareApplicationJsonLd(),
+    faqPageJsonLd(HOME_FAQ),
+  ])
 
   return (
     <SiteFrame>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd data={jsonLd} />
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:pt-24 text-center">
-        <p className="text-xs font-medium uppercase tracking-wide text-primary">Hosted dropshipping storefront</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-primary">Dropshipping product research</p>
         <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
-          Sell supplier products without opening another store
+          Research the product before you spend on ads
         </h1>
         <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
-          Sign up, import a product a real supplier can ship, and publish a storefront with cart and checkout. Stripe collects the payment and the order is fulfilled automatically.
+          Filter a sample catalog by season, niche, and margin. Get a supplier quote before you call anything a winner. Upgrade to Pro in Stripe Checkout when the free limits are in the way.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link href="/auth/sign-up">
+          <SignupLink href="/auth/sign-up" location="home-hero">
             <Button size="lg" className="gap-2 px-6">Start for free <ArrowRight className="h-4 w-4" /></Button>
-          </Link>
+          </SignupLink>
           <Link href="/pricing">
             <Button variant="outline" size="lg">See pricing</Button>
           </Link>
         </div>
+        <p className="mt-4 text-sm">
+          <Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea, no account</Link>
+        </p>
       </section>
 
       <section id="product" className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
@@ -76,14 +86,31 @@ export default function LandingPage() {
       </section>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-2xl font-bold text-balance">Guides for people choosing a product</h2>
+          <Link href="/research" className="text-sm text-primary shrink-0">All research pages</Link>
+        </div>
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+          {featured.map(page => (
+            <li key={page.slug} className="rounded-lg border border-border bg-card p-4">
+              <h3 className="font-semibold">
+                <Link href={`/research/${page.slug}`} className="hover:text-primary">{page.title}</Link>
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">{page.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="rounded-xl border border-border bg-card p-6 sm:p-10">
-          <h2 className="text-2xl font-bold text-balance">A free account is enough to publish a store</h2>
+          <h2 className="text-2xl font-bold text-balance">A free account is enough to start the shortlist</h2>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {[
-              'Hosted product pages, cart, and checkout',
-              '25 published listings on the free plan',
-              'CJ, Printful, Printify, and direct suppliers',
-              'Shopify and WooCommerce when you want them',
+              '10 saved research products',
+              '25 research-catalog products',
+              'Sample catalog labeled as sample data',
+              'Hosted store when a supplier can fulfill',
             ].map(item => (
               <li key={item} className="flex items-start gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" aria-hidden="true" />
@@ -91,9 +118,9 @@ export default function LandingPage() {
               </li>
             ))}
           </ul>
-          <Link href="/auth/sign-up" className="inline-block mt-6">
+          <SignupLink href="/auth/sign-up" location="home-shortlist" className="inline-block mt-6">
             <Button>Create your account</Button>
-          </Link>
+          </SignupLink>
         </div>
       </section>
 

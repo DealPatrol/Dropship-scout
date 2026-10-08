@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
+import { publicCheckoutError } from '@/lib/billing'
 import { getBillingProfile } from '@/lib/db'
+import { siteUrl } from '@/lib/site'
 import { getStripe } from '@/lib/stripe'
 
 export async function POST() {
@@ -13,16 +15,17 @@ export async function POST() {
       return NextResponse.json({ error: 'No Stripe customer found' }, { status: 404 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = siteUrl()
     const session = await getStripe().billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
       return_url: `${appUrl}/dashboard/settings`,
     })
     return NextResponse.json({ url: session.url })
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Could not open billing portal' },
-      { status: 500 }
-    )
+    const failure = publicCheckoutError(err)
+    const message = failure.status === 503
+      ? failure.message
+      : 'Could not open billing portal'
+    return NextResponse.json({ error: message }, { status: failure.status === 503 ? 503 : 500 })
   }
 }

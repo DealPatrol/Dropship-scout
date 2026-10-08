@@ -105,7 +105,7 @@ export function toPushableProduct(product: CatalogProduct): Product {
     margin: perSale.marginPercent,
     sellPrice: product.price.toFixed(2),
     sourcePrice: product.cost.toFixed(2),
-    monthlySales: `${(product.monthlyOrders / 1000).toFixed(1)}k`,
+    monthlySales: 'Not verified',
     rating: product.rating,
     competition: product.competition,
     score: Math.round((perSale.marginPercent + product.demand) / 20 * 10) / 10,

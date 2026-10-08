@@ -52,13 +52,20 @@ function buildSearchPrompt(
   sortBy: string,
   customNiche: string
 ): string {
-  return `You are a dropshipping product research expert. Generate 8 best-selling products for: ${platforms.join(', ')}.
-${category && category !== 'All Categories' ? 'Category: ' + category : 'Mix of popular categories.'}
+  return `You are a dropshipping product research assistant. Suggest 8 product ideas for: ${platforms.join(', ')}.
+${category && category !== 'All Categories' ? 'Category: ' + category : 'Mix of practical categories.'}
 ${customNiche ? 'Niche: ' + customNiche : ''}
-Sort by: ${sortBy || 'Best Selling'}
+Sort preference: ${sortBy || 'Best Selling'}
+
+Rules:
+- These are ideas, not live market data.
+- Set monthlySales to the exact string "Not verified" on every object.
+- Do not invent unit sales, order counts, revenue, or "k" volume figures in any field, including aiInsight.
+- sellPrice and sourcePrice are rough planning numbers, not live supplier quotes. Say that in aiInsight.
+- Do not claim a product is trending, viral, or a best seller as a measured fact.
 
 Return ONLY a valid JSON array with 8 objects. No markdown, no backticks, no explanation.
-[{"name":"Specific product name","category":"Category","trend":"🔥 Hot","margin":38,"sellPrice":"29.99","sourcePrice":"9.50","monthlySales":"3.2k","rating":4.6,"competition":"Low","score":8.4,"platforms":["aliexpress"],"tags":["trending","gift"],"aiInsight":"2-3 sentence expert insight.","imageUrl":""}]
+[{"name":"Specific product name","category":"Category","trend":"🔥 Hot","margin":38,"sellPrice":"29.99","sourcePrice":"9.50","monthlySales":"Not verified","rating":4.6,"competition":"Low","score":8.4,"platforms":["aliexpress"],"tags":["gift"],"aiInsight":"Who it is for, what to check with a supplier, and that prices are estimates.","imageUrl":""}]
 trend: "🔥 Hot"|"📈 Rising"|"✅ Stable"|"⚡ Viral"
 competition: "Low"|"Medium"|"High"
 Only use platform IDs from: ${platforms.join(', ')}`
