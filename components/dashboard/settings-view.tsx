@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { startProCheckout } from '@/components/billing/start-checkout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,9 +16,25 @@ interface SettingsViewProps {
 
 export function SettingsView({ userEmail }: SettingsViewProps) {
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [plan, setPlan] = useState<'free' | 'pro'>('free')
   const [hasStripeCustomer, setHasStripeCustomer] = useState(false)
+  const [statusLoaded, setStatusLoaded] = useState(false)
   const [billingLoading, setBillingLoading] = useState(false)
+  const [checkoutRequested, setCheckoutRequested] = useState(false)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setCheckoutRequested(params.get('checkout') === '1')
+    const billing = params.get('billing')
+    if (billing === 'success') {
+      setNotice('Stripe sent you back after checkout. The plan updates when the webhook marks the subscription active. Refresh if it still says Free.')
+    } else if (billing === 'cancelled') {
+      setNotice('Checkout was cancelled. You can start it again.')
+    } else if (billing === 'unavailable') {
+      setNotice('Pro checkout is not configured on this deployment yet.')
+    }
+  }, [])
 
   useEffect(() => {
     fetch('/api/billing/status')
@@ -27,24 +44,59 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
         setHasStripeCustomer(Boolean(data.hasCustomer))
       })
       .catch(() => undefined)
+      .finally(() => setStatusLoaded(true))
   }, [])
 
-  async function handleBilling() {
+  async function openPortal() {
+    const response = await fetch('/api/billing/portal', { method: 'POST' })
+    const data = await response.json()
+    if (!response.ok || !data.url) throw new Error(data.error || 'Could not open billing')
+    window.location.assign(data.url)
+  }
+
+  async function handlePortal() {
     setBillingLoading(true)
     setError(null)
     try {
-      const endpoint = plan === 'pro' || hasStripeCustomer
-        ? '/api/billing/portal'
-        : '/api/billing/checkout'
-      const response = await fetch(endpoint, { method: 'POST' })
-      const data = await response.json()
-      if (!response.ok || !data.url) throw new Error(data.error || 'Could not open billing')
-      window.location.assign(data.url)
+      await openPortal()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not open billing')
       setBillingLoading(false)
     }
   }
+
+  async function handleUpgrade() {
+    setBillingLoading(true)
+    setError(null)
+    try {
+      const url = await startProCheckout('settings')
+      window.location.assign(url)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not start checkout'
+      if (message.includes('already exists')) {
+        try {
+          await openPortal()
+          return
+        } catch (portalError) {
+          setError(portalError instanceof Error ? portalError.message : 'Could not open billing')
+          setBillingLoading(false)
+          return
+        }
+      }
+      setError(message)
+      setBillingLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!statusLoaded || !checkoutRequested || plan === 'pro') return
+    const key = 'ds-checkout-autostart'
+    if (sessionStorage.getItem(key) === '1') return
+    sessionStorage.setItem(key, '1')
+    void handleUpgrade()
+    // handleUpgrade is recreated each render; this effect should run once per visit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusLoaded, checkoutRequested, plan])
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
@@ -83,12 +135,26 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
                 : 'Free includes 10 saved products, 25 research-catalog products, and 25 hosted store listings.'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-between gap-4">
-            <span className="text-sm font-medium capitalize">{plan} plan</span>
-            <Button onClick={handleBilling} disabled={billingLoading} variant={plan === 'pro' ? 'outline' : 'default'}>
-              {billingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {plan === 'pro' || hasStripeCustomer ? 'Manage billing' : 'Upgrade to Pro'}
-            </Button>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm font-medium capitalize">{plan} plan</span>
+              {plan === 'pro' ? (
+                <Button onClick={() => void handlePortal()} disabled={billingLoading} variant="outline">
+                  {billingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Manage billing
+                </Button>
+              ) : (
+                <Button onClick={() => void handleUpgrade()} disabled={billingLoading}>
+                  {billingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Upgrade to Pro
+                </Button>
+              )}
+            </div>
+            {plan !== 'pro' && hasStripeCustomer && (
+              <button type="button" className="text-sm text-primary text-left" onClick={() => void handlePortal()}>
+                Open the billing portal
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -107,6 +173,7 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
           </CardContent>
         </Card>
 
+        {notice && <p className="text-sm text-muted-foreground">{notice}</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       </div>
     </div>

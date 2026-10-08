@@ -88,8 +88,8 @@ export function DiscoveryCard({ product, inCatalog, isPushed, isPushing, onAdd, 
             <p className="text-sm font-semibold text-foreground">${product.cost.toFixed(2)}</p>
           </div>
           <div className="bg-surface-raised rounded-md p-2">
-            <p className="text-xs text-muted-foreground mb-0.5">Monthly Orders</p>
-            <p className="text-sm font-semibold text-foreground">{(product.monthlyOrders / 1000).toFixed(1)}k</p>
+            <p className="text-xs text-muted-foreground mb-0.5">Sample ship time</p>
+            <p className="text-sm font-semibold text-foreground">{product.shippingDays} days</p>
           </div>
           <div className="bg-surface-raised rounded-md p-2">
             <p className="text-xs text-muted-foreground mb-0.5">Competition</p>

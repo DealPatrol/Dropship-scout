@@ -3,10 +3,10 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { PRODUCTS } from '@/lib/merchandising/data'
-import { catalogScore, opportunityScore, revenueImpact } from '@/lib/merchandising/scoring'
+import { marginPercent, PRODUCTS } from '@/lib/merchandising/data'
+import { catalogScore, opportunityScore } from '@/lib/merchandising/scoring'
 import { missingBundlePartners } from '@/lib/merchandising/bundles'
-import { MONTH_LABELS, stockingAlerts } from '@/lib/merchandising/seasonal'
+import { MONTH_LABELS, sellingWindowLabel, stockingAlerts } from '@/lib/merchandising/seasonal'
 import { useCatalog } from '@/lib/merchandising/use-catalog'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -54,15 +54,11 @@ export function OverviewView({ userId, email }: { userId: string; email: string 
   )
   const opportunities = allOpportunities.slice(0, 6)
 
-  const potentialRevenue = opportunities
-    .slice(0, 3)
-    .reduce((sum, product) => sum + revenueImpact(product).monthlyRevenue, 0)
-
   const tasks: { icon: React.ReactNode; text: string; href: string }[] = []
   if (opportunities.length > 0) {
     tasks.push({
       icon: <Sparkles className="h-4 w-4 text-primary" />,
-      text: `Add these ${Math.min(3, opportunities.length)} trending products (est. +$${potentialRevenue.toLocaleString()}/mo)`,
+      text: `Review ${Math.min(3, opportunities.length)} sample-catalog products that are not in your catalog yet`,
       href: '/dashboard/explore',
     })
   }
@@ -135,8 +131,8 @@ export function OverviewView({ userId, email }: { userId: string; email: string 
         </Card>
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-muted-foreground">Est. Revenue Upside</p>
-            <p className="text-2xl font-bold text-green-400">+${potentialRevenue.toLocaleString()}<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
+            <p className="text-xs text-muted-foreground">Stocking notes</p>
+            <p className="text-2xl font-bold text-foreground">{alerts.length}</p>
           </CardContent>
         </Card>
       </div>
@@ -219,7 +215,6 @@ export function OverviewView({ userId, email }: { userId: string; email: string 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {opportunities.map(product => {
               const productScore = opportunityScore(product).total
-              const impact = revenueImpact(product)
               return (
                 <div key={product.id} className="rounded-md border border-border bg-surface-raised p-3 flex flex-col gap-1.5">
                   <div className="flex items-start justify-between gap-2">
@@ -234,7 +229,7 @@ export function OverviewView({ userId, email }: { userId: string; email: string 
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Est. <span className="text-green-400 font-medium">+${impact.monthlyRevenue.toLocaleString()}/mo</span> · {impact.confidence} confidence
+                    Sample margin {marginPercent(product)}% · {sellingWindowLabel(product)}. Not a sales forecast.
                   </p>
                   <Button
                     variant="outline"

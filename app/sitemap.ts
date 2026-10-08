@@ -1,22 +1,13 @@
 import type { MetadataRoute } from 'next'
-import { GUIDES } from '@/lib/marketing/content'
+import { marketingPaths } from '@/lib/marketing/paths'
 import { absoluteUrl } from '@/lib/site'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
-  const staticPaths = ['/', '/pricing', '/faq', '/guides']
-  return [
-    ...staticPaths.map(path => ({
-      url: absoluteUrl(path),
-      lastModified: now,
-      changeFrequency: path === '/' ? 'weekly' as const : 'monthly' as const,
-      priority: path === '/' ? 1 : 0.7,
-    })),
-    ...GUIDES.map(guide => ({
-      url: absoluteUrl(`/guides/${guide.slug}`),
-      lastModified: now,
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    })),
-  ]
+  return marketingPaths(now).map(entry => ({
+    url: absoluteUrl(entry.path),
+    lastModified: now,
+    changeFrequency: entry.changeFrequency,
+    priority: entry.priority,
+  }))
 }

@@ -1,13 +1,14 @@
-import type { Metadata } from 'next'
+import { JsonLd } from '@/components/marketing/json-ld'
+import { SignupCta } from '@/components/marketing/signup-cta'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { FAQ_ITEMS } from '@/lib/marketing/content'
-import { faqPageJsonLd } from '@/lib/seo'
+import { faqPageJsonLd, pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'FAQ',
-  description: 'Answers about selling on Dropship Scout without Shopify, which suppliers can fulfill orders, and how payouts are split.',
-  alternates: { canonical: '/faq' },
-}
+  description: 'Answers about Dropship Scout product research, the sample catalog, suppliers, payouts, and how Pro checkout works.',
+  path: '/faq',
+})
 
 export default function FaqPage() {
   const jsonLd = {
@@ -16,10 +17,10 @@ export default function FaqPage() {
   }
   return (
     <SiteFrame>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd data={jsonLd} />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
         <h1 className="text-4xl font-bold tracking-tight">FAQ</h1>
-        <p className="mt-4 text-muted-foreground">Practical answers for sellers setting up a hosted store.</p>
+        <p className="mt-4 text-muted-foreground">Practical answers for sellers researching products and setting up a hosted store.</p>
         <div className="mt-10 flex flex-col gap-8">
           {FAQ_ITEMS.map(item => (
             <article key={item.question}>
@@ -28,6 +29,7 @@ export default function FaqPage() {
             </article>
           ))}
         </div>
+        <SignupCta location="faq" />
       </div>
     </SiteFrame>
   )

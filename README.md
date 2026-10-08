@@ -22,7 +22,7 @@ Requires Node.js 22.14+, pnpm, and a Postgres database (Neon works).
 | `AUTH_SECRET` | Runtime | Long random signing key for login session cookies. Keep the same value between deployments. |
 | `ANTHROPIC_API_KEY` | Optional | Enables AI search and prompt interpretation. Built-in discovery and catalog work without it. |
 | `NEXT_PUBLIC_APP_URL` | Recommended | Public app URL, such as `http://localhost:3000` locally or the Vercel domain. |
-| `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical origin for metadata, the sitemap, and Open Graph. Set this to the custom domain when it is attached. Falls back to `NEXT_PUBLIC_APP_URL`. |
+| `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical origin for metadata, the sitemap, Open Graph, and Stripe return URLs. Set this to `https://getdropshipscout.com` in production. Falls back to `NEXT_PUBLIC_APP_URL`, then that domain. |
 | `CRON_SECRET` | Runtime | Authorizes `/api/cron/track`; the route refuses to run when it is missing. |
 | `STRIPE_SECRET_KEY` | Billing | Restricted Stripe server key for Customers, Checkout, and Billing Portal. |
 | `STRIPE_PRO_PRICE_ID` | Billing | Recurring Price ID for the separate Dropship Scout Pro product. |
@@ -63,6 +63,10 @@ The built-in discovery catalog is still sample research data and cannot be sold 
 Import this repository into Vercel as a Next.js project. Select pnpm and use `pnpm build`. Copy the required values from `.env.example` into sensitive Environment Variables for Production and Preview; do not commit real values. Keep the Postgres URL and all provider keys server-side and use a pooled Neon connection string for serverless functions.
 
 The included hourly cron calls `/api/cron/track`. Set a long random `CRON_SECRET`; Vercel Cron automatically sends it as `Authorization: Bearer <CRON_SECRET>`. Local calls must send the same header. A missing secret returns `503`, not an unprotected successful run.
+
+Vercel Web Analytics is included with `@vercel/analytics`. Enable Web Analytics on the Vercel project. No extra key is required. Signup buttons emit `signup-click`. A successful call that returns a Stripe Checkout URL emits `checkout-started`.
+
+Public research pages live under `/research`, with a sample-catalog preview at `/research/preview`. Those pages do not publish order counts or revenue. Pro checkout starts from `/pricing` after signup or sign-in (`?plan=pro`).
 
 ## Stripe subscriptions
 

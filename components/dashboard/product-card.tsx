@@ -1,5 +1,6 @@
 'use client'
 
+import { publicSalesNote } from '@/lib/sales-note'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 import { Button } from '@/components/ui/button'
@@ -72,8 +73,8 @@ export function ProductCard({ product, isSaved, isSaving, onSave }: ProductCardP
             </p>
           </div>
           <div className="bg-surface-raised rounded-md p-2">
-            <p className="text-xs text-muted-foreground mb-0.5">Monthly Sales</p>
-            <p className="text-sm font-semibold text-foreground">{product.monthlySales}</p>
+            <p className="text-xs text-muted-foreground mb-0.5">Sales</p>
+            <p className="text-sm font-semibold text-foreground">{publicSalesNote(product.monthlySales)}</p>
           </div>
           <div className="bg-surface-raised rounded-md p-2">
             <p className="text-xs text-muted-foreground mb-0.5">Competition</p>

@@ -137,6 +137,10 @@ export function guideBySlug(slug: string): Guide | undefined {
 
 export const FAQ_ITEMS = [
   {
+    question: 'Is the product catalog live sales data?',
+    answer: 'No. The built-in discovery catalog is curated sample data. Prices, competition tags, and season windows are editorial. Search suggestions do not include verified order counts. Use a supplier quote before you buy ads.',
+  },
+  {
     question: 'Do I need a Shopify account?',
     answer: 'No. Sign up, connect Stripe payouts, import a supplier product, and publish a storefront at /store/your-link. Shopify is an optional sales channel.',
   },
@@ -169,13 +173,21 @@ function faqByQuestion(question: string): { question: string; answer: string } {
 }
 
 /** Questions rendered in the homepage "Common questions" block. */
-export const HOME_FAQ = FAQ_ITEMS.slice(0, 3)
+export const HOME_FAQ = [
+  faqByQuestion('Is the product catalog live sales data?'),
+  faqByQuestion('Do I need a Shopify account?'),
+  faqByQuestion('What does the free plan include?'),
+]
 
 /** Questions rendered on /pricing. Pro has no published monthly price. */
 export const PRICING_FAQ = [
   faqByQuestion('What does the free plan include?'),
   {
     question: 'How is Pro billed?',
-    answer: 'Pro is billed through Stripe at the price configured for the Dropship Scout Pro product.',
+    answer: 'Create an account from the pricing page and Stripe Checkout opens for the Dropship Scout Pro price. If you already have an account, sign in and the same checkout starts. The monthly amount is that Stripe Price. Settings can open checkout again when the subscription is not active.',
+  },
+  {
+    question: 'What if I already started checkout once?',
+    answer: 'An abandoned checkout can leave a Stripe customer on the account without an active subscription. Upgrade to Pro still starts Checkout in that case. Manage billing is for an active Pro plan.',
   },
 ]

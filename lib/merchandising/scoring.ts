@@ -55,15 +55,15 @@ export function opportunityScore(product: CatalogProduct): OpportunityScore {
   )
 
   const reasons: string[] = []
-  if (product.demand >= 80) reasons.push(`Strong demand — roughly ${formatOrders(product.monthlyOrders)} orders/month across suppliers.`)
-  else if (product.demand >= 70) reasons.push('Steady demand with consistent monthly order volume.')
-  if (product.competition === 'Low') reasons.push('Only a small number of stores are actively selling it.')
-  if (product.competition === 'High') reasons.push('Competition is crowded — differentiation via bundles or creative is needed.')
-  reasons.push(`Average profit margin is ${margin}%.`)
-  if (product.shippingDays <= 8) reasons.push(`Suppliers ship in ~${product.shippingDays} days on average.`)
-  if (product.trend === 'hot' || product.trend === 'rising') reasons.push('Demand is expected to keep growing over the next three months.')
-  if (product.trend === 'declining') reasons.push('Demand is trending down — treat as a short-term play.')
-  if (product.seasonality === 'evergreen') reasons.push('Evergreen product that sells year-round.')
+  if (product.demand >= 80) reasons.push('The sample catalog tags demand as strong. That tag is editorial, not a live order count.')
+  else if (product.demand >= 70) reasons.push('The sample catalog tags demand as steady. It is not a measured sales volume.')
+  if (product.competition === 'Low') reasons.push('The sample catalog tags competition as low. Confirm that on the supplier and on store search before you buy ads.')
+  if (product.competition === 'High') reasons.push('The sample catalog tags competition as high, so the first photo and the bundle have to do more work.')
+  reasons.push(`Sample margin is ${margin}% before shipping, ads, and refunds.`)
+  if (product.shippingDays <= 8) reasons.push(`The sample record lists about ${product.shippingDays} shipping days. Ask the supplier before you promise a date.`)
+  if (product.trend === 'hot' || product.trend === 'rising') reasons.push('The sample catalog tags the trend as rising. Treat that as a hypothesis to test, not a forecast.')
+  if (product.trend === 'declining') reasons.push('The sample catalog tags the trend as declining, so keep the test small.')
+  if (product.seasonality === 'evergreen') reasons.push('Marked evergreen in the sample catalog, so it is not tied to one holiday.')
 
   return { total, breakdown, reasons }
 }
@@ -98,10 +98,6 @@ export function revenueImpact(product: CatalogProduct): RevenueImpact {
     confidence,
     why: `Based on ${why}.`,
   }
-}
-
-function formatOrders(n: number): string {
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)
 }
 
 // ─── Catalog Health Score ─────────────────────────────────────────────────────

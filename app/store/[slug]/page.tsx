@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { StoreFrame } from '@/components/storefront/store-frame'
 import { formatCents } from '@/lib/commerce/money'
-import { metadataTitle, storeShouldIndex } from '@/lib/seo'
+import { documentTitle, metadataTitle, OG_IMAGE_PATH, storeShouldIndex } from '@/lib/seo'
 import { getPublishedStore } from '@/lib/store-db'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +17,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: metadataTitle(store.storeName),
     description,
     alternates: { canonical: `/store/${store.storeSlug}` },
+    openGraph: {
+      title: documentTitle(store.storeName),
+      description,
+      url: `/store/${store.storeSlug}`,
+      images: [{ url: OG_IMAGE_PATH, width: 1200, height: 630, alt: store.storeName }],
+    },
+    twitter: { card: 'summary_large_image', title: documentTitle(store.storeName), description, images: [OG_IMAGE_PATH] },
     robots: storeShouldIndex(store.storeSlug, store.listings.length)
       ? { index: true, follow: true }
       : { index: false, follow: false },

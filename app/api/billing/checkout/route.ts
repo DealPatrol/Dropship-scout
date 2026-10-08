@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
+import { publicCheckoutError } from '@/lib/billing'
 import { getBillingProfile, setStripeCustomer } from '@/lib/db'
+import { siteUrl } from '@/lib/site'
 import {
   checkoutIntegrationIdentifier,
   getStripe,
@@ -37,7 +39,7 @@ export async function POST() {
       await setStripeCustomer(user.id, customerId)
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = siteUrl()
     const priceId = proPriceId()
     const checkoutWindow = Math.floor(Date.now() / (60 * 60 * 1000))
     const session = await stripe.checkout.sessions.create({
@@ -56,9 +58,7 @@ export async function POST() {
 
     return NextResponse.json({ url: session.url })
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Could not start checkout' },
-      { status: 500 }
-    )
+    const failure = publicCheckoutError(err)
+    return NextResponse.json({ error: failure.message }, { status: failure.status })
   }
 }

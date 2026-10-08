@@ -36,7 +36,7 @@ export function buildShopifyPayload(product: Product): ShopifyProductPayload {
     product: {
       title: product.name,
       handle: shopifyProductHandle(product),
-      body_html: `<p>${product.aiInsight}</p><p><strong>Rating:</strong> ${product.rating}/5 &nbsp;|&nbsp; <strong>Monthly Sales:</strong> ${product.monthlySales}</p>`,
+      body_html: `<p>${product.aiInsight}</p>`,
       vendor: 'DropShip Scout',
       product_type: product.category,
       tags: [...(product.tags || []), product.category, 'dropship'].join(', '),

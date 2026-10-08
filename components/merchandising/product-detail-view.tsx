@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { marginPercent, NICHE_MAP, HOLIDAY_MAP } from '@/lib/merchandising/data'
-import { opportunityScore, revenueImpact } from '@/lib/merchandising/scoring'
+import { opportunityScore } from '@/lib/merchandising/scoring'
 import { dropshipEconomics, supplierSources } from '@/lib/merchandising/fulfillment'
 import {
   demandForMonth,
@@ -49,7 +49,6 @@ export function ProductDetailView({ product, userId }: { product: CatalogProduct
   const { toast } = useToast()
   const [pushing, setPushing] = useState(false)
   const score = opportunityScore(product)
-  const impact = revenueImpact(product)
   const bundles = bundleSuggestions(product)
   const bundle = bundleValue(product, bundles)
   const margin = marginPercent(product)
@@ -213,8 +212,7 @@ export function ProductDetailView({ product, userId }: { product: CatalogProduct
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Est. <span className="text-green-400 font-medium">${economics.monthlyProfit.toLocaleString()}/mo profit</span> at{' '}
-                {economics.monthlyUnitsLow}–{economics.monthlyUnitsHigh} sales/month
+                Sample catalog prices only. Unit sales are not measured, so this screen does not forecast monthly profit.
               </p>
             </div>
 
@@ -307,30 +305,18 @@ export function ProductDetailView({ product, userId }: { product: CatalogProduct
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-green-400" />
-              Potential Revenue Impact
+              Sample margin
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div>
-              <p className="text-3xl font-bold text-green-400">
-                +${impact.monthlyRevenue.toLocaleString()}
-                <span className="text-sm font-normal text-muted-foreground">/month</span>
+              <p className="text-3xl font-bold text-foreground">
+                {margin}%
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Estimated {impact.monthlyUnitsLow}–{impact.monthlyUnitsHigh} units/month
+                (sample retail − sample cost) / sample retail. Shipping, ads, and refunds are not included, and this is not a sales forecast.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Confidence:</span>
-              <span className={cn(
-                'text-xs font-semibold px-2 py-0.5 rounded-full',
-                impact.confidence === 'High' ? 'bg-green-400/10 text-green-400' :
-                impact.confidence === 'Medium' ? 'bg-yellow-400/10 text-yellow-400' : 'bg-red-400/10 text-red-400'
-              )}>
-                {impact.confidence}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{impact.why}</p>
             <div className="border-t border-border pt-3 grid grid-cols-2 gap-2 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground">Sell / Cost</p>
