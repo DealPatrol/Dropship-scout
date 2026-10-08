@@ -31,6 +31,10 @@ export function proPriceId(): string {
   return requiredEnv('STRIPE_PRO_PRICE_ID')
 }
 
+export function stripeBillingConfigured(): boolean {
+  return Boolean(process.env.STRIPE_SECRET_KEY?.trim() && process.env.STRIPE_PRO_PRICE_ID?.trim())
+}
+
 export function annualPriceConfigured(): boolean {
   return Boolean(process.env.STRIPE_PRO_ANNUAL_PRICE_ID?.trim())
 }

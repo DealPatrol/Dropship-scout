@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { PLAN_LIMITS } from '@/lib/billing'
 import { getBillingProfile } from '@/lib/db'
+import { stripeBillingConfigured } from '@/lib/stripe'
 
 export async function GET() {
   const user = await getSession()
@@ -15,5 +16,6 @@ export async function GET() {
     status: profile?.stripe_subscription_status ?? null,
     hasCustomer: Boolean(profile?.stripe_customer_id),
     limits: PLAN_LIMITS[plan],
+    checkoutAvailable: stripeBillingConfigured(),
   })
 }

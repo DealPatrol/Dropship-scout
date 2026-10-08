@@ -1,7 +1,7 @@
 import type Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
 import { compensateRefundedCharge, fulfillCheckoutSession } from '@/lib/commerce/process-order'
-import { hasStripeEvent, reconcileStripeSubscription, recordStripeEvent } from '@/lib/db'
+import { hasStripeEvent, queuePurchaseConversion, reconcileStripeSubscription, recordStripeEvent } from '@/lib/db'
 import { planForSubscriptionStatus } from '@/lib/billing'
 import { recipientTransfersStatus, retrieveRecipientAccount } from '@/lib/connect'
 import { setConnectAccount, userIdForConnectAccount } from '@/lib/store-db'
@@ -18,6 +18,7 @@ async function processCheckout(session: Stripe.Checkout.Session, eventCreated: n
   const subscriptionId = resourceId(session.subscription)
   if (!userId || !customerId || !subscriptionId) return
 
+  const paid = session.payment_status === 'paid' || session.payment_status === 'no_payment_required'
   await reconcileStripeSubscription({
     userId,
     subscriptionId,
@@ -35,6 +36,14 @@ async function processCheckout(session: Stripe.Checkout.Session, eventCreated: n
         plan: planForSubscriptionStatus(current.status),
       }
     },
+  })
+  if (!paid) return
+  const amount = session.amount_total
+  await queuePurchaseConversion({
+    userId,
+    transactionId: subscriptionId,
+    valueCents: typeof amount === 'number' && Number.isInteger(amount) && amount > 0 ? amount : null,
+    currency: session.currency ? session.currency.toLowerCase() : null,
   })
 }
 

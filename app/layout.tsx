@@ -2,10 +2,12 @@ import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { AdsTags } from '@/components/ads/ads-tags'
+import { AttributionCapture } from '@/components/ads/attribution-capture'
 import { Toaster } from '@/components/ui/toaster'
 import { SITE_NAME, siteUrl } from '@/lib/site'
 
-const _inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const _inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter', adjustFontFallback: true })
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -29,6 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${_inter.variable} dark`}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Toaster>{children}</Toaster>
+        <AttributionCapture />
+        <AdsTags />
         <Analytics />
       </body>
     </html>

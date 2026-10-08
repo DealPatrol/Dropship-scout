@@ -1,6 +1,6 @@
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export const WATCH_SOURCES = ['idea-checker', 'research', 'pricing', 'footer', 'products-to-watch'] as const
+export const WATCH_SOURCES = ['idea-checker', 'research', 'pricing', 'footer', 'products-to-watch', 'pro-waitlist'] as const
 
 export type WatchSource = (typeof WATCH_SOURCES)[number]
 

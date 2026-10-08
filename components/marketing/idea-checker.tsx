@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { trackAdsConversion } from '@/lib/ads-events'
 import { WatchForm } from '@/components/marketing/watch-form'
 import { formatCents } from '@/lib/commerce/money'
 import {
@@ -44,7 +45,7 @@ function amount(value: string): number {
   return Number(value)
 }
 
-function shareQuery(input: {
+function shareQuery(shareBase: string, input: {
   name: string
   cost: string
   price: string
@@ -66,7 +67,7 @@ function shareQuery(input: {
     supplier: input.secondSupplier,
     sample: input.sampleOrdered ? '1' : '0',
   })
-  return `/research/idea-checker?${query.toString()}`
+  return `${shareBase}?${query.toString()}`
 }
 
 export function IdeaChecker({
@@ -74,11 +75,13 @@ export function IdeaChecker({
   fees,
   initialResult,
   initialError,
+  shareBase = '/research/idea-checker',
 }: {
   fields: IdeaFormFields
   fees: IdeaCheckFees
   initialResult: IdeaCheckResult | null
   initialError: string | null
+  shareBase?: string
 }) {
   const router = useRouter()
   const [name, setName] = useState(fields.name)
@@ -92,7 +95,7 @@ export function IdeaChecker({
   const [sampleOrdered, setSampleOrdered] = useState(fields.sampleOrdered)
   const [error, setError] = useState<string | null>(initialError)
   const [result, setResult] = useState<IdeaCheckResult | null>(initialResult)
-  const [sharePath, setSharePath] = useState<string | null>(initialResult ? shareQuery(fields) : null)
+  const [sharePath, setSharePath] = useState<string | null>(initialResult ? shareQuery(shareBase, fields) : null)
 
   const shown = result
 
@@ -117,7 +120,8 @@ export function IdeaChecker({
     }
     setError(null)
     setResult(checked)
-    const next = shareQuery({
+    trackAdsConversion('idea-checker-complete')
+    const next = shareQuery(shareBase, {
       name: checked.name,
       cost,
       price,

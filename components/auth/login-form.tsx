@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, Radar } from 'lucide-react'
+import { currentPageAttribution } from '@/lib/attribution'
 import { startProCheckout } from '@/components/billing/start-checkout'
 import { SignupLink } from '@/components/marketing/signup-link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { parseBillingInterval, proAuthHref } from '@/lib/billing'
+import { parseBillingInterval, proAuthHref, PRO_WAITLIST_SAVED, PRO_WAITLIST_UNSAVED } from '@/lib/billing'
 import { safeNextPath } from '@/lib/paths'
 
 export function LoginForm() {
@@ -22,6 +23,7 @@ export function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [waitlist, setWaitlist] = useState<string | null>(null)
 
   const signUpHref = plan === 'pro'
     ? proAuthHref('/auth/sign-up', interval)
@@ -38,7 +40,7 @@ export function LoginForm() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, attribution: currentPageAttribution() }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -54,8 +56,13 @@ export function LoginForm() {
 
     if (plan === 'pro') {
       try {
-        const url = await startProCheckout('login', interval)
-        window.location.assign(url)
+        const result = await startProCheckout('login', interval)
+        if (result.waitlist) {
+          setWaitlist(result.saved ? PRO_WAITLIST_SAVED : PRO_WAITLIST_UNSAVED)
+          setLoading(false)
+          return
+        }
+        window.location.assign(result.url)
         return
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not start checkout')
@@ -99,6 +106,7 @@ export function LoginForm() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" placeholder="••••••••" value={password} onChange={event => setPassword(event.target.value)} required autoComplete="current-password" className={error ? 'border-destructive focus:ring-destructive' : ''} />
               </div>
+              {waitlist && <p role="status" className="text-sm text-muted-foreground">{waitlist}</p>}
               {error && <p id="login-error" role="alert" className="text-sm text-destructive">{error}</p>}
               <Button type="submit" disabled={loading} className="w-full mt-1">
                 {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Signing in...</> : plan === 'pro' ? 'Sign in and continue' : 'Sign in'}

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { getUserProfile } from '@/lib/db'
+import { PurchaseConversion } from '@/components/ads/purchase-conversion'
 import { DashboardShell } from '@/components/dashboard/dashboard-shell'
 
 export const metadata: Metadata = {
@@ -23,5 +24,10 @@ export default async function DashboardLayout({
   const profile = await getUserProfile(user.id)
   const plan = profile?.plan === 'pro' ? 'pro' : 'free'
 
-  return <DashboardShell user={user} plan={plan}>{children}</DashboardShell>
+  return (
+    <>
+      <PurchaseConversion />
+      <DashboardShell user={user} plan={plan}>{children}</DashboardShell>
+    </>
+  )
 }

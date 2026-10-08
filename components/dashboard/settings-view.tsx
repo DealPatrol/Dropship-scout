@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { startProCheckout } from '@/components/billing/start-checkout'
-import { parseBillingInterval, type BillingInterval } from '@/lib/billing'
+import { parseBillingInterval, PRO_WAITLIST_SAVED, PRO_WAITLIST_UNSAVED, type BillingInterval } from '@/lib/billing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,7 +35,7 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
     } else if (billing === 'cancelled') {
       setNotice('Checkout was cancelled. You can start it again.')
     } else if (billing === 'unavailable') {
-      setNotice('Pro checkout is not configured on this deployment yet.')
+      setNotice(PRO_WAITLIST_SAVED)
     }
   }, [])
 
@@ -72,8 +72,13 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
     setBillingLoading(true)
     setError(null)
     try {
-      const url = await startProCheckout('settings', nextInterval)
-      window.location.assign(url)
+      const result = await startProCheckout('settings', nextInterval)
+      if (result.waitlist) {
+        setNotice(result.saved ? PRO_WAITLIST_SAVED : PRO_WAITLIST_UNSAVED)
+        setBillingLoading(false)
+        return
+      }
+      window.location.assign(result.url)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not start checkout'
       if (message.includes('already exists')) {
