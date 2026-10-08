@@ -188,7 +188,10 @@ function supplierParam(value: string | undefined): SecondSupplier {
 }
 
 /** Reads a shareable idea-checker URL. A missing price means the visitor has not run a check. */
-export function ideaQueryFromSearch(params: Record<string, string | string[] | undefined>): {
+export function ideaQueryFromSearch(
+  params: Record<string, string | string[] | undefined>,
+  fees: IdeaCheckFees = IDEA_CHECK_DEFAULTS,
+): {
   fields: IdeaFormFields
   result: IdeaCheckResult | { error: string } | null
 } {
@@ -220,6 +223,6 @@ export function ideaQueryFromSearch(params: Record<string, string | string[] | u
       similarListings: fields.similarListings,
       secondSupplier: fields.secondSupplier,
       sampleOrdered: fields.sampleOrdered,
-    }),
+    }, fees),
   }
 }

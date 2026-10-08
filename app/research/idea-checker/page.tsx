@@ -3,14 +3,15 @@ import Link from 'next/link'
 import { IdeaChecker } from '@/components/marketing/idea-checker'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { SiteFrame } from '@/components/marketing/site-frame'
-import { ideaQueryFromSearch, isIdeaCheckResult } from '@/lib/marketing/idea-check'
+import { platformFeeBps, stripeFeeConfig } from '@/lib/commerce/modes'
+import { ideaQueryFromSearch, isIdeaCheckResult, type IdeaCheckFees } from '@/lib/marketing/idea-check'
 import { breadcrumbJsonLd, faqPageJsonLd, jsonLdGraph, pageMetadata } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
 
 const FAQ = [
   {
     question: 'Does the product idea checker use live sales data?',
-    answer: 'No. It uses the cost, price, and shipping you type, plus the app default platform fee and a card-fee estimate. It does not look up order counts.',
+    answer: 'No. It uses the cost, price, and shipping you type, plus this deployment’s platform fee and card-fee estimate. It does not look up order counts.',
   },
   {
     question: 'Do I need an account?',
@@ -38,7 +39,13 @@ export default function IdeaCheckerPage({
 }: {
   searchParams: Record<string, string | string[] | undefined>
 }) {
-  const query = ideaQueryFromSearch(searchParams)
+  const cardFee = stripeFeeConfig()
+  const fees: IdeaCheckFees = {
+    platformFeeBps: platformFeeBps(),
+    stripeFeeBps: cardFee.bps,
+    stripeFeeFixedCents: cardFee.fixedCents,
+  }
+  const query = ideaQueryFromSearch(searchParams, fees)
   const initialResult = query.result && isIdeaCheckResult(query.result) ? query.result : null
   const initialError = query.result && !isIdeaCheckResult(query.result) ? query.result.error : null
   const jsonLd = jsonLdGraph([
@@ -70,7 +77,7 @@ export default function IdeaCheckerPage({
         <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
           Check your own product before you buy ads. Type the supplier quote and the price you want to charge. Nothing here is a sales forecast, and you do not need an account.
         </p>
-        <IdeaChecker fields={query.fields} initialResult={initialResult} initialError={initialError} />
+        <IdeaChecker fields={query.fields} fees={fees} initialResult={initialResult} initialError={initialError} />
         <section className="mt-12">
           <h2 className="text-2xl font-semibold">Questions</h2>
           <div className="mt-6 flex flex-col gap-6">

@@ -8,7 +8,7 @@ import { formatCents } from '@/lib/commerce/money'
 import {
   checkProductIdea,
   isIdeaCheckResult,
-  IDEA_CHECK_DEFAULTS,
+  type IdeaCheckFees,
   type IdeaCheckResult,
   type IdeaFormFields,
   type SecondSupplier,
@@ -71,10 +71,12 @@ function shareQuery(input: {
 
 export function IdeaChecker({
   fields,
+  fees,
   initialResult,
   initialError,
 }: {
   fields: IdeaFormFields
+  fees: IdeaCheckFees
   initialResult: IdeaCheckResult | null
   initialError: string | null
 }) {
@@ -107,7 +109,7 @@ export function IdeaChecker({
       similarListings,
       secondSupplier,
       sampleOrdered,
-    })
+    }, fees)
     if (!isIdeaCheckResult(checked)) {
       setError(checked.error)
       setResult(null)
@@ -185,7 +187,7 @@ export function IdeaChecker({
           </label>
         </div>
         <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-          Fee floor used here: {IDEA_CHECK_DEFAULTS.platformFeeBps / 100}% of merchandise and a card-fee estimate of {IDEA_CHECK_DEFAULTS.stripeFeeBps / 100}% plus {formatCents(IDEA_CHECK_DEFAULTS.stripeFeeFixedCents)}. A deployment can change the platform fee. Ads and refunds are not included.
+          Fee floor used here: {fees.platformFeeBps / 100}% of merchandise and a card-fee estimate of {fees.stripeFeeBps / 100}% plus {formatCents(fees.stripeFeeFixedCents)}. This deployment can change those rates. Ads and refunds are not included.
         </p>
         {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
         <button type="submit" className="mt-4 h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
