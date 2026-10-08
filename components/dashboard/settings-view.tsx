@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { startProCheckout } from '@/components/billing/start-checkout'
+import { parseBillingInterval, type BillingInterval } from '@/lib/billing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,10 +23,12 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
   const [statusLoaded, setStatusLoaded] = useState(false)
   const [billingLoading, setBillingLoading] = useState(false)
   const [checkoutRequested, setCheckoutRequested] = useState(false)
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>('month')
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setCheckoutRequested(params.get('checkout') === '1')
+    setBillingInterval(parseBillingInterval(params.get('interval')))
     const billing = params.get('billing')
     if (billing === 'success') {
       setNotice('Stripe sent you back after checkout. The plan updates when the webhook marks the subscription active. Refresh if it still says Free.')
@@ -65,11 +68,11 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
     }
   }
 
-  async function handleUpgrade() {
+  async function handleUpgrade(nextInterval: BillingInterval = billingInterval) {
     setBillingLoading(true)
     setError(null)
     try {
-      const url = await startProCheckout('settings')
+      const url = await startProCheckout('settings', nextInterval)
       window.location.assign(url)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not start checkout'
@@ -90,13 +93,13 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
 
   useEffect(() => {
     if (!statusLoaded || !checkoutRequested || plan === 'pro') return
-    const key = 'ds-checkout-autostart'
+    const key = `ds-checkout-autostart-${billingInterval}`
     if (sessionStorage.getItem(key) === '1') return
     sessionStorage.setItem(key, '1')
-    void handleUpgrade()
+    void handleUpgrade(billingInterval)
     // handleUpgrade is recreated each render; this effect should run once per visit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusLoaded, checkoutRequested, plan])
+  }, [statusLoaded, checkoutRequested, plan, billingInterval])
 
   return (
     <div className="p-6 max-w-2xl mx-auto">

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CheckoutButton } from '@/components/marketing/checkout-button'
 import { SignupLink } from '@/components/marketing/signup-link'
 import { Button } from '@/components/ui/button'
+import { proAuthHref } from '@/lib/billing'
 
 type PlanState = 'guest' | 'free' | 'pro'
 
@@ -36,7 +37,7 @@ export function FreePlanAction() {
   )
 }
 
-export function ProPlanAction() {
+export function ProPlanAction({ annualAvailable }: { annualAvailable: boolean }) {
   const [state, setState] = useState<PlanState>('guest')
 
   useEffect(() => {
@@ -59,15 +60,27 @@ export function ProPlanAction() {
 
   if (state === 'free') {
     return (
-      <div className="mt-6">
-        <CheckoutButton source="pricing">Continue to Pro checkout</CheckoutButton>
+      <div className="mt-6 flex flex-col items-start gap-2">
+        <CheckoutButton source="pricing" interval="month">
+          {annualAvailable ? 'Continue with monthly billing' : 'Continue to Pro checkout'}
+        </CheckoutButton>
+        {annualAvailable && (
+          <CheckoutButton source="pricing" interval="year" variant="outline">Continue with annual billing</CheckoutButton>
+        )}
       </div>
     )
   }
 
   return (
-    <SignupLink href="/auth/sign-up?plan=pro" location="pricing-pro" className="inline-block mt-6">
-      <Button>Create account and continue to checkout</Button>
-    </SignupLink>
+    <div className="mt-6 flex flex-col items-start gap-2">
+      <SignupLink href={proAuthHref('/auth/sign-up', 'month')} location="pricing-pro" className="inline-block">
+        <Button>{annualAvailable ? 'Create account and continue monthly' : 'Create account and continue to checkout'}</Button>
+      </SignupLink>
+      {annualAvailable && (
+        <SignupLink href={proAuthHref('/auth/sign-up', 'year')} location="pricing-pro-annual" className="inline-block">
+          <Button variant="outline">Create account and continue yearly</Button>
+        </SignupLink>
+      )}
+    </div>
   )
 }

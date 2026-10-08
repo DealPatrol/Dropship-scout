@@ -1,3 +1,12 @@
+import { EXTRA_GUIDES } from '@/lib/marketing/extra-guides'
+import { breadcrumbJsonLd, faqPageJsonLd } from '@/lib/seo'
+import { absoluteUrl } from '@/lib/site'
+
+export interface GuideFaq {
+  question: string
+  answer: string
+}
+
 export interface Guide {
   slug: string
   title: string
@@ -6,9 +15,12 @@ export interface Guide {
   description: string
   intent: string
   sections: { heading: string; paragraphs: string[] }[]
+  faqs?: GuideFaq[]
+  /** Research page slugs to link from the guide. */
+  relatedResearch?: string[]
 }
 
-export const GUIDES: Guide[] = [
+const BASE_GUIDES: Guide[] = [
   {
     slug: 'dropshipping-without-shopify',
     title: 'Dropshipping without Shopify',
@@ -131,8 +143,29 @@ export const GUIDES: Guide[] = [
   },
 ]
 
+export const GUIDES: Guide[] = [...BASE_GUIDES, ...EXTRA_GUIDES]
+
 export function guideBySlug(slug: string): Guide | undefined {
   return GUIDES.find(guide => guide.slug === slug)
+}
+
+export function guideStructuredData(guide: Guide): object[] {
+  const nodes: object[] = [
+    {
+      '@type': 'Article',
+      headline: guide.title,
+      description: guide.description,
+      mainEntityOfPage: absoluteUrl(`/guides/${guide.slug}`),
+      author: { '@type': 'Organization', name: 'Dropship Scout' },
+    },
+    breadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: 'Guides', path: '/guides' },
+      { name: guide.title, path: `/guides/${guide.slug}` },
+    ]),
+  ]
+  if (guide.faqs && guide.faqs.length > 0) nodes.push(faqPageJsonLd(guide.faqs))
+  return nodes
 }
 
 export const FAQ_ITEMS = [
@@ -184,7 +217,11 @@ export const PRICING_FAQ = [
   faqByQuestion('What does the free plan include?'),
   {
     question: 'How is Pro billed?',
-    answer: 'Create an account from the pricing page and Stripe Checkout opens for the Dropship Scout Pro price. If you already have an account, sign in and the same checkout starts. The monthly amount is that Stripe Price. Settings can open checkout again when the subscription is not active.',
+    answer: 'Create an account from the pricing page and Stripe Checkout opens for the Dropship Scout Pro price. If you already have an account, sign in and the same checkout starts. The amount is that Stripe Price. Settings can open checkout again when the subscription is not active.',
+  },
+  {
+    question: 'Is there an annual Pro plan?',
+    answer: 'When an annual Stripe Price is configured, pricing offers yearly billing next to monthly billing. Both unlock the same Pro limits. If yearly billing is not configured, only the monthly Price is offered. This page does not invent either amount.',
   },
   {
     question: 'What if I already started checkout once?',

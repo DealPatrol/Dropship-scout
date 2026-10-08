@@ -2,6 +2,7 @@
 // Session-cookie auth checks + security headers + CORS
 
 import { NextRequest, NextResponse } from 'next/server'
+import { parseBillingInterval, settingsCheckoutSearch } from '@/lib/billing'
 import { safeNextPath } from '@/lib/paths'
 import { SESSION_COOKIE, verifySessionToken } from '@/lib/session'
 
@@ -24,7 +25,7 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone()
     if (req.nextUrl.searchParams.get('plan') === 'pro') {
       url.pathname = '/dashboard/settings'
-      url.search = '?checkout=1'
+      url.search = settingsCheckoutSearch(parseBillingInterval(req.nextUrl.searchParams.get('interval')))
       return NextResponse.redirect(url)
     }
     const next = safeNextPath(req.nextUrl.searchParams.get('next'))

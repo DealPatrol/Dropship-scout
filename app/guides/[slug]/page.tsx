@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SiteFrame } from '@/components/marketing/site-frame'
-import { GUIDES, guideBySlug } from '@/lib/marketing/content'
+import { GUIDES, guideBySlug, guideStructuredData } from '@/lib/marketing/content'
+import { intentBySlug } from '@/lib/marketing/intent'
 import { SignupCta } from '@/components/marketing/signup-cta'
 import { JsonLd } from '@/components/marketing/json-ld'
-import { breadcrumbJsonLd, jsonLdGraph, pageMetadata } from '@/lib/seo'
-import { absoluteUrl } from '@/lib/site'
+import { jsonLdGraph, pageMetadata } from '@/lib/seo'
 
 export function generateStaticParams() {
   return GUIDES.map(guide => ({ slug: guide.slug }))
@@ -27,20 +27,10 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 export default function GuidePage({ params }: { params: { slug: string } }) {
   const guide = guideBySlug(params.slug)
   if (!guide) notFound()
-  const jsonLd = jsonLdGraph([
-      {
-        '@type': 'Article',
-        headline: guide.title,
-        description: guide.description,
-        mainEntityOfPage: absoluteUrl(`/guides/${guide.slug}`),
-        author: { '@type': 'Organization', name: 'Dropship Scout' },
-      },
-      breadcrumbJsonLd([
-        { name: 'Home', path: '/' },
-        { name: 'Guides', path: '/guides' },
-        { name: guide.title, path: `/guides/${guide.slug}` },
-      ]),
-  ])
+  const jsonLd = jsonLdGraph(guideStructuredData(guide))
+  const related = (guide.relatedResearch ?? [])
+    .map(slug => intentBySlug(slug))
+    .filter((page): page is NonNullable<ReturnType<typeof intentBySlug>> => Boolean(page))
   return (
     <SiteFrame>
       <JsonLd data={jsonLd} />
@@ -58,6 +48,31 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
             </section>
           ))}
         </div>
+        {guide.faqs && guide.faqs.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-2xl font-semibold">Questions</h2>
+            <div className="mt-6 flex flex-col gap-6">
+              {guide.faqs.map(item => (
+                <article key={item.question}>
+                  <h3 className="text-lg font-semibold">{item.question}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.answer}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+        <section className="mt-12">
+          <h2 className="text-2xl font-semibold">Keep going</h2>
+          <ul className="mt-4 flex flex-col gap-2 text-sm">
+            <li><Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea without an account</Link></li>
+            <li><Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link></li>
+            {related.map(page => (
+              <li key={page.slug}>
+                <Link href={`/research/${page.slug}`} className="text-primary hover:underline">{page.title}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
         <SignupCta location={`guide-${guide.slug}`} />
       </article>
     </SiteFrame>

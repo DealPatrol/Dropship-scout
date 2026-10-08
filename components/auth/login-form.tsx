@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { parseBillingInterval, proAuthHref } from '@/lib/billing'
 import { safeNextPath } from '@/lib/paths'
 
 export function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
   const plan = params.get('plan') === 'pro' ? 'pro' : null
+  const interval = parseBillingInterval(params.get('interval'))
   const next = safeNextPath(params.get('next'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,7 +24,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
 
   const signUpHref = plan === 'pro'
-    ? '/auth/sign-up?plan=pro'
+    ? proAuthHref('/auth/sign-up', interval)
     : next
       ? `/auth/sign-up?next=${encodeURIComponent(next)}`
       : '/auth/sign-up'
@@ -52,7 +54,7 @@ export function LoginForm() {
 
     if (plan === 'pro') {
       try {
-        const url = await startProCheckout('login')
+        const url = await startProCheckout('login', interval)
         window.location.assign(url)
         return
       } catch (err) {
@@ -80,7 +82,11 @@ export function LoginForm() {
           <CardHeader className="pb-4">
             <CardTitle className="text-xl text-center">Welcome back</CardTitle>
             <CardDescription className="text-center">
-              {plan === 'pro' ? 'Sign in to continue to Pro checkout.' : 'Sign in to your account to continue'}
+              {plan === 'pro'
+                ? interval === 'year'
+                  ? 'Sign in to continue to annual Pro checkout.'
+                  : 'Sign in to continue to monthly Pro checkout.'
+                : 'Sign in to your account to continue'}
             </CardDescription>
           </CardHeader>
           <CardContent>

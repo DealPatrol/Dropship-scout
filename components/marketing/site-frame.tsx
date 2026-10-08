@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Radar } from 'lucide-react'
 import { SignupLink } from '@/components/marketing/signup-link'
+import { WatchForm } from '@/components/marketing/watch-form'
 import { Button } from '@/components/ui/button'
 
 const links = [
@@ -50,6 +51,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex flex-col gap-2 text-sm">
             <Link href="/research" className="text-muted-foreground hover:text-foreground">Research</Link>
+            <Link href="/research/idea-checker" className="text-muted-foreground hover:text-foreground">Product idea checker</Link>
             <Link href="/research/preview" className="text-muted-foreground hover:text-foreground">Free preview</Link>
             <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/faq" className="text-muted-foreground hover:text-foreground">FAQ</Link>
@@ -62,6 +64,9 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
             <Link href="/research/tiktok-trending-products-to-sell" className="text-muted-foreground hover:text-foreground">TikTok products to sell</Link>
             <SignupLink href="/auth/sign-up" location="footer" className="text-muted-foreground hover:text-foreground">Create an account</SignupLink>
           </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
+          <WatchForm source="footer" />
         </div>
       </footer>
     </div>

@@ -4,13 +4,16 @@ import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { startProCheckout } from '@/components/billing/start-checkout'
 import { Button } from '@/components/ui/button'
+import type { BillingInterval } from '@/lib/billing'
 
 export function CheckoutButton({
   source,
+  interval = 'month',
   children,
   variant = 'default',
 }: {
   source: string
+  interval?: BillingInterval
   children: React.ReactNode
   variant?: 'default' | 'outline'
 }) {
@@ -21,7 +24,7 @@ export function CheckoutButton({
     setLoading(true)
     setError(null)
     try {
-      const url = await startProCheckout(source)
+      const url = await startProCheckout(source, interval)
       window.location.assign(url)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not start checkout')

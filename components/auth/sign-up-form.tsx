@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { parseBillingInterval, proAuthHref } from '@/lib/billing'
 import { safeNextPath } from '@/lib/paths'
 import { track } from '@vercel/analytics'
 
@@ -17,6 +18,7 @@ export function SignUpForm() {
   const router = useRouter()
   const params = useSearchParams()
   const plan = params.get('plan') === 'pro' ? 'pro' : null
+  const interval = parseBillingInterval(params.get('interval'))
   const next = safeNextPath(params.get('next'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,7 +26,7 @@ export function SignUpForm() {
   const [error, setError] = useState<string | null>(null)
   const [accountCreated, setAccountCreated] = useState(false)
 
-  const loginHref = plan === 'pro' ? '/auth/login?plan=pro' : next ? `/auth/login?next=${encodeURIComponent(next)}` : '/auth/login'
+  const loginHref = plan === 'pro' ? proAuthHref('/auth/login', interval) : next ? `/auth/login?next=${encodeURIComponent(next)}` : '/auth/login'
 
   async function handleSignUp(event: React.FormEvent) {
     event.preventDefault()
@@ -56,7 +58,7 @@ export function SignUpForm() {
 
     if (plan === 'pro') {
       try {
-        const url = await startProCheckout('sign-up')
+        const url = await startProCheckout('sign-up', interval)
         window.location.assign(url)
         return
       } catch (err) {
@@ -86,7 +88,9 @@ export function SignUpForm() {
             <CardTitle className="text-xl text-center">Create your account</CardTitle>
             <CardDescription className="text-center">
               {plan === 'pro'
-                ? 'After this form, Stripe Checkout opens for Pro.'
+                ? interval === 'year'
+                  ? 'After this form, Stripe Checkout opens for annual Pro billing.'
+                  : 'After this form, Stripe Checkout opens for monthly Pro billing.'
                 : 'Start a free research account. Upgrade later from pricing.'}
             </CardDescription>
           </CardHeader>

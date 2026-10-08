@@ -1,5 +1,6 @@
 import { createHash } from 'crypto'
 import Stripe from 'stripe'
+import { parseBillingInterval, selectProPriceId, type BillingInterval } from '@/lib/billing'
 
 let stripeClient: Stripe | undefined
 
@@ -28,6 +29,21 @@ export function stripeWebhookSecret(): string {
 
 export function proPriceId(): string {
   return requiredEnv('STRIPE_PRO_PRICE_ID')
+}
+
+export function annualPriceConfigured(): boolean {
+  return Boolean(process.env.STRIPE_PRO_ANNUAL_PRICE_ID?.trim())
+}
+
+export function priceIdForInterval(interval: BillingInterval): string {
+  return selectProPriceId(interval, {
+    month: process.env.STRIPE_PRO_PRICE_ID?.trim() ?? '',
+    year: process.env.STRIPE_PRO_ANNUAL_PRICE_ID?.trim() || null,
+  })
+}
+
+export function billingIntervalFromRequest(value: unknown): BillingInterval {
+  return parseBillingInterval(value)
 }
 
 export function checkoutIntegrationIdentifier(userId: string): string {

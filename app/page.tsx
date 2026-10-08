@@ -64,6 +64,9 @@ export default function LandingPage() {
             <Button variant="outline" size="lg">See pricing</Button>
           </Link>
         </div>
+        <p className="mt-4 text-sm">
+          <Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea, no account</Link>
+        </p>
       </section>
 
       <section id="product" className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
