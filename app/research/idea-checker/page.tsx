@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { IdeaChecker } from '@/components/marketing/idea-checker'
+import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
+import { IdeaCheckerPanel } from '@/components/marketing/idea-checker-panel'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { SiteFrame } from '@/components/marketing/site-frame'
-import { platformFeeBps, stripeFeeConfig } from '@/lib/commerce/modes'
-import { ideaQueryFromSearch, isIdeaCheckResult, type IdeaCheckFees } from '@/lib/marketing/idea-check'
 import { breadcrumbJsonLd, faqPageJsonLd, jsonLdGraph, pageMetadata } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
 
@@ -39,15 +38,6 @@ export default function IdeaCheckerPage({
 }: {
   searchParams: Record<string, string | string[] | undefined>
 }) {
-  const cardFee = stripeFeeConfig()
-  const fees: IdeaCheckFees = {
-    platformFeeBps: platformFeeBps(),
-    stripeFeeBps: cardFee.bps,
-    stripeFeeFixedCents: cardFee.fixedCents,
-  }
-  const query = ideaQueryFromSearch(searchParams, fees)
-  const initialResult = query.result && isIdeaCheckResult(query.result) ? query.result : null
-  const initialError = query.result && !isIdeaCheckResult(query.result) ? query.result.error : null
   const jsonLd = jsonLdGraph([
     {
       '@type': 'WebApplication',
@@ -70,14 +60,15 @@ export default function IdeaCheckerPage({
     <SiteFrame>
       <JsonLd data={jsonLd} />
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <p className="text-sm text-muted-foreground">
-          <Link href="/research" className="hover:text-foreground">Research</Link>
-        </p>
+        <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Research', href: '/research' }, { name: 'Product idea checker', href: '/research/idea-checker' }]} />
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-balance">Product idea checker</h1>
         <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
           Check your own product before you buy ads. Type the supplier quote and the price you want to charge. Nothing here is a sales forecast, and you do not need an account.
         </p>
-        <IdeaChecker fields={query.fields} fees={fees} initialResult={initialResult} initialError={initialError} />
+        <p className="mt-3 text-sm">
+          <Link href="/research/how-to-price-a-dropshipping-product" className="text-primary hover:underline">How to price a dropshipping product</Link>
+        </p>
+        <IdeaCheckerPanel searchParams={searchParams} />
         <section className="mt-12">
           <h2 className="text-2xl font-semibold">Questions</h2>
           <div className="mt-6 flex flex-col gap-6">

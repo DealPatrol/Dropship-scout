@@ -1,6 +1,5 @@
 import { EXTRA_GUIDES } from '@/lib/marketing/extra-guides'
-import { breadcrumbJsonLd, faqPageJsonLd } from '@/lib/seo'
-import { absoluteUrl } from '@/lib/site'
+import { articleJsonLd, breadcrumbJsonLd, faqPageJsonLd } from '@/lib/seo'
 
 export interface GuideFaq {
   question: string
@@ -151,13 +150,12 @@ export function guideBySlug(slug: string): Guide | undefined {
 
 export function guideStructuredData(guide: Guide): object[] {
   const nodes: object[] = [
-    {
-      '@type': 'Article',
+    articleJsonLd({
       headline: guide.title,
       description: guide.description,
-      mainEntityOfPage: absoluteUrl(`/guides/${guide.slug}`),
-      author: { '@type': 'Organization', name: 'Dropship Scout' },
-    },
+      path: `/guides/${guide.slug}`,
+      imagePath: `/guides/${guide.slug}/opengraph-image`,
+    }),
     breadcrumbJsonLd([
       { name: 'Home', path: '/' },
       { name: 'Guides', path: '/guides' },

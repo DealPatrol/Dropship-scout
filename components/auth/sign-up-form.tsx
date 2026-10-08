@@ -4,13 +4,15 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, Radar } from 'lucide-react'
+import { trackAdsConversion } from '@/lib/ads-events'
+import { currentPageAttribution } from '@/lib/attribution'
 import { startProCheckout } from '@/components/billing/start-checkout'
 import { SignupLink } from '@/components/marketing/signup-link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { parseBillingInterval, proAuthHref } from '@/lib/billing'
+import { parseBillingInterval, proAuthHref, PRO_WAITLIST_SAVED, PRO_WAITLIST_UNSAVED } from '@/lib/billing'
 import { safeNextPath } from '@/lib/paths'
 import { track } from '@vercel/analytics'
 
@@ -25,6 +27,7 @@ export function SignUpForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [accountCreated, setAccountCreated] = useState(false)
+  const [waitlist, setWaitlist] = useState<string | null>(null)
 
   const loginHref = plan === 'pro' ? proAuthHref('/auth/login', interval) : next ? `/auth/login?next=${encodeURIComponent(next)}` : '/auth/login'
 
@@ -42,7 +45,7 @@ export function SignUpForm() {
       const res = await fetch('/api/auth/sign-up', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, attribution: currentPageAttribution() }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -50,6 +53,7 @@ export function SignUpForm() {
         setLoading(false)
         return
       }
+      trackAdsConversion('signup')
     } catch {
       setError('Could not reach the server. Try again.')
       setLoading(false)
@@ -58,8 +62,14 @@ export function SignUpForm() {
 
     if (plan === 'pro') {
       try {
-        const url = await startProCheckout('sign-up', interval)
-        window.location.assign(url)
+        const result = await startProCheckout('sign-up', interval)
+        if (result.waitlist) {
+          setAccountCreated(true)
+          setWaitlist(result.saved ? PRO_WAITLIST_SAVED : PRO_WAITLIST_UNSAVED)
+          setLoading(false)
+          return
+        }
+        window.location.assign(result.url)
         return
       } catch (err) {
         setAccountCreated(true)
@@ -104,6 +114,7 @@ export function SignUpForm() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" placeholder="Min. 6 characters" value={password} onChange={event => setPassword(event.target.value)} required minLength={6} autoComplete="new-password" className={error ? 'border-destructive' : ''} />
               </div>
+              {waitlist && <p role="status" className="text-sm text-muted-foreground">{waitlist}</p>}
               {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
               {accountCreated && (
                 <p className="text-sm text-muted-foreground">

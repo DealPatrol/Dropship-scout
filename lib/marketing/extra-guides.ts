@@ -98,7 +98,7 @@ export const EXTRA_GUIDES: Guide[] = [
     slug: 'how-to-validate-a-dropshipping-product-idea',
     title: 'How to validate a dropshipping product',
     metaTitle: 'Validate a dropshipping product',
-    description: 'How to validate a dropshipping product with a supplier quote, a sample, and a small page test. Separate from the research article on the same topic.',
+    description: 'The how-to sequence: supplier quote, fee check, sample, then a small page test. The research page is the shortlist.',
     intent: 'how to validate a dropshipping product',
     relatedResearch: [
       'how-to-validate-a-dropshipping-product',

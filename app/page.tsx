@@ -4,13 +4,13 @@ import { JsonLd } from '@/components/marketing/json-ld'
 import { SignupLink } from '@/components/marketing/signup-link'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { Button } from '@/components/ui/button'
-import { HOME_FAQ } from '@/lib/marketing/content'
+import { GUIDES, HOME_FAQ } from '@/lib/marketing/content'
 import { allIntentPages } from '@/lib/marketing/intent'
 import { faqPageJsonLd, jsonLdGraph, organizationJsonLd, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
 
 export const metadata = pageMetadata({
-  title: 'Dropshipping product research',
-  description: 'Research what to dropship with a sample catalog you can filter by season and niche, then import a real supplier. Free plan included. Pro checks out in Stripe.',
+  title: 'Research before you dropship',
+  description: 'Dropship Scout helps you check a product idea, then import a real supplier. Research shortlists live under Research. How-to steps live under Guides.',
   path: '/',
 })
 
@@ -87,7 +87,7 @@ export default function LandingPage() {
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="flex items-end justify-between gap-4">
-          <h2 className="text-2xl font-bold text-balance">Guides for people choosing a product</h2>
+          <h2 className="text-2xl font-bold text-balance">Research shortlists</h2>
           <Link href="/research" className="text-sm text-primary shrink-0">All research pages</Link>
         </div>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -97,6 +97,20 @@ export default function LandingPage() {
                 <Link href={`/research/${page.slug}`} className="hover:text-primary">{page.title}</Link>
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">{page.description}</p>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-8 flex items-end justify-between gap-4">
+          <h2 className="text-2xl font-bold text-balance">How-to guides</h2>
+          <Link href="/guides" className="text-sm text-primary shrink-0">All guides</Link>
+        </div>
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+          {GUIDES.filter(guide => guide.faqs).slice(0, 4).map(guide => (
+            <li key={guide.slug} className="rounded-lg border border-border bg-card p-4">
+              <h3 className="font-semibold">
+                <Link href={`/guides/${guide.slug}`} className="hover:text-primary">{guide.title}</Link>
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">{guide.description}</p>
             </li>
           ))}
         </ul>

@@ -4,6 +4,7 @@
 import { ensureSchema, sql } from './database'
 import { decryptSecret, encryptSecret } from './secrets'
 import { PlanLimitError, planLimitMessage, type Plan } from './billing'
+import type { AccountAttribution } from './attribution'
 import type { Product } from './types'
 
 // ─── Users / Shopify credentials ─────────────────────────────────────────────
@@ -71,6 +72,83 @@ export async function getBillingProfile(userId: string) {
 export async function setStripeCustomer(userId: string, customerId: string) {
   await ensureSchema()
   await sql`update users set stripe_customer_id = ${customerId} where id = ${userId}`
+}
+
+export async function saveAccountAttribution(userId: string, attribution: AccountAttribution, fillEmpty = false) {
+  await ensureSchema()
+  if (fillEmpty) {
+    await sql`
+      update users set
+        utm_source = coalesce(utm_source, ${attribution.utmSource}),
+        utm_medium = coalesce(utm_medium, ${attribution.utmMedium}),
+        utm_campaign = coalesce(utm_campaign, ${attribution.utmCampaign}),
+        utm_term = coalesce(utm_term, ${attribution.utmTerm}),
+        utm_content = coalesce(utm_content, ${attribution.utmContent}),
+        gclid = coalesce(gclid, ${attribution.gclid}),
+        fbclid = coalesce(fbclid, ${attribution.fbclid}),
+        ads_landing = coalesce(ads_landing, ${attribution.landingPath})
+      where id = ${userId}
+    `
+    return
+  }
+  await sql`
+    update users set
+      utm_source = ${attribution.utmSource},
+      utm_medium = ${attribution.utmMedium},
+      utm_campaign = ${attribution.utmCampaign},
+      utm_term = ${attribution.utmTerm},
+      utm_content = ${attribution.utmContent},
+      gclid = ${attribution.gclid},
+      fbclid = ${attribution.fbclid},
+      ads_landing = ${attribution.landingPath}
+    where id = ${userId}
+  `
+}
+
+export async function queuePurchaseConversion(input: {
+  userId: string
+  transactionId: string
+  valueCents: number | null
+  currency: string | null
+}) {
+  await ensureSchema()
+  await sql`
+    update users
+    set ads_purchase_pending = true,
+        ads_purchase_transaction_id = ${input.transactionId},
+        ads_purchase_value_cents = ${input.valueCents},
+        ads_purchase_currency = ${input.currency},
+        ads_purchase_reported_at = null
+    where id = ${input.userId}
+      and (
+        ads_purchase_transaction_id is distinct from ${input.transactionId}
+        or ads_purchase_reported_at is null
+      )
+  `
+}
+
+export async function claimPurchaseConversion(userId: string): Promise<{
+  transactionId: string
+  valueCents: number | null
+  currency: string | null
+} | null> {
+  await ensureSchema()
+  const rows = await sql`
+    update users
+    set ads_purchase_pending = false,
+        ads_purchase_reported_at = now()
+    where id = ${userId}
+      and ads_purchase_pending = true
+      and ads_purchase_transaction_id is not null
+    returning ads_purchase_transaction_id, ads_purchase_value_cents, ads_purchase_currency
+  `
+  const row = rows[0]
+  if (!row?.ads_purchase_transaction_id) return null
+  return {
+    transactionId: String(row.ads_purchase_transaction_id),
+    valueCents: row.ads_purchase_value_cents == null ? null : Number(row.ads_purchase_value_cents),
+    currency: row.ads_purchase_currency ? String(row.ads_purchase_currency) : null,
+  }
 }
 
 interface StripeSubscriptionState {

@@ -14,6 +14,31 @@ export function settingsCheckoutSearch(interval: BillingInterval): string {
   return interval === 'year' ? '?checkout=1&interval=year' : '?checkout=1'
 }
 
+export type CheckoutGate = 'ready' | 'waitlist' | 'annual_missing'
+
+/** Signed-in checkout when Stripe keys are missing should waitlist, not 503. */
+export function checkoutGate(input: {
+  interval: BillingInterval
+  secretConfigured: boolean
+  monthlyPriceConfigured: boolean
+  annualPriceConfigured: boolean
+}): CheckoutGate {
+  if (!input.secretConfigured || !input.monthlyPriceConfigured) return 'waitlist'
+  if (input.interval === 'year' && !input.annualPriceConfigured) return 'annual_missing'
+  switch (input.interval) {
+    case 'month':
+    case 'year':
+      return 'ready'
+    default: {
+      const exhaustive: never = input.interval
+      return exhaustive
+    }
+  }
+}
+
+export const PRO_WAITLIST_SAVED = 'Pro is launching soon. Your account email is on the waitlist.'
+export const PRO_WAITLIST_UNSAVED = 'Pro is launching soon. The waitlist could not be saved just now. Try again in a moment.'
+
 /** Picks the Stripe Price id. Throws the same missing-env error shape as the Stripe client. */
 export function selectProPriceId(
   interval: BillingInterval,

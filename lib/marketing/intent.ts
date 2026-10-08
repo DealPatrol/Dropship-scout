@@ -1,5 +1,6 @@
 import type { Season } from '@/lib/merchandising/types'
 import { SEASON_LABELS } from '@/lib/merchandising/seasonal'
+import { LONG_TAIL_PAGES } from '@/lib/marketing/long-tail'
 
 export type IntentKind = 'season' | 'short-form' | 'low-competition' | 'niches' | 'article'
 
@@ -100,7 +101,7 @@ const ARTICLES: IntentPage[] = [
     metaTitle: 'Winning dropshipping products',
     description: 'A practical definition of a winning dropshipping product: margin, ship time, and a buyer you can name. No fake order counts.',
     kind: 'article',
-    related: ['how-to-validate-a-dropshipping-product', 'low-competition-products-to-dropship', 'best-products-to-dropship-in-fall'],
+    related: ['how-to-validate-a-dropshipping-product', 'how-to-price-a-dropshipping-product', 'low-competition-products-to-dropship'],
     sections: [
       {
         heading: 'Winning means you can explain the sale',
@@ -137,7 +138,7 @@ const ARTICLES: IntentPage[] = [
     metaTitle: 'Dropshipping product research tool',
     description: 'What Dropship Scout does as a product research tool: sample catalog, supplier import, and Stripe billing for Pro.',
     kind: 'article',
-    related: ['winning-dropshipping-products', 'shopify-product-research', 'tiktok-trending-products-to-sell'],
+    related: ['winning-dropshipping-products', 'dropshipping-product-page', 'shopify-product-research'],
     sections: [
       {
         heading: 'What you can do on the free plan',
@@ -174,7 +175,7 @@ const ARTICLES: IntentPage[] = [
     metaTitle: 'Shopify product research',
     description: 'How to research products for a Shopify store: supplier cost, ship time, and a listing you can tell apart.',
     kind: 'article',
-    related: ['what-to-sell-in-a-shopify-store', 'winning-dropshipping-products', 'aliexpress-product-research'],
+    related: ['what-to-sell-in-a-shopify-store', 'shopify-vs-hosted-dropshipping', 'winning-dropshipping-products'],
     sections: [
       {
         heading: 'Research the product before you open the theme',
@@ -211,7 +212,7 @@ const ARTICLES: IntentPage[] = [
     metaTitle: 'TikTok trending products to sell',
     description: 'How to judge products you see on TikTok without treating a view count as a sales figure.',
     kind: 'short-form',
-    related: ['winning-dropshipping-products', 'how-to-validate-a-dropshipping-product', 'dropshipping-niche-ideas'],
+    related: ['winning-dropshipping-products', 'dropshipping-product-photos', 'how-to-validate-a-dropshipping-product'],
     sections: [
       {
         heading: 'A TikTok view is not an order',
@@ -244,11 +245,11 @@ const ARTICLES: IntentPage[] = [
   },
   {
     slug: 'how-to-validate-a-dropshipping-product',
-    title: 'How to validate a dropshipping product',
-    metaTitle: 'How to validate a dropshipping product',
-    description: 'Validate a dropshipping product with a supplier quote, a sample, and a small test. Skip invented sales figures.',
+    title: 'Dropshipping product validation',
+    metaTitle: 'Dropshipping product validation',
+    description: 'What the sample catalog can tell you when you validate a dropshipping product, and what still needs a supplier quote.',
     kind: 'article',
-    related: ['winning-dropshipping-products', 'low-competition-products-to-dropship', 'aliexpress-product-research'],
+    related: ['winning-dropshipping-products', 'when-to-stop-testing-a-product', 'aliexpress-product-research'],
     sections: [
       {
         heading: 'Validation is a sequence, not a score',
@@ -285,7 +286,7 @@ const ARTICLES: IntentPage[] = [
     metaTitle: 'Low competition products to dropship',
     description: 'How to read a low-competition tag, and which sample-catalog products carry that editorial label.',
     kind: 'low-competition',
-    related: ['winning-dropshipping-products', 'how-to-validate-a-dropshipping-product', 'dropshipping-niche-ideas'],
+    related: ['winning-dropshipping-products', 'dropshipping-profit-margin', 'how-to-validate-a-dropshipping-product'],
     sections: [
       {
         heading: 'Low competition is a claim you have to check',
@@ -316,7 +317,7 @@ const ARTICLES: IntentPage[] = [
     metaTitle: 'AliExpress product research',
     description: 'How to research an AliExpress product for dropshipping: variant, ship time, and a price that survives fees.',
     kind: 'article',
-    related: ['how-to-validate-a-dropshipping-product', 'shopify-product-research', 'winning-dropshipping-products'],
+    related: ['how-to-read-a-supplier-quote', 'how-to-validate-a-dropshipping-product', 'winning-dropshipping-products'],
     sections: [
       {
         heading: 'Research the listing, not the category',
@@ -384,7 +385,7 @@ const ARTICLES: IntentPage[] = [
     metaTitle: 'Dropshipping niche ideas',
     description: 'Ten sample-catalog niches and how to pick one based on the buyer, not on a sales chart.',
     kind: 'niches',
-    related: ['what-to-sell-in-a-shopify-store', 'winning-dropshipping-products', 'tiktok-trending-products-to-sell'],
+    related: ['what-to-sell-in-a-shopify-store', 'second-dropshipping-supplier', 'winning-dropshipping-products'],
     sections: [
       {
         heading: 'A niche is an audience you can reach',
@@ -414,7 +415,7 @@ const ARTICLES: IntentPage[] = [
 const SEASONS: Season[] = ['spring', 'summer', 'fall', 'winter']
 
 export function allIntentPages(): IntentPage[] {
-  return [...ARTICLES, ...SEASONS.map(seasonPage)]
+  return [...ARTICLES, ...LONG_TAIL_PAGES, ...SEASONS.map(seasonPage)]
 }
 
 export function intentBySlug(slug: string): IntentPage | undefined {

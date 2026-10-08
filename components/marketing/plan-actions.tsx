@@ -7,7 +7,7 @@ import { SignupLink } from '@/components/marketing/signup-link'
 import { Button } from '@/components/ui/button'
 import { proAuthHref } from '@/lib/billing'
 
-type PlanState = 'guest' | 'free' | 'pro'
+type PlanState = 'guest' | 'free' | 'pro' | 'waitlist'
 
 export function FreePlanAction() {
   const [state, setState] = useState<PlanState>('guest')
@@ -45,10 +45,21 @@ export function ProPlanAction({ annualAvailable }: { annualAvailable: boolean })
       .then(async response => {
         if (!response.ok) return
         const data = await response.json()
-        setState(data.plan === 'pro' ? 'pro' : 'free')
+        if (data.plan === 'pro') setState('pro')
+        else if (data.checkoutAvailable === false) setState('waitlist')
+        else setState('free')
       })
       .catch(() => undefined)
   }, [])
+
+  if (state === 'waitlist') {
+    return (
+      <div className="mt-6">
+        <CheckoutButton source="pricing" interval="month">Join the Pro waitlist</CheckoutButton>
+        <p className="mt-2 text-sm text-muted-foreground">Pro is launching soon. Joining the waitlist saves your account email.</p>
+      </div>
+    )
+  }
 
   if (state === 'pro') {
     return (

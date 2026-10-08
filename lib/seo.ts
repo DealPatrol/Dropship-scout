@@ -4,6 +4,8 @@ import { absoluteUrl, FOUNDER_NAME, ORGANIZATION_EMAIL, SITE_NAME, siteUrl } fro
 export const TITLE_SUFFIX = ` · ${SITE_NAME}`
 export const OG_IMAGE_PATH = '/opengraph-image'
 export const LOGO_PATH = '/apple-icon'
+/** Editorial date for article schema. Not a sales or traffic claim. */
+export const CONTENT_DATE = '2026-10-08'
 
 const MAX_TITLE_LENGTH = 60
 
@@ -80,11 +82,10 @@ export function pageMetadata(input: {
   type?: 'website' | 'article'
   imagePath?: string
 }): Metadata {
-  const title = metadataTitle(input.title)
   const socialTitle = documentTitle(input.title)
   const imagePath = input.imagePath ?? OG_IMAGE_PATH
   return {
-    title,
+    title: { absolute: socialTitle },
     description: input.description,
     alternates: { canonical: input.path },
     robots: input.noIndex
@@ -103,6 +104,29 @@ export function pageMetadata(input: {
       title: socialTitle,
       description: input.description,
       images: [imagePath],
+    },
+  }
+}
+
+export function articleJsonLd(input: {
+  headline: string
+  description: string
+  path: string
+  imagePath?: string
+}) {
+  return {
+    '@type': 'Article',
+    headline: input.headline,
+    description: input.description,
+    mainEntityOfPage: absoluteUrl(input.path),
+    image: [absoluteUrl(input.imagePath ?? OG_IMAGE_PATH)],
+    datePublished: CONTENT_DATE,
+    dateModified: CONTENT_DATE,
+    author: { '@type': 'Organization', name: SITE_NAME },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: { '@type': 'ImageObject', url: absoluteUrl(LOGO_PATH) },
     },
   }
 }

@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { SignupCta } from '@/components/marketing/signup-cta'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { allIntentPages, intentBySlug } from '@/lib/marketing/intent'
+import { guideBySlug } from '@/lib/marketing/content'
+import { guideForResearch } from '@/lib/marketing/overlap'
 import {
   lowCompetitionProducts,
   productsForSeason,
@@ -13,8 +16,7 @@ import {
   shortFormTaggedProducts,
   type PublicProduct,
 } from '@/lib/marketing/public-catalog'
-import { breadcrumbJsonLd, faqPageJsonLd, jsonLdGraph, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
-import { absoluteUrl } from '@/lib/site'
+import { articleJsonLd, breadcrumbJsonLd, faqPageJsonLd, jsonLdGraph, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
 
 export const revalidate = 86400
 
@@ -52,14 +54,14 @@ export default function IntentPage({ params }: { params: { slug: string } }) {
         : []
   const niches = page.kind === 'niches' ? publicNiches() : []
 
+  const pairedGuide = guideBySlug(guideForResearch(page.slug) ?? '')
   const graph: object[] = [
-    {
-      '@type': 'Article',
+    articleJsonLd({
       headline: page.title,
       description: page.description,
-      mainEntityOfPage: absoluteUrl(`/research/${page.slug}`),
-      author: { '@type': 'Organization', name: 'Dropship Scout' },
-    },
+      path: `/research/${page.slug}`,
+      imagePath: `/research/${page.slug}/opengraph-image`,
+    }),
     breadcrumbJsonLd([
       { name: 'Home', path: '/' },
       { name: 'Research', path: '/research' },
@@ -75,9 +77,7 @@ export default function IntentPage({ params }: { params: { slug: string } }) {
     <SiteFrame>
       <JsonLd data={jsonLdGraph(graph)} />
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <p className="text-sm text-muted-foreground">
-          <Link href="/research" className="hover:text-foreground">Research</Link>
-        </p>
+        <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Research', href: '/research' }, { name: page.title, href: `/research/${page.slug}` }]} />
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-balance">{page.title}</h1>
         <p className="mt-4 text-lg text-muted-foreground">{page.description}</p>
         {page.season === currentSeason && (
@@ -138,6 +138,15 @@ export default function IntentPage({ params }: { params: { slug: string } }) {
             ))}
           </div>
         </section>
+        <p className="mt-8 text-sm">
+          <Link href="/research/idea-checker" className="text-primary hover:underline">Check this kind of idea with your own quote</Link>
+        </p>
+        {pairedGuide && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            This page is the research shortlist.{' '}
+            <Link href={`/guides/${pairedGuide.slug}`} className="text-primary hover:underline">How-to guide: {pairedGuide.title}</Link>
+          </p>
+        )}
         {page.related.length > 0 && (
           <nav className="mt-10" aria-label="Related research">
             <h2 className="text-lg font-semibold">Keep reading</h2>

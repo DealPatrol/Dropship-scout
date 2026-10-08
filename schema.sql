@@ -15,8 +15,35 @@ create table if not exists users (
   stripe_subscription_id text unique,
   stripe_subscription_status text,
   stripe_event_created bigint not null default 0,
+  utm_source text,
+  utm_medium text,
+  utm_campaign text,
+  utm_term text,
+  utm_content text,
+  gclid text,
+  fbclid text,
+  ads_landing text,
+  ads_purchase_pending boolean not null default false,
+  ads_purchase_transaction_id text,
+  ads_purchase_value_cents integer,
+  ads_purchase_currency text,
+  ads_purchase_reported_at timestamptz,
   created_at timestamptz default now()
 );
+
+alter table users add column if not exists utm_source text;
+alter table users add column if not exists utm_medium text;
+alter table users add column if not exists utm_campaign text;
+alter table users add column if not exists utm_term text;
+alter table users add column if not exists utm_content text;
+alter table users add column if not exists gclid text;
+alter table users add column if not exists fbclid text;
+alter table users add column if not exists ads_landing text;
+alter table users add column if not exists ads_purchase_pending boolean not null default false;
+alter table users add column if not exists ads_purchase_transaction_id text;
+alter table users add column if not exists ads_purchase_value_cents integer;
+alter table users add column if not exists ads_purchase_currency text;
+alter table users add column if not exists ads_purchase_reported_at timestamptz;
 
 create table if not exists saved_products (
   id uuid primary key default gen_random_uuid(),

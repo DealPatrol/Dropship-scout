@@ -1,8 +1,9 @@
+import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { SignupCta } from '@/components/marketing/signup-cta'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { FAQ_ITEMS } from '@/lib/marketing/content'
-import { faqPageJsonLd, pageMetadata } from '@/lib/seo'
+import { breadcrumbJsonLd, faqPageJsonLd, jsonLdGraph, pageMetadata } from '@/lib/seo'
 
 export const metadata = pageMetadata({
   title: 'FAQ',
@@ -11,15 +12,19 @@ export const metadata = pageMetadata({
 })
 
 export default function FaqPage() {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    ...faqPageJsonLd(FAQ_ITEMS),
-  }
+  const jsonLd = jsonLdGraph([
+    faqPageJsonLd(FAQ_ITEMS),
+    breadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: 'FAQ', path: '/faq' },
+    ]),
+  ])
   return (
     <SiteFrame>
       <JsonLd data={jsonLd} />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <h1 className="text-4xl font-bold tracking-tight">FAQ</h1>
+        <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'FAQ', href: '/faq' }]} />
+        <h1 className="mt-3 text-4xl font-bold tracking-tight">FAQ</h1>
         <p className="mt-4 text-muted-foreground">Practical answers for sellers researching products and setting up a hosted store.</p>
         <div className="mt-10 flex flex-col gap-8">
           {FAQ_ITEMS.map(item => (

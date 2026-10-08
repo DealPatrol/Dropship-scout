@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
-import { parseBillingInterval, publicCheckoutError } from '@/lib/billing'
-import { getBillingProfile, setStripeCustomer } from '@/lib/db'
+import { checkoutGate, parseBillingInterval, publicCheckoutError } from '@/lib/billing'
+import { getBillingProfile, saveWatchSubscriber, setStripeCustomer } from '@/lib/db'
 import { siteUrl } from '@/lib/site'
 import {
   checkoutIntegrationIdentifier,
@@ -22,6 +22,28 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ error: 'Checkout interval was not valid JSON.' }, { status: 400 })
     }
+  }
+
+  const gate = checkoutGate({
+    interval,
+    secretConfigured: Boolean(process.env.STRIPE_SECRET_KEY?.trim()),
+    monthlyPriceConfigured: Boolean(process.env.STRIPE_PRO_PRICE_ID?.trim()),
+    annualPriceConfigured: Boolean(process.env.STRIPE_PRO_ANNUAL_PRICE_ID?.trim()),
+  })
+  if (gate === 'waitlist') {
+    let saved = true
+    try {
+      await saveWatchSubscriber(user.email, 'pro-waitlist')
+    } catch {
+      saved = false
+    }
+    return NextResponse.json({ waitlist: true, saved })
+  }
+  if (gate === 'annual_missing') {
+    return NextResponse.json(
+      { error: 'Annual billing is not available right now. Monthly checkout is still open.' },
+      { status: 409 },
+    )
   }
 
   try {

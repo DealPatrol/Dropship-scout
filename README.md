@@ -27,6 +27,12 @@ Requires Node.js 22.14+, pnpm, and a Postgres database (Neon works).
 | `STRIPE_SECRET_KEY` | Billing | Restricted Stripe server key for Customers, Checkout, and Billing Portal. |
 | `STRIPE_PRO_PRICE_ID` | Billing | Recurring Price ID for the monthly Dropship Scout Pro product. |
 | `STRIPE_PRO_ANNUAL_PRICE_ID` | Optional billing | Recurring yearly Price ID. When set, pricing offers annual checkout with the same Pro limits. |
+| `NEXT_PUBLIC_META_PIXEL_ID` | Optional ads | Meta Pixel id, digits only. Unset means the pixel is not loaded. |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Optional ads | GA4 measurement id (`G-...`). Unset means GA4 is not loaded. |
+| `NEXT_PUBLIC_GOOGLE_ADS_ID` | Optional ads | Google Ads id (`AW-...`). Needs a conversion label to send a conversion. |
+| `NEXT_PUBLIC_GOOGLE_ADS_SIGNUP_LABEL` | Optional ads | Conversion label for a completed signup. |
+| `NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL` | Optional ads | Conversion label for a completed idea check. |
+| `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` | Optional ads | Conversion label for a Stripe-confirmed Pro purchase. |
 | `STRIPE_WEBHOOK_SECRET` | Billing | Signing secret for `/api/stripe/webhook`. |
 | `CJ_API_ACCESS_TOKEN` | Optional, Pro | Enables the live CJ Dropshipping supplier adapter. |
 | `CJ_API_BASE_URL` | Optional | CJ API v2 base URL; normally keep the documented default. |
@@ -66,6 +72,10 @@ Import this repository into Vercel as a Next.js project. Select pnpm and use `pn
 The included hourly cron calls `/api/cron/track`. Set a long random `CRON_SECRET`; Vercel Cron automatically sends it as `Authorization: Bearer <CRON_SECRET>`. Local calls must send the same header. A missing secret returns `503`, not an unprotected successful run.
 
 Vercel Web Analytics is included with `@vercel/analytics`. Enable Web Analytics on the Vercel project. No extra key is required. Signup buttons emit `signup-click`. A successful call that returns a Stripe Checkout URL emits `checkout-started`.
+
+Meta Pixel, GA4, and Google Ads load only when their `NEXT_PUBLIC_` ids are set. Signup fires after an account is created. The idea checker fires a lead after a completed check. Purchase fires only after Stripe Checkout is confirmed and the dashboard claims that conversion once. UTM parameters, `gclid`, and `fbclid` are stored on the user at signup, and filled in on later logins when those columns are empty. `/ads/check-your-product` and `/ads/worth-selling` are noindex landing pages for the checker. They are not in the sitemap.
+
+If Stripe billing keys are missing, signed-in checkout joins the Pro waitlist (`watch_subscribers`, source `pro-waitlist`) instead of returning an error. The app still does not send that email.
 
 Public research pages live under `/research`, with a sample-catalog preview at `/research/preview` and a no-signup product idea checker at `/research/idea-checker`. Those pages do not publish order counts or revenue. The checker uses the default platform fee and card-fee estimate, not live sales. Pro checkout starts from `/pricing` after signup or sign-in (`?plan=pro`, optional `&interval=year`). `POST /api/watch` stores a products-to-watch email in `watch_subscribers`. The app does not send that email.
 
