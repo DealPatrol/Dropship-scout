@@ -1,3 +1,4 @@
+import { BUYER_GUIDES } from '@/lib/marketing/buyer-guides'
 import { EXTRA_GUIDES } from '@/lib/marketing/extra-guides'
 import { articleJsonLd, breadcrumbJsonLd, faqPageJsonLd } from '@/lib/seo'
 
@@ -142,7 +143,7 @@ const BASE_GUIDES: Guide[] = [
   },
 ]
 
-export const GUIDES: Guide[] = [...BASE_GUIDES, ...EXTRA_GUIDES]
+export const GUIDES: Guide[] = [...BASE_GUIDES, ...EXTRA_GUIDES, ...BUYER_GUIDES]
 
 export function guideBySlug(slug: string): Guide | undefined {
   return GUIDES.find(guide => guide.slug === slug)
