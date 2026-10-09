@@ -2,6 +2,10 @@ export type Plan = 'free' | 'pro'
 
 export type BillingInterval = 'month' | 'year'
 
+/** Published Pro price. Must match the live Stripe Price set in STRIPE_PRO_PRICE_ID. */
+export const PRO_MONTHLY_PRICE_USD = 29
+export const PRO_MONTHLY_PRICE_LABEL = `$${PRO_MONTHLY_PRICE_USD}/month`
+
 export function parseBillingInterval(value: unknown): BillingInterval {
   return value === 'year' ? 'year' : 'month'
 }

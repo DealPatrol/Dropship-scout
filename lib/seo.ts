@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PRO_MONTHLY_PRICE_USD } from '@/lib/billing'
 import { absoluteUrl, FOUNDER_NAME, ORGANIZATION_EMAIL, SITE_NAME, siteUrl } from '@/lib/site'
 
 export const TITLE_SUFFIX = ` · ${SITE_NAME}`
@@ -61,15 +62,32 @@ export function freeOfferJsonLd() {
   }
 }
 
+export function proOfferJsonLd() {
+  return {
+    '@type': 'Offer',
+    name: 'Pro',
+    price: String(PRO_MONTHLY_PRICE_USD),
+    priceCurrency: 'USD',
+    url: absoluteUrl('/pricing'),
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price: String(PRO_MONTHLY_PRICE_USD),
+      priceCurrency: 'USD',
+      billingDuration: 'P1M',
+      unitCode: 'MON',
+    },
+  }
+}
+
 export function softwareApplicationJsonLd() {
   return {
     '@type': 'SoftwareApplication',
     name: SITE_NAME,
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
-    offers: freeOfferJsonLd(),
+    offers: [freeOfferJsonLd(), proOfferJsonLd()],
     description:
-      'Dropshipping product research with a sample catalog, supplier import, and an optional hosted storefront. Free plan included. Pro is billed in Stripe.',
+      'Dropshipping product research with a sample catalog, supplier import, and an optional hosted storefront. Free plan included. Pro is $29/month, billed by Stripe.',
     url: siteUrl(),
   }
 }

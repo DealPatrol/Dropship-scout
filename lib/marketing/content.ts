@@ -215,11 +215,11 @@ export const PRICING_FAQ = [
   faqByQuestion('What does the free plan include?'),
   {
     question: 'How is Pro billed?',
-    answer: 'Create an account from the pricing page and Stripe Checkout opens for the Dropship Scout Pro price. If you already have an account, sign in and the same checkout starts. The amount is that Stripe Price. Settings can open checkout again when the subscription is not active.',
+    answer: 'Pro is $29 per month in US dollars, billed by Stripe. Create an account from the pricing page and Stripe Checkout opens for Pro. If you already have an account, sign in and the same checkout starts. Pro is month to month with no contract. Manage billing from Settings, or email support for help with your subscription.',
   },
   {
     question: 'Is there an annual Pro plan?',
-    answer: 'When an annual Stripe Price is configured, pricing offers yearly billing next to monthly billing. Both unlock the same Pro limits. If yearly billing is not configured, only the monthly Price is offered. This page does not invent either amount.',
+    answer: 'When an annual Stripe Price is configured, pricing offers yearly billing next to monthly billing. Both unlock the same Pro limits. If yearly billing is not configured, only the $29 monthly plan is offered.',
   },
   {
     question: 'What if I already started checkout once?',
