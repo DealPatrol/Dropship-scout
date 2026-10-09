@@ -6,11 +6,15 @@ import { AdsTags } from '@/components/ads/ads-tags'
 import { AttributionCapture } from '@/components/ads/attribution-capture'
 import { Toaster } from '@/components/ui/toaster'
 import { SITE_NAME, siteUrl } from '@/lib/site'
+import { googleSiteVerificationToken } from '@/lib/site-verification'
+
+const googleSiteVerification = googleSiteVerificationToken()
 
 const _inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter', adjustFontFallback: true })
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
+  ...(googleSiteVerification ? { verification: { google: googleSiteVerification } } : {}),
   title: {
     default: SITE_NAME,
     template: `%s · ${SITE_NAME}`,
