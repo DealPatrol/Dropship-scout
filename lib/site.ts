@@ -19,3 +19,6 @@ export const FOUNDER_NAME = 'Cole Collins'
 
 /** Owner inbox used in public Organization structured data. */
 export const ORGANIZATION_EMAIL = 'colecollins763@gmail.com'
+
+/** Public support inbox shown on Contact, Privacy, Terms, and the footer. */
+export const SUPPORT_EMAIL = ORGANIZATION_EMAIL

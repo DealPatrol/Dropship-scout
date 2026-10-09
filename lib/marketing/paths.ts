@@ -18,6 +18,10 @@ export function marketingPaths(now = new Date()): MarketingPath[] {
     { path: '/research/idea-checker', priority: 0.85, changeFrequency: 'weekly' },
     { path: '/faq', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/guides', priority: 0.6, changeFrequency: 'monthly' },
+    { path: '/about', priority: 0.4, changeFrequency: 'monthly' },
+    { path: '/contact', priority: 0.4, changeFrequency: 'monthly' },
+    { path: '/privacy', priority: 0.2, changeFrequency: 'monthly' },
+    { path: '/terms', priority: 0.2, changeFrequency: 'monthly' },
   ]
   const research = allIntentPages().map(page => ({
     path: `/research/${page.slug}`,
