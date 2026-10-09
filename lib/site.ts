@@ -18,7 +18,7 @@ export const SITE_NAME = 'Dropship Scout'
 export const FOUNDER_NAME = 'Cole Collins'
 
 /** Owner inbox used in public Organization structured data. */
-export const ORGANIZATION_EMAIL = 'colecollins763@gmail.com'
+export const ORGANIZATION_EMAIL = 'support@getdropshipscout.com'
 
 /** Public support inbox shown on Contact, Privacy, Terms, and the footer. */
 export const SUPPORT_EMAIL = ORGANIZATION_EMAIL
