@@ -42,13 +42,26 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-balance">{guide.title}</h1>
         <p className="mt-4 text-lg text-muted-foreground">{guide.description}</p>
         <div className="mt-10 flex flex-col gap-8">
-          {guide.sections.map(section => (
-            <section key={section.heading}>
-              <h2 className="text-2xl font-semibold">{section.heading}</h2>
-              {section.paragraphs.map(paragraph => (
-                <p key={paragraph} className="mt-3 text-muted-foreground leading-relaxed">{paragraph}</p>
-              ))}
-            </section>
+          {guide.sections.map((section, index) => (
+            <div key={section.heading} className="flex flex-col gap-8">
+              <section>
+                <h2 className="text-2xl font-semibold">{section.heading}</h2>
+                {section.paragraphs.map(paragraph => (
+                  <p key={paragraph} className="mt-3 text-muted-foreground leading-relaxed">{paragraph}</p>
+                ))}
+              </section>
+              {index === 0 && (
+                <aside className="rounded-xl border bg-muted/40 p-5 sm:flex sm:items-center sm:justify-between sm:gap-6">
+                  <div>
+                    <p className="font-semibold">Have a product in mind?</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Run it through the free idea checker. No account or card needed.</p>
+                  </div>
+                  <Link href="/research/idea-checker" className="mt-4 inline-flex shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:mt-0">
+                    Check a product idea
+                  </Link>
+                </aside>
+              )}
+            </div>
           ))}
         </div>
         {guide.faqs && guide.faqs.length > 0 && (
