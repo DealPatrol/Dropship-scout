@@ -4,7 +4,7 @@ import { absoluteUrl, FOUNDER_NAME, ORGANIZATION_EMAIL, SITE_NAME, siteUrl } fro
 
 export const TITLE_SUFFIX = ` · ${SITE_NAME}`
 export const OG_IMAGE_PATH = '/opengraph-image'
-export const LOGO_PATH = '/apple-icon'
+export const LOGO_PATH = '/brand-logo.png'
 /** Editorial date for article schema. Not a sales or traffic claim. */
 export const CONTENT_DATE = '2026-10-08'
 

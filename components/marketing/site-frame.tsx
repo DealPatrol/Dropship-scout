@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Radar } from 'lucide-react'
 import { SignupLink } from '@/components/marketing/signup-link'
 import { WatchForm } from '@/components/marketing/watch-form'
 import { Button } from '@/components/ui/button'
@@ -23,10 +22,8 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-              <Radar className="h-4 w-4 text-primary-foreground" aria-hidden="true" />
-            </span>
-            <span className="font-semibold tracking-tight">Dropship Scout</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand-header.png" alt="Dropship Scout" width={130} height={44} className="block h-11 w-auto rounded-md bg-white px-2 py-1" />
           </Link>
           <nav aria-label="Primary" className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             {links.map(link => (
