@@ -10,12 +10,13 @@ import { allIntentPages } from '@/lib/marketing/intent'
 import { faqPageJsonLd, jsonLdGraph, organizationJsonLd, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
 
 export const metadata = pageMetadata({
-  title: 'Product research that ends in a real supplier',
+  title: 'Know your numbers. Launch a better product test.',
   description: 'Dropship Scout helps you validate a product, confirm a supplier can fulfill it, and publish a store page in one workspace. Start free, Pro is $29/month.',
   path: '/',
 })
 
 const features = [
+  { icon: Search, title: 'Profit-first launch workspace', description: 'Calculate acquisition limits after shipping, fees, and returns. Save supplier evidence, export campaign drafts, and record actual test results.' },
   {
     icon: Search,
     title: 'Product research',
@@ -81,6 +82,7 @@ export default function LandingPage() {
 
   return (
     <SiteFrame>
+      <div className="border-b border-border bg-primary/5 px-4 py-3 text-center text-sm"><Link href="/launch-preview" className="font-medium text-primary hover:underline">Try the new launch workspace: margins → campaign → results →</Link></div>
       <JsonLd data={jsonLd} />
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:pt-24 text-center">
         <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">

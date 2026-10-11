@@ -121,6 +121,8 @@ export function StoreView() {
         </p>
       </div>
 
+      <div className="flex flex-wrap gap-3 text-sm"><a className="text-primary underline" href="/api/store/export?channel=shopify">Download Shopify draft CSV</a><a className="text-primary underline" href="/api/store/export?channel=etsy">Download Etsy listing worksheet</a></div>
+      <p className="text-xs text-muted-foreground">Exports use your store listings. The Etsy worksheet is for manual listing preparation; it does not publish to Etsy.</p>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Payouts</CardTitle>

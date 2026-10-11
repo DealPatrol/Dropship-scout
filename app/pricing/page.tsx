@@ -24,6 +24,9 @@ export default function PricingPage() {
   const annual = annualPriceConfigured()
   const rows: { label: string; free: string; pro: string }[] = [
     { label: 'Price', free: '$0', pro: annual ? `${PRO_MONTHLY_PRICE_LABEL}, or yearly` : PRO_MONTHLY_PRICE_LABEL },
+    { label: 'Profit-first launch workspaces', free: '3', pro: '50' },
+    { label: 'Margin calculator and campaign templates', free: 'Included', pro: 'Included' },
+    { label: 'Shopify CSV and Etsy listing worksheet', free: 'Included', pro: 'Included' },
     { label: 'Saved research products', free: limitLabel(free.savedProducts), pro: limitLabel(pro.savedProducts) },
     { label: 'Research-catalog products', free: limitLabel(free.catalogProducts), pro: limitLabel(pro.catalogProducts) },
     { label: 'Products per catalog build', free: limitLabel(free.catalogBuildSize), pro: limitLabel(pro.catalogBuildSize) },
