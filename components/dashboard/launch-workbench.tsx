@@ -7,6 +7,8 @@ import { ArrowRight, Download, Save, Plus, Trash2, FlaskConical } from 'lucide-r
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { CheckoutButton } from '@/components/marketing/checkout-button'
+import { PRO_MONTHLY_PRICE_USD } from '@/lib/billing'
 import { calculateLaunchEconomics, type LaunchEconomicsInput, type LaunchEconomicsResult } from '@/lib/launch-economics'
 import { buildLaunchCampaign, launchWorkspaceCsv, evaluateLaunchExperiment, type LaunchWorkspaceInput } from '@/lib/launch-workspace'
 
@@ -34,17 +36,28 @@ function download(name: string, content: string, type: string) {
   const a = document.createElement('a'); a.href = url; a.download = name; a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+function LaunchUpgradeOffer() {
+  return (
+    <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
+      <p className="text-sm">Pro is ${PRO_MONTHLY_PRICE_USD}/month and includes 50 saved launches. Stripe collects the card.</p>
+      <div className="mt-3">
+        <CheckoutButton source="launch-limit">Continue to Pro checkout</CheckoutButton>
+      </div>
+    </div>
+  )
+}
 export function LaunchWorkbench({ preview = false }: { preview?: boolean }) {
   const [form, setForm] = useState<LaunchWorkspaceInput>(initial)
   const [selected, setSelected] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [upgrade, setUpgrade] = useState(false)
   const [listingMessage, setListingMessage] = useState('')
   const savedSnapshot = useRef(JSON.stringify(initial))
   function switchWorkspace(next: LaunchWorkspaceInput, id: string | null) {
     if (busy) return
     if (JSON.stringify(form) !== savedSnapshot.current && !window.confirm('Discard unsaved changes to this launch?')) return
-    setForm(next); setSelected(id); savedSnapshot.current = JSON.stringify(next); setMessage(''); setListingMessage('')
+    setForm(next); setSelected(id); savedSnapshot.current = JSON.stringify(next); setMessage(''); setListingMessage(''); setUpgrade(false)
   }
   const { data, error, mutate } = useSWR<{ launches: SavedLaunch[]; limit: number; plan: string }>(preview ? null : '/api/launches', fetcher)
   const { data: storeCosts } = useSWR<{ platformFeeBps: number }>(preview ? null : '/api/store/listings', fetcher)
@@ -67,9 +80,13 @@ export function LaunchWorkbench({ preview = false }: { preview?: boolean }) {
   async function save() {
     setBusy(true); setMessage('')
     try {
+      setUpgrade(false)
       const response = await fetch(selected ? `/api/launches/${selected}` : '/api/launches', { method: selected ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       const result = await response.json()
-      if (!response.ok) throw new Error(result.error || 'Could not save.')
+      if (!response.ok) {
+        if (result.code === 'PLAN_LIMIT' && data?.plan !== 'pro') setUpgrade(true)
+        throw new Error(result.error || 'Could not save.')
+      }
       setSelected(result.launch.id); savedSnapshot.current = JSON.stringify(form); await mutate(); setMessage('Launch saved to your account.')
     } catch (e) { setMessage(e instanceof Error ? e.message : 'Could not save.') } finally { setBusy(false) }
   }
@@ -103,7 +120,7 @@ export function LaunchWorkbench({ preview = false }: { preview?: boolean }) {
         <Card><CardHeader><CardTitle>4. Record the actual test</CardTitle></CardHeader><CardContent className="space-y-4"><p className="text-sm text-muted-foreground">Enter totals for this product and test period. Refunds are dollar amounts; revenue is before refunds. This ledger is manual, not automatically synced from ad accounts.</p><div className="grid sm:grid-cols-2 gap-4">{(['spend','orders','revenue','refunds'] as const).map(key=><label key={key} className="text-sm capitalize">{key}{key==='orders'?'':' ($)'}<Input disabled={busy} className="mt-2" type="number" min="0" step={key==='orders'?1:0.01} value={form.experiment[key]} onChange={e=>setForm({...form,experiment:{...form.experiment,[key]:Number(e.target.value)}})} /></label>)}</div>{experimentInvalid || economicsError ? <p role="alert" className="text-sm text-destructive">Check experiment totals. Orders must be whole numbers, and refunds cannot exceed revenue.</p> : <div className="grid sm:grid-cols-3 gap-3">{[['Contribution after test', money(actual.netContribution)], ['Actual acquisition cost', money(actual.acquisitionCost)], ['Actual ROAS', actual.roas === null ? 'No ad spend' : `${actual.roas.toFixed(2)}×`]].map(([label,value])=><div key={label} className="rounded-md bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="font-semibold text-lg mt-1">{value}</p></div>)}<p className="sm:col-span-3 text-sm">{actual.status === 'insufficient-data' ? 'No completed orders recorded yet.' : actual.status === 'positive-contribution' ? 'This test has positive estimated contribution. Check repeatability before increasing spend.' : 'Revise the offer or stop the test before increasing spend.'}</p></div>}<p className="text-xs text-muted-foreground">Product and shipping costs are estimates from step 2. Taxes, overhead, and supplier credits are outside this calculation.</p></CardContent></Card>
       </div>
       <div className="space-y-4 lg:sticky lg:top-4 self-start"><Card><CardHeader><CardTitle>Merchandising manager</CardTitle></CardHeader><CardContent className="space-y-4"><p className="text-xs text-muted-foreground">A rules-based decision assistant. It evaluates costs and evidence; it does not predict demand.</p>{economicsError?<p role="alert" className="text-destructive text-sm">{economicsError}</p>:economics&&<><div className="grid grid-cols-2 gap-3">{[['Profit after ads',money(economics.netProfitPerOrder)],['Net margin',`${economics.netMarginPercent.toFixed(1)}%`],['Break-even acquisition cost',money(economics.breakEvenCAC)],['Target acquisition ceiling',money(economics.maxCACForTargetProfit)],['Break-even ROAS',economics.breakEvenROAS===null?'Not viable':`${economics.breakEvenROAS.toFixed(2)}×`],['Orders test budget could fund',economics.affordableTestOrders===null?'Set ad cost':String(economics.affordableTestOrders)]].map(([label,value])=><div className="bg-secondary/50 p-3 rounded-md" key={label}><p className="text-xs text-muted-foreground">{label}</p><p className="text-lg font-semibold mt-1">{value}</p></div>)}</div><p className="text-lg capitalize font-semibold">{economics.recommendation === 'test' ? 'Ready for a controlled test' : economics.recommendation === 'stop' ? 'Revise before spending' : 'Review missing evidence'}</p><ul className="text-sm list-disc pl-5 space-y-2">{[...economics.reasons, ...economics.missingEvidence].map((reason,i)=><li key={i}>{reason}</li>)}</ul></>}
-      {!preview&&<div className="flex gap-2"><Button disabled={busy||!!economicsError||experimentInvalid} onClick={save} className="flex-1"><Save className="h-4 w-4 mr-2" />{busy?'Saving…':'Save launch'}</Button>{selected&&<Button variant="outline" disabled={busy} aria-label="Delete selected launch" onClick={remove}><Trash2 className="h-4 w-4" /></Button>}</div>}<p aria-live="polite" className="text-sm">{message}</p></CardContent></Card><p className="text-xs text-muted-foreground">Free: 3 saved launches. Pro: 50. Campaign drafts and calculations do not incur generation fees. Publishing and fulfillment remain separate, approved actions.</p></div>
+      {!preview&&<div className="flex gap-2"><Button disabled={busy||!!economicsError||experimentInvalid} onClick={save} className="flex-1"><Save className="h-4 w-4 mr-2" />{busy?'Saving…':'Save launch'}</Button>{selected&&<Button variant="outline" disabled={busy} aria-label="Delete selected launch" onClick={remove}><Trash2 className="h-4 w-4" /></Button>}</div>}<div className="space-y-3"><p aria-live="polite" className="text-sm">{message}</p>{upgrade && <LaunchUpgradeOffer />}</div></CardContent></Card><p className="text-xs text-muted-foreground">Free: 3 saved launches. Pro: 50. Campaign drafts and calculations do not incur generation fees. Publishing and fulfillment remain separate, approved actions.</p></div>
     </div>
   </div>
 }

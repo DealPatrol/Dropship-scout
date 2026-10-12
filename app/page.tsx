@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { ArrowRight, CheckCircle, KeyRound, Lock, Search, ShieldCheck, ShoppingBag, Store, Truck } from 'lucide-react'
+import { ArrowRight, CheckCircle, FlaskConical, KeyRound, Lock, Search, ShieldCheck, ShoppingBag, Store, Truck } from 'lucide-react'
 import { PRO_MONTHLY_PRICE_USD } from '@/lib/billing'
 import { JsonLd } from '@/components/marketing/json-ld'
+import { SignupCta } from '@/components/marketing/signup-cta'
 import { SignupLink } from '@/components/marketing/signup-link'
 import { SiteFrame } from '@/components/marketing/site-frame'
 import { Button } from '@/components/ui/button'
@@ -10,13 +11,13 @@ import { allIntentPages } from '@/lib/marketing/intent'
 import { faqPageJsonLd, jsonLdGraph, organizationJsonLd, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
 
 export const metadata = pageMetadata({
-  title: 'Know your numbers. Launch a better product test.',
-  description: 'Dropship Scout helps you validate a product, confirm a supplier can fulfill it, and publish a store page in one workspace. Start free, Pro is $29/month.',
+  title: 'Dropshipping product research',
+  description: 'Check supplier cost and margin in a public launch workspace, then publish a store page when a supplier can fulfill. Start free. Pro is $29/month.',
   path: '/',
 })
 
 const features = [
-  { icon: Search, title: 'Profit-first launch workspace', description: 'Calculate acquisition limits after shipping, fees, and returns. Save supplier evidence, export campaign drafts, and record actual test results.' },
+  { icon: FlaskConical, title: 'Profit-first launch workspace', description: 'Calculate acquisition limits after shipping, fees, and returns. Save supplier evidence, export campaign drafts, and record actual test results.' },
   {
     icon: Search,
     title: 'Product research',
@@ -82,27 +83,28 @@ export default function LandingPage() {
 
   return (
     <SiteFrame>
-      <div className="border-b border-border bg-primary/5 px-4 py-3 text-center text-sm"><Link href="/launch-preview" className="font-medium text-primary hover:underline">Try the new launch workspace: margins → campaign → results →</Link></div>
       <JsonLd data={jsonLd} />
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:pt-24 text-center">
         <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
           <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" /> Product research, suppliers, and a storefront in one workspace
         </p>
         <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
-          Know a product can sell and ship before you spend a dollar on ads
+          Check the margin and the supplier before you spend on ads
         </h1>
         <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
-          Dropship Scout takes you from product idea to a supplier that can actually fulfill it, with the margin math done before you publish a single listing.
+          Dropship Scout is a research workspace: run the margin math, confirm a supplier can fulfill the product, and publish a listing only after that check.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <SignupLink href="/auth/sign-up" location="home-hero">
             <Button size="lg" className="gap-2 px-6">Start free, no card <ArrowRight className="h-4 w-4" /></Button>
           </SignupLink>
-          <Link href="/pricing">
-            <Button variant="outline" size="lg">Pro is ${PRO_MONTHLY_PRICE_USD}/month</Button>
+          <Link href="/launch-preview">
+            <Button variant="outline" size="lg">Try the launch workspace</Button>
           </Link>
         </div>
-        <p className="mt-4 text-sm">
+        <p className="mt-4 text-sm text-muted-foreground">
+          <Link href="/pricing" className="text-primary hover:underline">Pro is ${PRO_MONTHLY_PRICE_USD}/month</Link>
+          <span className="mx-2" aria-hidden="true">·</span>
           <Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea, no account</Link>
         </p>
       </section>
@@ -174,6 +176,7 @@ export default function LandingPage() {
             {[
               '10 saved research products',
               '25 research-catalog products',
+              '3 saved launch workspaces',
               'Sample catalog labeled as sample data',
               'Hosted store when a supplier can fulfill',
             ].map(item => (
@@ -219,6 +222,11 @@ export default function LandingPage() {
           ))}
         </div>
         <Link href="/faq" className="inline-block mt-4 text-sm text-primary">Read the FAQ</Link>
+        <SignupCta
+          location="home-closing"
+          heading="Try the numbers, then create an account"
+          body="The launch workspace preview saves nothing and charges nothing. A free account keeps 3 launches. Pro is $29/month, billed by Stripe, and raises that to 50."
+        />
       </section>
     </SiteFrame>
   )

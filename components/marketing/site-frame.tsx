@@ -21,24 +21,25 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
       <div className="fixed inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:64px_64px] opacity-20 pointer-events-none" />
       <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
+          <Link href="/" className="flex min-w-0 items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand-header.png" alt="Dropship Scout" width={130} height={44} className="block h-11 w-auto rounded-md bg-white px-2 py-1" />
+            <img src="/brand-header.png" alt="Dropship Scout" width={130} height={44} className="block h-8 w-auto max-w-[7rem] rounded-md bg-white object-contain object-left px-1.5 py-0.5 sm:h-10 sm:max-w-[9.5rem] md:h-11 md:max-w-none md:px-2 md:py-1" />
           </Link>
           <nav aria-label="Primary" className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             {links.map(link => (
               <Link key={link.href} href={link.href} className="hover:text-foreground transition-colors">{link.label}</Link>
             ))}
           </nav>
-          <div className="flex items-center gap-2">
-            <Link href="/auth/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link href="/auth/login" className="hidden md:inline-flex"><Button variant="ghost" size="sm">Sign in</Button></Link>
             <SignupLink href="/auth/sign-up" location="header"><Button size="sm">Start free</Button></SignupLink>
           </div>
         </div>
         <nav aria-label="Mobile" className="md:hidden border-t border-border px-4 py-2 flex gap-4 overflow-x-auto text-sm text-muted-foreground">
           {links.map(link => (
-            <Link key={link.href} href={link.href} className="hover:text-foreground">{link.label}</Link>
+            <Link key={link.href} href={link.href} className="shrink-0 hover:text-foreground">{link.label}</Link>
           ))}
+          <Link href="/auth/login" className="shrink-0 font-medium text-foreground">Sign in</Link>
         </nav>
       </header>
       <main id="main" className="relative z-10">{children}</main>

@@ -16,6 +16,7 @@ export function marketingPaths(now = new Date()): MarketingPath[] {
     { path: '/research', priority: 0.9, changeFrequency: 'weekly' },
     { path: '/research/preview', priority: 0.8, changeFrequency: 'weekly' },
     { path: '/research/idea-checker', priority: 0.85, changeFrequency: 'weekly' },
+    { path: '/launch-preview', priority: 0.8, changeFrequency: 'weekly' },
     { path: '/faq', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/guides', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/about', priority: 0.4, changeFrequency: 'monthly' },

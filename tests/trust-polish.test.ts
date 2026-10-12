@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { PRO_MONTHLY_PRICE_LABEL, PRO_MONTHLY_PRICE_USD } from '@/lib/billing'
 import { PRICING_FAQ } from '@/lib/marketing/content'
 import { marketingPaths } from '@/lib/marketing/paths'
-import { proOfferJsonLd, softwareApplicationJsonLd } from '@/lib/seo'
+import { documentTitle, proOfferJsonLd, softwareApplicationJsonLd } from '@/lib/seo'
 import { SUPPORT_EMAIL } from '@/lib/site'
 
 const read = (path: string) => readFileSync(path, 'utf8')
@@ -39,6 +39,43 @@ describe('company pages', () => {
   it('show a real support address', () => {
     expect(SUPPORT_EMAIL).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
     expect(read('app/contact/page.tsx')).toContain('SUPPORT_EMAIL')
+  })
+})
+
+describe('homepage and Pro checkout', () => {
+  it('uses a branded research title and links the public launch workspace', () => {
+    const home = read('app/page.tsx')
+    const title = 'Dropshipping product research'
+    expect(home).toContain(`title: '${title}'`)
+    expect(documentTitle(title)).toBe(`${title} · Dropship Scout`)
+    expect(documentTitle(title).length).toBeLessThanOrEqual(60)
+    expect(documentTitle('Dropshipping launch workspace').length).toBeLessThanOrEqual(60)
+    expect(home).toContain('href="/launch-preview"')
+    expect(home).toContain('3 saved launch workspaces')
+    expect(marketingPaths().map(entry => entry.path)).toContain('/launch-preview')
+  })
+
+  it('opens Stripe checkout from the launch-workspace cap', () => {
+    const workbench = read('components/dashboard/launch-workbench.tsx')
+    const settings = read('components/dashboard/settings-view.tsx')
+    expect(workbench).toContain("result.code === 'PLAN_LIMIT'")
+    expect(workbench).toContain('source="launch-limit"')
+    expect(workbench).toContain('PRO_MONTHLY_PRICE_USD')
+    expect(settings).toContain('Continue to Pro checkout')
+    expect(settings).toContain('PRO_MONTHLY_PRICE_USD')
+    expect(settings).toContain('3 saved launch workspaces')
+    expect(settings).toContain('50 saved launch workspaces')
+  })
+
+  it('keeps public FAQ answers free of operator environment names', () => {
+    const faq = read('lib/marketing/content.ts')
+    const free = PRICING_FAQ.find(item => item.question === 'What does the free plan include?')?.answer ?? ''
+    expect(free).toContain('3 launch workspaces')
+    expect(free).toContain('50 saved launch workspaces')
+    expect(free).toContain('$29 per month')
+    expect(free).not.toMatch(/unlimited launch/i)
+    expect(faq).not.toContain('STRIPE_LIVE_MODE')
+    expect(faq).not.toContain('SUPPLIER_ORDERS_MODE')
   })
 })
 

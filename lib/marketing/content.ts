@@ -186,7 +186,7 @@ export const FAQ_ITEMS = [
   },
   {
     question: 'Are test orders billed?',
-    answer: 'Stripe stays in test mode until STRIPE_LIVE_MODE is set with a live key. Supplier orders stay in sandbox until SUPPLIER_ORDERS_MODE=live. Sandbox does not confirm Printful orders, send Printify orders to production, or pay the CJ wallet.',
+    answer: 'Pro subscriptions are billed by Stripe at the price on the pricing page. A storefront charge and a supplier order stay in sandbox until this deployment is switched to live mode. Sandbox does not confirm Printful orders, send Printify orders to production, or pay the CJ wallet.',
   },
   {
     question: 'Can I connect Etsy, eBay, or TikTok Shop?',
@@ -194,7 +194,7 @@ export const FAQ_ITEMS = [
   },
   {
     question: 'What does the free plan include?',
-    answer: 'Free accounts can save 10 products, keep 25 research-catalog products, and publish 25 hosted listings. Pro removes those limits. Supplier API import for the storefront uses the platform keys and is available to signed-in sellers.',
+    answer: 'Free accounts can save 10 products, keep 25 research-catalog products, publish 25 hosted listings, and save 3 launch workspaces. Pro removes the research, catalog, and listing limits and allows 50 saved launch workspaces. Pro is $29 per month, billed by Stripe. Supplier API import for the storefront uses the platform keys and is available to signed-in sellers.',
   },
 ]
 

@@ -46,6 +46,7 @@ describe('buyer-intent pages', () => {
     expect(paths).toContain('/pricing')
     expect(paths).toContain('/research')
     expect(paths).toContain('/research/preview')
+    expect(paths).toContain('/launch-preview')
     expect(paths).toContain('/research/best-products-to-dropship-in-fall')
     expect(paths.filter(path => path.startsWith('/research/')).length).toBeGreaterThanOrEqual(12)
   })
