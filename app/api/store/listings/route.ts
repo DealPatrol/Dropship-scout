@@ -29,11 +29,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null) as {
     supplierProductId?: string
     title?: string
+    description?: string
     priceCents?: number
     published?: boolean
   } | null
   if (!body?.supplierProductId || !body.title?.trim() || !Number.isInteger(body.priceCents)) {
     return NextResponse.json({ error: 'Product, title, and price are required.' }, { status: 400 })
+  }
+  if (body.description !== undefined && (typeof body.description !== 'string' || body.description.length > 6000)) {
+    return NextResponse.json({ error: 'Description must be at most 6000 characters.' }, { status: 400 })
   }
   const product = await getSupplierProduct(body.supplierProductId)
   if (!product || !product.available) {
@@ -66,7 +70,7 @@ export async function POST(req: NextRequest) {
       sellerUserId: user.id,
       supplierProductId: product.id,
       title: body.title.trim().slice(0, 140),
-      description: product.description,
+      description: body.description?.trim() || product.description,
       priceCents,
       slug: `${slugify(body.title, 32) || 'product'}-${randomUUID().slice(0, 6)}`,
       published,

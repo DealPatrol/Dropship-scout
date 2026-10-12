@@ -29,6 +29,7 @@ import { Separator } from '@/components/ui/separator'
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+  { href: '/dashboard/launch', label: 'Launch workspace', icon: Radar, exact: false },
   { href: '/dashboard/store', label: 'Your store', icon: Store, exact: false },
   { href: '/dashboard/suppliers', label: 'Suppliers', icon: Package, exact: false },
   { href: '/dashboard/orders', label: 'Orders', icon: Truck, exact: false },

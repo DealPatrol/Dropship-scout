@@ -1,5 +1,13 @@
 # Dropship Scout
 
+## Unified merchant workspace
+
+The app brings supplier research, realistic advertising economics, campaign drafts, hosted listings, channel exports, and a manual experiment ledger into one merchant workflow. Try `/launch-preview`; signed-in accounts start at `/dashboard`. Free supports 3 saved launches; the existing $29 Pro plan supports 50.
+
+- [Launch workflow and limits](docs/launch-workspace.md)
+- [Audited repository consolidation and remaining integrations](docs/commerce-consolidation.md)
+
+
 Next.js 14 dropshipping app. A seller signs up, imports products from a real supplier, connects Stripe payouts, and publishes a storefront hosted by this app (product pages, cart, and checkout). Shopify remains an optional listing push.
 
 Order routing, supplier sandbox behavior, and the payout split are documented in `docs/commerce.md`.
