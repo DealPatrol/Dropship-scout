@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { startProCheckout } from '@/components/billing/start-checkout'
-import { parseBillingInterval, PRO_WAITLIST_SAVED, PRO_WAITLIST_UNSAVED, type BillingInterval } from '@/lib/billing'
+import { parseBillingInterval, PRO_MONTHLY_PRICE_USD, PRO_WAITLIST_SAVED, PRO_WAITLIST_UNSAVED, type BillingInterval } from '@/lib/billing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -139,12 +139,12 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
             </CardTitle>
             <CardDescription>
               {plan === 'pro'
-                ? 'Pro removes the free-plan limits on saved products, research catalogs, and hosted listings.'
-                : 'Free includes 10 saved products, 25 research-catalog products, and 25 hosted store listings.'}
+                ? 'Pro includes 50 saved launch workspaces and removes the free-plan limits on saved products, research catalogs, and hosted listings.'
+                : `Free includes 3 saved launch workspaces, 10 saved products, 25 research-catalog products, and 25 hosted store listings. Pro is $${PRO_MONTHLY_PRICE_USD}/month.`}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm font-medium capitalize">{plan} plan</span>
               {plan === 'pro' ? (
                 <Button onClick={() => void handlePortal()} disabled={billingLoading} variant="outline">
@@ -154,7 +154,7 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
               ) : (
                 <Button onClick={() => void handleUpgrade()} disabled={billingLoading}>
                   {billingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Upgrade to Pro
+                  Continue to Pro checkout
                 </Button>
               )}
             </div>
