@@ -31,6 +31,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
+            <Link href="/auth/login" className="text-sm font-medium text-muted-foreground hover:text-foreground md:hidden">Sign in</Link>
             <Link href="/auth/login" className="hidden md:inline-flex"><Button variant="ghost" size="sm">Sign in</Button></Link>
             <SignupLink href="/auth/sign-up" location="header"><Button size="sm">Start free</Button></SignupLink>
           </div>
@@ -39,7 +40,6 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
           {links.map(link => (
             <Link key={link.href} href={link.href} className="shrink-0 hover:text-foreground">{link.label}</Link>
           ))}
-          <Link href="/auth/login" className="shrink-0 font-medium text-foreground">Sign in</Link>
         </nav>
       </header>
       <main id="main" className="relative z-10">{children}</main>
