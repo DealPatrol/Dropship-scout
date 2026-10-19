@@ -54,6 +54,7 @@ export default function ResearchIndexPage() {
         </p>
         <p className="mt-4 flex flex-col gap-2">
           <Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea, no account</Link>
+          <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Calculate profit margin and break-even ad cost</Link>
           <Link href="/research/preview" className="text-primary hover:underline">Open the free sample-catalog preview</Link>
           <Link href="/guides" className="text-primary hover:underline">Read the how-to guides</Link>
           <Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link>

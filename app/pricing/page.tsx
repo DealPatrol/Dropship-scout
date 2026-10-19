@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { FreePlanAction, ProPlanAction } from '@/components/marketing/plan-actions'
 import { SiteFrame } from '@/components/marketing/site-frame'
@@ -49,6 +50,10 @@ export default function PricingPage() {
         <h1 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight text-balance">Start free. Go Pro for ${PRO_MONTHLY_PRICE_USD} a month when you are ready to scale.</h1>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl leading-relaxed">
           Every account starts on Free with no card required. Pro removes the research, catalog, and listing limits for one flat monthly price. No setup fees and no contracts.
+        </p>
+        <p className="mt-4 text-sm">
+          <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Use the free profit margin calculator</Link>
+          {' '}before you create an account. It does not start checkout.
         </p>
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           <section className="rounded-xl border border-border bg-card p-6 sm:p-8">

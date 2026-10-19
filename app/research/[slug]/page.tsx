@@ -140,6 +140,8 @@ export default function IntentPage({ params }: { params: { slug: string } }) {
         </section>
         <p className="mt-8 text-sm">
           <Link href="/research/idea-checker" className="text-primary hover:underline">Check this kind of idea with your own quote</Link>
+          {' · '}
+          <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Calculate margin and break-even ad cost</Link>
         </p>
         {pairedGuide && (
           <p className="mt-3 text-sm text-muted-foreground">

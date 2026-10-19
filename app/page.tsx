@@ -106,6 +106,8 @@ export default function LandingPage() {
           <Link href="/pricing" className="text-primary hover:underline">Pro is ${PRO_MONTHLY_PRICE_USD}/month</Link>
           <span className="mx-2" aria-hidden="true">·</span>
           <Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea, no account</Link>
+          <span className="mx-2" aria-hidden="true">·</span>
+          <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Profit margin calculator, no account</Link>
         </p>
       </section>
 

@@ -18,7 +18,7 @@ export const LONG_TAIL_PAGES: IntentPage[] = [
         heading: 'Start from the quote, not a competitor screenshot',
         paragraphs: [
           'Write down product cost, shipping you pay, and shipping you charge. The customer price has to clear those amounts, the estimated card fee, and the platform fee before ads and refunds. A price copied from another listing skips that check.',
-          'The free product idea checker does this math with the fee rates configured for this deployment. It is not a profit forecast.',
+          'The free product idea checker does this math with the fee rates configured for this deployment. The profit calculator adds shipping you charge, a refund reserve you choose, and an ad cost per sale. Neither one is a profit forecast.',
         ],
       },
       {
@@ -47,7 +47,7 @@ export const LONG_TAIL_PAGES: IntentPage[] = [
       {
         heading: 'Margin is the remainder you can explain',
         paragraphs: [
-          'Subtract supplier cost, shipping you pay, the estimated card fee, and the platform fee from what the customer pays. What is left is the remainder before ads and refunds. This site does not publish a target margin, because that number depends on the quote and the ad test.',
+          'Subtract supplier cost, shipping you pay, the estimated card fee, and the platform fee from what the customer pays. What is left is the remainder before ads and refunds. The profit calculator lets you type an ad cost per sale and see the break-even. This site does not publish a target margin, because that number depends on the quote and the ad test.',
           'A positive remainder is permission to run a small test. It is not proof the product will sell.',
         ],
       },

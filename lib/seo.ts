@@ -29,6 +29,24 @@ export function storeShouldIndex(slug: string, publishedProductCount: number): b
   return !NON_INDEXABLE_STORE_SLUG.test(slug)
 }
 
+export function howToJsonLd(input: {
+  name: string
+  description: string
+  steps: { name: string; text: string }[]
+}) {
+  return {
+    '@type': 'HowTo',
+    name: input.name,
+    description: input.description,
+    step: input.steps.map((step, index) => ({
+      '@type': 'HowToStep',
+      position: index + 1,
+      name: step.name,
+      text: step.text,
+    })),
+  }
+}
+
 export function faqPageJsonLd(items: { question: string; answer: string }[]) {
   return {
     '@type': 'FAQPage',
