@@ -49,6 +49,7 @@ export default function GuidesPage() {
         <p className="mt-4 flex flex-col gap-2 text-sm">
           <Link href="/research" className="text-primary hover:underline">Browse research shortlists</Link>
           <Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea</Link>
+          <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Calculate profit margin and break-even ad cost</Link>
           <Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link>
         </p>
         <section className="mt-10">

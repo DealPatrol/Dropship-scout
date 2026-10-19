@@ -67,6 +67,8 @@ export default function IdeaCheckerPage({
         </p>
         <p className="mt-3 text-sm">
           <Link href="/research/how-to-price-a-dropshipping-product" className="text-primary hover:underline">How to price a dropshipping product</Link>
+          {' · '}
+          <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Add ad cost in the profit calculator</Link>
         </p>
         <IdeaCheckerPanel searchParams={searchParams} />
         <section className="mt-12">

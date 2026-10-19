@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { track } from '@vercel/analytics'
+import { useEffect, useState } from 'react'
+import { hrefWithOrigin } from '@/lib/analytics/origin'
+import { FUNNEL, rememberOrigin, trackFunnel } from '@/lib/analytics/track-funnel'
 
 export function SignupLink({
   href,
@@ -14,16 +16,20 @@ export function SignupLink({
   className?: string
   children: React.ReactNode
 }) {
+  const [dest, setDest] = useState(href)
+  useEffect(() => {
+    setDest(hrefWithOrigin(href, window.location.pathname))
+  }, [href])
+
   return (
     <Link
-      href={href}
+      href={dest}
       className={className}
       onClick={() => {
-        try {
-          track('signup-click', { location })
-        } catch {
-          // Analytics must not block the signup path.
-        }
+        const path = window.location.pathname
+        rememberOrigin(path)
+        trackFunnel(FUNNEL.ctaClicked, { cta: location, path })
+        trackFunnel(FUNNEL.signupClick, { location, path })
       }}
     >
       {children}

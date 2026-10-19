@@ -21,7 +21,7 @@ export const BUYER_GUIDES: Guide[] = [
         heading: 'Turn it into break-even ROAS',
         paragraphs: [
           'Break-even ROAS is the sale price divided by the contribution per order. In the example, $39.99 / $20.53 is about 1.95. If your ads return less than $1.95 in revenue for every $1 spent, each sale loses money.',
-          'Your maximum cost per purchase is the contribution itself, about $20.53 here. Anything below that is profit; anything above is a loss.',
+          'Your maximum cost per purchase is the contribution itself, about $20.53 here. Anything below that is profit; anything above is a loss. The profit calculator on this site runs the same kind of math from your own price, shipping, fees, and ad cost per sale.',
         ],
       },
       {
@@ -39,7 +39,7 @@ export const BUYER_GUIDES: Guide[] = [
       },
       {
         question: 'Does Dropship Scout calculate fees for me?',
-        answer: 'Yes. Before a listing can be published, the price must cover supplier cost, shipping, an estimated card fee, and the platform fee. The idea checker helps you sanity-check a product before you quote it.',
+        answer: 'The profit calculator uses the price, shipping, fees, and ad cost you enter. The idea checker checks the fee floor before ads. A hosted listing still has to cover supplier cost, shipping, an estimated card fee, and the platform fee. None of these is a sales forecast.',
       },
       {
         question: 'Should I include ad spend in the product price?',

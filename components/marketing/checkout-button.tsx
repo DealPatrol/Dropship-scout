@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import { FUNNEL, trackFunnel } from '@/lib/analytics/track-funnel'
 import { startProCheckout } from '@/components/billing/start-checkout'
 import { Button } from '@/components/ui/button'
 import { PRO_WAITLIST_SAVED, PRO_WAITLIST_UNSAVED, type BillingInterval } from '@/lib/billing'
@@ -25,6 +26,7 @@ export function CheckoutButton({
     setLoading(true)
     setError(null)
     setWaitlist(null)
+    trackFunnel(FUNNEL.ctaClicked, { cta: `checkout-${source}`, path: window.location.pathname })
     try {
       const result = await startProCheckout(source, interval)
       if (result.waitlist) {

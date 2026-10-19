@@ -1,6 +1,6 @@
 'use client'
 
-import { track } from '@vercel/analytics'
+import { FUNNEL, funnelPath, trackFunnel } from '@/lib/analytics/track-funnel'
 import type { BillingInterval } from '@/lib/billing'
 
 export type CheckoutStart =
@@ -21,10 +21,6 @@ export async function startProCheckout(source: string, interval: BillingInterval
     const message = typeof data.error === 'string' ? data.error : 'Could not start checkout'
     throw new Error(message)
   }
-  try {
-    track('checkout-started', { source, interval })
-  } catch {
-    // Analytics must not block Stripe Checkout.
-  }
+  trackFunnel(FUNNEL.checkoutStarted, { source, interval, path: funnelPath() })
   return { waitlist: false, url: data.url }
 }

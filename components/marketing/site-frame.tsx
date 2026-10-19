@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { OriginBeacon } from '@/components/analytics/origin-beacon'
 import { SignupLink } from '@/components/marketing/signup-link'
 import { WatchForm } from '@/components/marketing/watch-form'
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ const links = [
 export function SiteFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <OriginBeacon />
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">
         Skip to content
       </a>
@@ -53,6 +55,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col gap-2 text-sm">
             <Link href="/research" className="text-muted-foreground hover:text-foreground">Research</Link>
             <Link href="/research/idea-checker" className="text-muted-foreground hover:text-foreground">Product idea checker</Link>
+            <Link href="/tools/dropshipping-profit-calculator" className="text-muted-foreground hover:text-foreground">Profit margin calculator</Link>
             <Link href="/research/preview" className="text-muted-foreground hover:text-foreground">Free preview</Link>
             <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/faq" className="text-muted-foreground hover:text-foreground">FAQ</Link>

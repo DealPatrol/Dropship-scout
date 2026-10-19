@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, Radar } from 'lucide-react'
+import { FUNNEL, funnelPath, trackFunnel } from '@/lib/analytics/track-funnel'
 import { trackAdsConversion } from '@/lib/ads-events'
 import { currentPageAttribution } from '@/lib/attribution'
 import { startProCheckout } from '@/components/billing/start-checkout'
@@ -14,7 +15,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { parseBillingInterval, proAuthHref, PRO_WAITLIST_SAVED, PRO_WAITLIST_UNSAVED } from '@/lib/billing'
 import { safeNextPath } from '@/lib/paths'
-import { track } from '@vercel/analytics'
 
 export function SignUpForm() {
   const router = useRouter()
@@ -35,11 +35,7 @@ export function SignUpForm() {
     event.preventDefault()
     setLoading(true)
     setError(null)
-    try {
-      track('signup-click', { location: 'sign-up-form' })
-    } catch {
-      // Analytics must not block account creation.
-    }
+    trackFunnel(FUNNEL.signupClick, { location: 'sign-up-form', path: funnelPath(params.get('from')) })
 
     try {
       const res = await fetch('/api/auth/sign-up', {

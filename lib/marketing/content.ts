@@ -1,6 +1,7 @@
 import { BUYER_GUIDES } from '@/lib/marketing/buyer-guides'
 import { EXTRA_GUIDES } from '@/lib/marketing/extra-guides'
-import { articleJsonLd, breadcrumbJsonLd, faqPageJsonLd } from '@/lib/seo'
+import { MARGIN_GUIDES } from '@/lib/marketing/margin-guides'
+import { articleJsonLd, breadcrumbJsonLd, faqPageJsonLd, howToJsonLd } from '@/lib/seo'
 
 export interface GuideFaq {
   question: string
@@ -18,6 +19,8 @@ export interface Guide {
   faqs?: GuideFaq[]
   /** Research page slugs to link from the guide. */
   relatedResearch?: string[]
+  /** Sections are ordered steps and are also emitted as HowTo structured data. */
+  howTo?: boolean
 }
 
 const BASE_GUIDES: Guide[] = [
@@ -143,7 +146,7 @@ const BASE_GUIDES: Guide[] = [
   },
 ]
 
-export const GUIDES: Guide[] = [...BASE_GUIDES, ...EXTRA_GUIDES, ...BUYER_GUIDES]
+export const GUIDES: Guide[] = [...BASE_GUIDES, ...EXTRA_GUIDES, ...BUYER_GUIDES, ...MARGIN_GUIDES]
 
 export function guideBySlug(slug: string): Guide | undefined {
   return GUIDES.find(guide => guide.slug === slug)
@@ -164,6 +167,16 @@ export function guideStructuredData(guide: Guide): object[] {
     ]),
   ]
   if (guide.faqs && guide.faqs.length > 0) nodes.push(faqPageJsonLd(guide.faqs))
+  if (guide.howTo) {
+    nodes.push(howToJsonLd({
+      name: guide.title,
+      description: guide.description,
+      steps: guide.sections.map(section => ({
+        name: section.heading,
+        text: section.paragraphs.join(' '),
+      })),
+    }))
+  }
   return nodes
 }
 
