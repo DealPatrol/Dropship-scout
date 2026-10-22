@@ -86,6 +86,7 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
             </p>
           )}
           <ul className="mt-4 flex flex-col gap-2 text-sm">
+            <li><Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">Compare two supplier quotes</Link></li>
             <li><Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea without an account</Link></li>
             <li><Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Calculate profit margin and break-even ad cost</Link></li>
             <li><Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link></li>
