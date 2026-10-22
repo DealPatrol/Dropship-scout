@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { trackAdsConversion } from '@/lib/ads-events'
+import { FUNNEL, trackFunnel } from '@/lib/analytics/track-funnel'
 import { WatchForm } from '@/components/marketing/watch-form'
 import { formatCents } from '@/lib/commerce/money'
 import {
@@ -84,6 +85,7 @@ export function IdeaChecker({
   shareBase?: string
 }) {
   const router = useRouter()
+  const trackedInitial = useRef(false)
   const [name, setName] = useState(fields.name)
   const [cost, setCost] = useState(fields.cost)
   const [price, setPrice] = useState(fields.price)
@@ -98,6 +100,16 @@ export function IdeaChecker({
   const [sharePath, setSharePath] = useState<string | null>(initialResult ? shareQuery(shareBase, fields) : null)
 
   const shown = result
+
+  useEffect(() => {
+    if (!initialResult || trackedInitial.current) return
+    trackedInitial.current = true
+    trackFunnel(FUNNEL.toolUsed, {
+      tool: 'idea-checker',
+      path: window.location.pathname,
+      result: initialResult.viable ? 'clears' : 'below-floor',
+    })
+  }, [initialResult])
 
   function onSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -120,6 +132,11 @@ export function IdeaChecker({
     }
     setError(null)
     setResult(checked)
+    trackFunnel(FUNNEL.toolUsed, {
+      tool: 'idea-checker',
+      path: window.location.pathname,
+      result: checked.viable ? 'clears' : 'below-floor',
+    })
     trackAdsConversion('idea-checker-complete')
     const next = shareQuery(shareBase, {
       name: checked.name,
@@ -238,6 +255,11 @@ export function IdeaChecker({
             </button>
           )}
           <p className="mt-6 text-sm leading-relaxed">
+            Compared two supplier quotes already?{' '}
+            <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">Open the supplier comparison</Link>
+            {' '}and bring the cost and ship days back here.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed">
             Want higher limits on saved products and hosted listings?{' '}
             <Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link>
             . The checker stays free either way.

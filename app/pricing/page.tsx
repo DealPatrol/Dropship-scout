@@ -53,7 +53,9 @@ export default function PricingPage() {
         </p>
         <p className="mt-4 text-sm">
           <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Use the free profit margin calculator</Link>
-          {' '}before you create an account. It does not start checkout.
+          {' '}or{' '}
+          <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">compare two supplier quotes</Link>
+          {' '}before you create an account. Neither page starts checkout.
         </p>
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           <section className="rounded-xl border border-border bg-card p-6 sm:p-8">

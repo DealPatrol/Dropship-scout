@@ -108,6 +108,9 @@ export default function ProfitCalculatorPage({
               )
             })}
             <li>
+              <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">Compare two supplier quotes</Link>
+            </li>
+            <li>
               <Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link>
             </li>
           </ul>

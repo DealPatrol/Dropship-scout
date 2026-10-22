@@ -56,6 +56,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
             <Link href="/research" className="text-muted-foreground hover:text-foreground">Research</Link>
             <Link href="/research/idea-checker" className="text-muted-foreground hover:text-foreground">Product idea checker</Link>
             <Link href="/tools/dropshipping-profit-calculator" className="text-muted-foreground hover:text-foreground">Profit margin calculator</Link>
+            <Link href="/tools/dropshipping-supplier-comparison" className="text-muted-foreground hover:text-foreground">Supplier comparison</Link>
             <Link href="/research/preview" className="text-muted-foreground hover:text-foreground">Free preview</Link>
             <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/faq" className="text-muted-foreground hover:text-foreground">FAQ</Link>

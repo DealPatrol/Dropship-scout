@@ -55,6 +55,21 @@ const howItWorks = [
   },
 ]
 
+const SUPPLIER_GUIDE_SLUGS = [
+  'compare-two-dropshipping-supplier-quotes',
+  'supplier-processing-time-vs-transit-time',
+  'cheaper-supplier-slower-shipping',
+]
+
+function featuredGuides(guides: typeof GUIDES) {
+  const featured = SUPPLIER_GUIDE_SLUGS.flatMap(slug => {
+    const guide = guides.find(item => item.slug === slug)
+    return guide ? [guide] : []
+  })
+  const rest = guides.filter(guide => guide.faqs && !SUPPLIER_GUIDE_SLUGS.includes(guide.slug))
+  return [...featured, ...rest].slice(0, 6)
+}
+
 const security = [
   {
     icon: Lock,
@@ -108,6 +123,8 @@ export default function LandingPage() {
           <Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea, no account</Link>
           <span className="mx-2" aria-hidden="true">·</span>
           <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Profit margin calculator, no account</Link>
+          <span className="mx-2" aria-hidden="true">·</span>
+          <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">Compare two suppliers, no account</Link>
         </p>
       </section>
 
@@ -160,7 +177,7 @@ export default function LandingPage() {
           <Link href="/guides" className="text-sm text-primary shrink-0">All guides</Link>
         </div>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-          {GUIDES.filter(guide => guide.faqs).slice(0, 4).map(guide => (
+          {featuredGuides(GUIDES).map(guide => (
             <li key={guide.slug} className="rounded-lg border border-border bg-card p-4">
               <h3 className="font-semibold">
                 <Link href={`/guides/${guide.slug}`} className="hover:text-primary">{guide.title}</Link>

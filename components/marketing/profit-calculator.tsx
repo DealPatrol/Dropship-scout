@@ -226,9 +226,11 @@ export function ProfitCalculator({
           <p className="mt-6 text-sm leading-relaxed">
             The same math is in the{' '}
             <Link href="/launch-preview" className="text-primary hover:underline">launch workspace preview</Link>
-            , which also keeps supplier notes and a campaign draft. The{' '}
+            , which also keeps supplier notes and a campaign draft. Compare two quotes in the{' '}
+            <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">supplier comparison</Link>
+            , then add the ship window in the{' '}
             <Link href="/research/idea-checker" className="text-primary hover:underline">product idea checker</Link>
-            {' '}adds the ship window and whether you have a second supplier. Neither page stores the quote.
+            . None of these pages stores the quote.
           </p>
         </section>
       )}
