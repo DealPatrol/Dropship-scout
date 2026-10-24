@@ -90,6 +90,15 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
             <li><Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea without an account</Link></li>
             <li><Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Calculate profit margin and break-even ad cost</Link></li>
             <li><Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link></li>
+            {(guide.relatedGuides ?? []).map(slug => {
+              const relatedGuide = guideBySlug(slug)
+              if (!relatedGuide) return null
+              return (
+                <li key={relatedGuide.slug}>
+                  <Link href={`/guides/${relatedGuide.slug}`} className="text-primary hover:underline">{relatedGuide.title}</Link>
+                </li>
+              )
+            })}
             {related.map(page => (
               <li key={page.slug}>
                 <Link href={`/research/${page.slug}`} className="text-primary hover:underline">{page.title}</Link>

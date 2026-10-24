@@ -55,19 +55,20 @@ const howItWorks = [
   },
 ]
 
-const SUPPLIER_GUIDE_SLUGS = [
+const FEATURED_GUIDE_SLUGS = [
+  'how-to-find-winning-dropshipping-products',
+  'dropshipping-product-validation-checklist',
+  'compare-dropshipping-product-research-tools',
   'compare-two-dropshipping-supplier-quotes',
   'supplier-processing-time-vs-transit-time',
   'cheaper-supplier-slower-shipping',
 ]
 
 function featuredGuides(guides: typeof GUIDES) {
-  const featured = SUPPLIER_GUIDE_SLUGS.flatMap(slug => {
+  return FEATURED_GUIDE_SLUGS.flatMap(slug => {
     const guide = guides.find(item => item.slug === slug)
     return guide ? [guide] : []
   })
-  const rest = guides.filter(guide => guide.faqs && !SUPPLIER_GUIDE_SLUGS.includes(guide.slug))
-  return [...featured, ...rest].slice(0, 6)
 }
 
 const security = [

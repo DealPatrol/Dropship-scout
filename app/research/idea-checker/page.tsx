@@ -3,7 +3,9 @@ import Link from 'next/link'
 import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { IdeaCheckerPanel } from '@/components/marketing/idea-checker-panel'
 import { JsonLd } from '@/components/marketing/json-ld'
+import { SignupCta } from '@/components/marketing/signup-cta'
 import { SiteFrame } from '@/components/marketing/site-frame'
+import { PRO_MONTHLY_PRICE_USD } from '@/lib/billing'
 import { breadcrumbJsonLd, faqPageJsonLd, jsonLdGraph, pageMetadata } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
 
@@ -84,6 +86,21 @@ export default function IdeaCheckerPage({
             ))}
           </div>
         </section>
+        <nav className="mt-10" aria-label="Related guides">
+          <h2 className="text-lg font-semibold">Read next</h2>
+          <ul className="mt-3 flex flex-col gap-2 text-sm">
+            <li><Link href="/guides/dropshipping-product-validation-checklist" className="text-primary hover:underline">Dropshipping product validation checklist</Link></li>
+            <li><Link href="/guides/how-to-find-winning-dropshipping-products" className="text-primary hover:underline">How to find winning dropshipping products</Link></li>
+            <li><Link href="/guides/compare-dropshipping-product-research-tools" className="text-primary hover:underline">Compare product research tools</Link></li>
+            <li><Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Add ad cost in the profit calculator</Link></li>
+            <li><Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link></li>
+          </ul>
+        </nav>
+        <SignupCta
+          location="idea-checker"
+          heading="Save the shortlist when the check passes"
+          body={`This page does not store the idea. A free account saves up to 10 products and 3 launch workspaces. Pro is $${PRO_MONTHLY_PRICE_USD}/month, billed by Stripe, and removes the saved-product cap. Checkout opens after the account exists.`}
+        />
       </article>
     </SiteFrame>
   )

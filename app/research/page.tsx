@@ -57,6 +57,10 @@ export default function ResearchIndexPage() {
           <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">Compare two supplier quotes, no account</Link>
           <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Calculate profit margin and break-even ad cost</Link>
           <Link href="/research/preview" className="text-primary hover:underline">Open the free sample-catalog preview</Link>
+          <Link href="/guides/how-to-find-winning-dropshipping-products" className="text-primary hover:underline">How to find winning dropshipping products</Link>
+          <Link href="/guides/dropshipping-product-validation-checklist" className="text-primary hover:underline">Product validation checklist</Link>
+          <Link href="/guides/seasonal-dropshipping-niche-ideas" className="text-primary hover:underline">Niche ideas by season</Link>
+          <Link href="/guides/compare-dropshipping-product-research-tools" className="text-primary hover:underline">Compare product research tools</Link>
           <Link href="/guides" className="text-primary hover:underline">Read the how-to guides</Link>
           <Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link>
         </p>
