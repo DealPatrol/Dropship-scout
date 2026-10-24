@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { trackAdsConversion } from '@/lib/ads-events'
 import { FUNNEL, trackFunnel } from '@/lib/analytics/track-funnel'
+import { SignupLink } from '@/components/marketing/signup-link'
 import { WatchForm } from '@/components/marketing/watch-form'
 import { formatCents } from '@/lib/commerce/money'
 import {
@@ -261,7 +262,9 @@ export function IdeaChecker({
           </p>
           <p className="mt-3 text-sm leading-relaxed">
             Want higher limits on saved products and hosted listings?{' '}
-            <Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link>
+            <SignupLink href="/auth/sign-up?plan=pro" location="idea-checker-result-pro" className="text-primary hover:underline">Continue to Pro checkout</SignupLink>
+            {' '}or{' '}
+            <Link href="/pricing" className="text-primary hover:underline">compare Free and Pro</Link>
             . The checker stays free either way.
           </p>
         </section>

@@ -12,6 +12,7 @@ export const EXTRA_GUIDES: Guide[] = [
       'dropshipping-product-research-tool',
       'how-to-validate-a-dropshipping-product',
     ],
+    relatedGuides: ['how-to-find-winning-dropshipping-products', 'dropshipping-product-validation-checklist'],
     faqs: [
       {
         question: 'What counts as a winning product here?',
@@ -61,6 +62,7 @@ export const EXTRA_GUIDES: Guide[] = [
       'aliexpress-product-research',
       'shopify-product-research',
     ],
+    relatedGuides: ['dropshipping-product-validation-checklist', 'compare-dropshipping-product-research-tools'],
     faqs: [
       {
         question: 'How long should this checklist take?',
@@ -195,6 +197,7 @@ export const EXTRA_GUIDES: Guide[] = [
       'best-products-to-dropship-in-fall',
       'best-products-to-dropship-in-winter',
     ],
+    relatedGuides: ['seasonal-dropshipping-niche-ideas'],
     faqs: [
       {
         question: 'What is a niche in this guide?',
