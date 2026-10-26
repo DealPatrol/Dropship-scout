@@ -151,6 +151,19 @@ export default function IntentPage({ params }: { params: { slug: string } }) {
             <Link href={`/guides/${pairedGuide.slug}`} className="text-primary hover:underline">How-to guide: {pairedGuide.title}</Link>
           </p>
         )}
+        {(page.relatedGuides ?? []).length > 0 && (
+          <ul className="mt-3 flex flex-col gap-2 text-sm">
+            {(page.relatedGuides ?? []).map(slug => {
+              const relatedGuide = guideBySlug(slug)
+              if (!relatedGuide || relatedGuide.slug === pairedGuide?.slug) return null
+              return (
+                <li key={relatedGuide.slug}>
+                  <Link href={`/guides/${relatedGuide.slug}`} className="text-primary hover:underline">{relatedGuide.title}</Link>
+                </li>
+              )
+            })}
+          </ul>
+        )}
         {page.related.length > 0 && (
           <nav className="mt-10" aria-label="Related research">
             <h2 className="text-lg font-semibold">Keep reading</h2>

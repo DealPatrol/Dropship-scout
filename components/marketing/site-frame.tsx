@@ -64,6 +64,8 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex flex-col gap-2 text-sm">
             <Link href="/research/winning-dropshipping-products" className="text-muted-foreground hover:text-foreground">Winning dropshipping products</Link>
+            <Link href="/guides/how-to-find-winning-dropshipping-products" className="text-muted-foreground hover:text-foreground">Find winning products</Link>
+            <Link href="/guides/compare-dropshipping-product-research-tools" className="text-muted-foreground hover:text-foreground">Compare research tools</Link>
             <Link href="/research/dropshipping-product-research-tool" className="text-muted-foreground hover:text-foreground">Product research tool</Link>
             <Link href="/research/shopify-product-research" className="text-muted-foreground hover:text-foreground">Shopify product research</Link>
             <Link href="/research/tiktok-trending-products-to-sell" className="text-muted-foreground hover:text-foreground">TikTok products to sell</Link>

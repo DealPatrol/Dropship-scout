@@ -24,6 +24,8 @@ export interface IntentPage {
   sections: IntentSection[]
   faqs: IntentFaq[]
   related: string[]
+  /** Guide slugs that explain the how-to behind this shortlist. */
+  relatedGuides?: string[]
 }
 
 const SHARED_FAQ: IntentFaq = {
@@ -65,6 +67,7 @@ function seasonPage(season: Season): IntentPage {
     kind: 'season',
     season,
     related: ['winning-dropshipping-products', 'how-to-validate-a-dropshipping-product', 'dropshipping-product-research-tool'],
+    relatedGuides: ['seasonal-dropshipping-niche-ideas'],
     sections: [
       {
         heading: `What to decide before ${label}`,
@@ -102,6 +105,7 @@ const ARTICLES: IntentPage[] = [
     description: 'A practical definition of a winning dropshipping product: margin, ship time, and a buyer you can name. No fake order counts.',
     kind: 'article',
     related: ['how-to-validate-a-dropshipping-product', 'how-to-price-a-dropshipping-product', 'low-competition-products-to-dropship'],
+    relatedGuides: ['how-to-find-winning-dropshipping-products', 'dropshipping-product-validation-checklist'],
     sections: [
       {
         heading: 'Winning means you can explain the sale',
@@ -139,6 +143,12 @@ const ARTICLES: IntentPage[] = [
     description: 'What Dropship Scout does as a product research tool: sample catalog, supplier import, and Stripe billing for Pro.',
     kind: 'article',
     related: ['winning-dropshipping-products', 'dropshipping-product-page', 'shopify-product-research'],
+    relatedGuides: [
+      'compare-dropshipping-product-research-tools',
+      'sell-the-trend-vs-dropship-scout',
+      'minea-vs-dropship-scout',
+      'ecomhunt-vs-dropship-scout',
+    ],
     sections: [
       {
         heading: 'What you can do on the free plan',
@@ -158,6 +168,7 @@ const ARTICLES: IntentPage[] = [
         heading: 'What this tool will not pretend to know',
         paragraphs: [
           'It will not show you another store\'s orders. It will not tell you that a product made a dollar amount last month. Supplier cost, ship time, and whether you can publish a price that clears fees are the facts it can help you collect. The hosted storefront, cart, and Stripe payout split are there when you are ready to sell, and Shopify or WooCommerce can be connected later.',
+          'Guides on this site compare that job with what Sell The Trend, Minea, and Ecomhunt say their own products do. Those pages do not repeat the other sites\' database sizes or sales claims. A name from one of them still has to come back here as a quote you can check.',
         ],
       },
     ],
@@ -386,6 +397,7 @@ const ARTICLES: IntentPage[] = [
     description: 'Ten sample-catalog niches and how to pick one based on the buyer, not on a sales chart.',
     kind: 'niches',
     related: ['what-to-sell-in-a-shopify-store', 'second-dropshipping-supplier', 'winning-dropshipping-products'],
+    relatedGuides: ['seasonal-dropshipping-niche-ideas'],
     sections: [
       {
         heading: 'A niche is an audience you can reach',
