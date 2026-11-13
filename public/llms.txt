@@ -1,0 +1,83 @@
+# Dropship Scout
+
+> Check supplier cost and margin in a public launch workspace, then publish a store page when a supplier can fulfill. Start free. Pro is $29/month.
+
+Site: https://getdropshipscout.com
+Sitemap: https://getdropshipscout.com/sitemap.xml
+
+## Main pages
+- [About · Dropship Scout](https://getdropshipscout.com/about): Why Dropship Scout exists: product research that ends in a supplier who can fulfill the order, with honest data and clear pricing.
+- [Contact · Dropship Scout](https://getdropshipscout.com/contact): Contact Dropship Scout support about your account, billing, suppliers, or your hosted store.
+- [FAQ · Dropship Scout](https://getdropshipscout.com/faq): Answers about Dropship Scout product research, the sample catalog, suppliers, payouts, and how Pro checkout works.
+- [Dropshipping how-to guides · Dropship Scout](https://getdropshipscout.com/guides): Step-by-step dropshipping guides for quotes, suppliers, photos, and ads. Product shortlists live on the research pages.
+- [Dropshipping launch workspace · Dropship Scout](https://getdropshipscout.com/launch-preview): Calculate advertising limits, assemble a campaign draft, and track your product test. Try the interactive preview before signing up.
+- [Pricing · Dropship Scout](https://getdropshipscout.com/pricing): Dropship Scout pricing: a free plan with no card required, and Pro at $29/month for unlimited research, saved products, and hosted listings. Billed securely by Stripe.
+- [Privacy policy · Dropship Scout](https://getdropshipscout.com/privacy): What Dropship Scout collects, why, who processes it, and how to ask for a copy or deletion of your data.
+- [Dropshipping product research · Dropship Scout](https://getdropshipscout.com/research): Research shortlists for dropshipping products: seasons, niches, Shopify, and TikTok. Sample catalog only. How-to steps are under Guides.
+- [Terms of service · Dropship Scout](https://getdropshipscout.com/terms): The terms for using Dropship Scout, including plans, billing, acceptable use, and your responsibilities as a seller.
+
+## Guides
+- [AliExpress vs CJ Dropshipping · Dropship Scout](https://getdropshipscout.com/guides/aliexpress-vs-cj-dropshipping): How AliExpress and CJ Dropshipping differ for product research and fulfillment, and what this app can actually order.
+- [Cheaper supplier, slower shipping · Dropship Scout](https://getdropshipscout.com/guides/cheaper-supplier-slower-shipping): Weigh extra ship days on a cheaper dropshipping supplier against the dollars saved before you pick that quote.
+- [CJ Dropshipping without Shopify · Dropship Scout](https://getdropshipscout.com/guides/cjdropshipping-alternative): What CJ Dropshipping is good for, and how a hosted storefront uses the CJ API without replacing CJ as the warehouse.
+- [Compare product research tools · Dropship Scout](https://getdropshipscout.com/guides/compare-dropshipping-product-research-tools): How to compare dropshipping product research tools by the question each one answers, then check the name with your own quote.
+- [Compare two supplier quotes · Dropship Scout](https://getdropshipscout.com/guides/compare-two-dropshipping-supplier-quotes): Compare two dropshipping supplier quotes on landed cost, ship days, and whether each one delivers to your country.
+- [Direct supplier onboarding · Dropship Scout](https://getdropshipscout.com/guides/direct-supplier-onboarding): The direct-supplier path: onboard, publish cost and stock, and receive orders without a marketplace API.
+- [Break-even ROAS for dropshipping · Dropship Scout](https://getdropshipscout.com/guides/dropshipping-break-even-roas): Work out the most you can spend on ads per sale before a dropshipping product loses money, using supplier cost, shipping, and fees.
+- [Dropshipping niches for beginners · Dropship Scout](https://getdropshipscout.com/guides/dropshipping-niches-for-beginners): How beginners can pick a dropshipping niche they can explain, quote, and sample without chasing a saturated keyword.
+- [Product research checklist · Dropship Scout](https://getdropshipscout.com/guides/dropshipping-product-research-checklist): A dropshipping product research checklist: buyer, supplier quote, ship window, similar listings, and a fee check before ads.
+- [Dropshipping product validation checklist · Dropship Scout](https://getdropshipscout.com/guides/dropshipping-product-validation-checklist): A dropshipping product validation checklist with stop rules: two quotes, a fee check, a sample, and one small test.
+- [Dropshipping return policy guide · Dropship Scout](https://getdropshipscout.com/guides/dropshipping-return-policy): Write a dropshipping return and refund policy that matches what your supplier will actually accept, with a checklist of what to include.
+- [Dropshipping shipping times · Dropship Scout](https://getdropshipscout.com/guides/dropshipping-shipping-times): How to handle dropshipping shipping times: ask for days, put the window on the page, and do not promise a faster date.
+- [Dropshipping without Shopify · Dropship Scout](https://getdropshipscout.com/guides/dropshipping-without-shopify): How to sell supplier products with a hosted storefront, cart, and Stripe checkout instead of opening a Shopify store.
+- [Ecomhunt vs Dropship Scout · Dropship Scout](https://getdropshipscout.com/guides/ecomhunt-vs-dropship-scout): What Ecomhunt's hand-picked list is for, and how to validate one product name with a supplier quote instead of their label.
+- [Choose a dropshipping supplier · Dropship Scout](https://getdropshipscout.com/guides/how-to-choose-a-dropshipping-supplier): How to choose a dropshipping supplier you can order from: quote, ship window, second source, and a sample.
+- [How to find winning dropshipping products · Dropship Scout](https://getdropshipscout.com/guides/how-to-find-winning-dropshipping-products): How to find winning dropshipping products: name a buyer, collect candidates, and score a quote before ads. No invented order counts.
+- [How to find winning products · Dropship Scout](https://getdropshipscout.com/guides/how-to-find-winning-products): A practical way to find dropshipping products worth quoting: buyer, offer, supplier, and a fee check. No invented order counts.
+- [Dropshipping chargebacks and disputes · Dropship Scout](https://getdropshipscout.com/guides/how-to-handle-dropshipping-chargebacks): Why dropshipping orders get disputed, what evidence to keep for each order, and how to lower chargebacks with clear shipping times and tracking.
+- [How to order dropshipping samples · Dropship Scout](https://getdropshipscout.com/guides/how-to-order-dropshipping-product-samples): What to check when you order a sample from a dropshipping supplier: build quality, packaging, real shipping time, and whether the photos match.
+- [How to spot saturated products · Dropship Scout](https://getdropshipscout.com/guides/how-to-spot-saturated-products): How to spot a saturated dropshipping product from similar listings, identical offers, and a ship window you cannot beat.
+- [Test a product on a small ad budget · Dropship Scout](https://getdropshipscout.com/guides/how-to-test-a-product-with-a-small-ad-budget): A step-by-step plan for testing a dropshipping product with limited ad spend: set a kill rule, test one offer, and read the right numbers.
+- [Validate a dropshipping product · Dropship Scout](https://getdropshipscout.com/guides/how-to-validate-a-dropshipping-product-idea): The how-to sequence: supplier quote, fee check, sample, then a small page test. The research page is the shortlist.
+- [Maximum ad cost per sale · Dropship Scout](https://getdropshipscout.com/guides/maximum-ad-cost-per-sale): Find the most you can spend on ads for one dropshipping sale after supplier cost, shipping, and fees.
+- [Minea vs Dropship Scout · Dropship Scout](https://getdropshipscout.com/guides/minea-vs-dropship-scout): What Minea's ad spy is for, and what to check on an advertised product before you treat it as a winner. No borrowed sales figures.
+- [Printful vs Printify · Dropship Scout](https://getdropshipscout.com/guides/printful-vs-printify): How Printful and Printify differ when you import designed products and place sandbox orders from Dropship Scout.
+- [Dropshipping niche ideas by season · Dropship Scout](https://getdropshipscout.com/guides/seasonal-dropshipping-niche-ideas): Seasonal dropshipping niche ideas for spring, summer, fall, and winter, tied to dates you can check. No demand scores.
+- [Sell The Trend vs Dropship Scout · Dropship Scout](https://getdropshipscout.com/guides/sell-the-trend-vs-dropship-scout): What Sell The Trend says it offers, what Dropship Scout does, and how to check a product name with your own supplier quote.
+- [Shipping and your margin · Dropship Scout](https://getdropshipscout.com/guides/shipping-cost-and-dropshipping-margin): Put shipping you pay and shipping you charge into a dropshipping margin before you set a price or buy ads.
+- [Dropshipping payout split · Dropship Scout](https://getdropshipscout.com/guides/supplier-payouts): What the seller, the supplier, and the platform each receive when a customer pays on a hosted storefront.
+- [Processing time vs transit time · Dropship Scout](https://getdropshipscout.com/guides/supplier-processing-time-vs-transit-time): Split a dropshipping ship quote into warehouse handling days and transit days before you publish one window.
+- [TikTok Made Me Buy It products · Dropship Scout](https://getdropshipscout.com/guides/tiktok-made-me-buy-it-products): How to research TikTok Made Me Buy It products without treating a video as a sales report.
+- [Checks before you buy ads · Dropship Scout](https://getdropshipscout.com/guides/what-to-check-before-buying-ads): What to check before buying dropshipping ads: viable price, sample, ship window, similar listings, and a second supplier.
+- [When a dropshipping order is late · Dropship Scout](https://getdropshipscout.com/guides/what-to-do-when-a-dropshipping-order-is-late): Steps to take when a dropshipping order is late: check tracking, contact the supplier, and send the customer an honest update before they ask.
+- [When to scale dropshipping ads · Dropship Scout](https://getdropshipscout.com/guides/when-to-scale-dropshipping-ads): Scale dropshipping ads only after the sample, ship window, and cost per sale still leave a remainder.
+
+## Research
+- [AliExpress product research · Dropship Scout](https://getdropshipscout.com/research/aliexpress-product-research): How to research an AliExpress product for dropshipping: variant, ship time, and a price that survives fees.
+- [Best products to dropship in fall · Dropship Scout](https://getdropshipscout.com/research/best-products-to-dropship-in-fall): How to choose fall dropshipping products using ship time, margin, and a sample catalog. No invented sales totals.
+- [Best products to dropship in spring · Dropship Scout](https://getdropshipscout.com/research/best-products-to-dropship-in-spring): How to choose spring dropshipping products using ship time, margin, and a sample catalog. No invented sales totals.
+- [Best products to dropship in summer · Dropship Scout](https://getdropshipscout.com/research/best-products-to-dropship-in-summer): How to choose summer dropshipping products using ship time, margin, and a sample catalog. No invented sales totals.
+- [Best products to dropship in winter · Dropship Scout](https://getdropshipscout.com/research/best-products-to-dropship-in-winter): How to choose winter dropshipping products using ship time, margin, and a sample catalog. No invented sales totals.
+- [Dropshipping niche ideas · Dropship Scout](https://getdropshipscout.com/research/dropshipping-niche-ideas): Ten sample-catalog niches and how to pick one based on the buyer, not on a sales chart.
+- [How to write a product page · Dropship Scout](https://getdropshipscout.com/research/dropshipping-product-page): What a dropshipping product page should say: buyer, variant, ship window, and a price that matches the quote.
+- [Dropshipping photo checklist · Dropship Scout](https://getdropshipscout.com/research/dropshipping-product-photos): Photos to take of a dropshipping sample before you advertise: the real variant, the scale, and the ship window.
+- [Dropshipping product research tool · Dropship Scout](https://getdropshipscout.com/research/dropshipping-product-research-tool): What Dropship Scout does as a product research tool: sample catalog, supplier import, and Stripe billing for Pro.
+- [Dropshipping profit margin · Dropship Scout](https://getdropshipscout.com/research/dropshipping-profit-margin): How to read a dropshipping margin after supplier cost and fees, without a fake benchmark percentage.
+- [How to price a dropshipping product · Dropship Scout](https://getdropshipscout.com/research/how-to-price-a-dropshipping-product): Price a dropshipping product from the supplier quote, shipping, card fees, and the platform fee. No invented margins.
+- [How to read a supplier quote · Dropship Scout](https://getdropshipscout.com/research/how-to-read-a-supplier-quote): Read a dropshipping supplier quote for variant, cost, shipping, ship days, and countries they will not ship to.
+- [Dropshipping product validation · Dropship Scout](https://getdropshipscout.com/research/how-to-validate-a-dropshipping-product): What the sample catalog can tell you when you validate a dropshipping product, and what still needs a supplier quote.
+- [Product idea checker · Dropship Scout](https://getdropshipscout.com/research/idea-checker): Free dropshipping product idea checker. Enter supplier cost, price, and shipping. No signup and no invented sales figures.
+- [Low competition products to dropship · Dropship Scout](https://getdropshipscout.com/research/low-competition-products-to-dropship): How to read a low-competition tag, and which sample-catalog products carry that editorial label.
+- [Free product research preview · Dropship Scout](https://getdropshipscout.com/research/preview): Filter Dropship Scout’s sample catalog by niche, season, and competition tag. Sample prices are not live quotes or sales.
+- [A second dropshipping supplier · Dropship Scout](https://getdropshipscout.com/research/second-dropshipping-supplier): How to line up a backup dropshipping supplier for the same variant before the first ad test.
+- [Shopify product research · Dropship Scout](https://getdropshipscout.com/research/shopify-product-research): How to research products for a Shopify store: supplier cost, ship time, and a listing you can tell apart.
+- [Shopify vs a hosted store · Dropship Scout](https://getdropshipscout.com/research/shopify-vs-hosted-dropshipping): Compare Shopify with a hosted dropshipping store: who charges the customer, who fulfills, and when you need an account.
+- [TikTok trending products to sell · Dropship Scout](https://getdropshipscout.com/research/tiktok-trending-products-to-sell): How to judge products you see on TikTok without treating a view count as a sales figure.
+- [What to sell in a Shopify store · Dropship Scout](https://getdropshipscout.com/research/what-to-sell-in-a-shopify-store): Choose what to sell on Shopify by buyer, ship time, and margin after fees, then connect the store if you want.
+- [When to stop a product test · Dropship Scout](https://getdropshipscout.com/research/when-to-stop-testing-a-product): Stop a dropshipping test when the sample, the ship window, or the fee floor is wrong. Do not wait for a sales total.
+- [Winning dropshipping products · Dropship Scout](https://getdropshipscout.com/research/winning-dropshipping-products): A practical definition of a winning dropshipping product: margin, ship time, and a buyer you can name. No fake order counts.
+
+## Tools
+- [Dropshipping profit calculator · Dropship Scout](https://getdropshipscout.com/tools/dropshipping-profit-calculator): Free dropshipping profit margin and break-even calculator. Enter price, shipping, fees, and ad cost per sale. No signup.
+- [Dropshipping supplier comparison · Dropship Scout](https://getdropshipscout.com/tools/dropshipping-supplier-comparison): Free dropshipping supplier comparison. Compare landed cost, processing days, transit days, and country coverage. No signup.
+
