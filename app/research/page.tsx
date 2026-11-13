@@ -13,7 +13,7 @@ import { SEASON_LABELS } from '@/lib/merchandising/seasonal'
 export const revalidate = 86400
 
 export const metadata = pageMetadata({
-  title: 'Dropshipping product research',
+  title: 'Dropshipping product research shortlists by season and niche',
   description: 'Research shortlists for dropshipping products: seasons, niches, Shopify, and TikTok. Sample catalog only. How-to steps are under Guides.',
   path: '/research',
   imagePath: '/research/opengraph-image',
