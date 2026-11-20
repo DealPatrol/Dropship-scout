@@ -4,6 +4,7 @@ import { SignupLink } from '@/components/marketing/signup-link'
 import { WatchForm } from '@/components/marketing/watch-form'
 import { Button } from '@/components/ui/button'
 import { SUPPORT_EMAIL } from '@/lib/site'
+import { SisterSites } from '@/components/marketing/sister-sites';
 
 const links = [
   { href: '/research', label: 'Research' },
@@ -83,7 +84,8 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
           <WatchForm source="footer" />
           <p className="mt-8 border-t border-border pt-6 text-xs text-muted-foreground">© {new Date().getFullYear()} Dropship Scout. Payments are processed securely by Stripe.</p>
         </div>
-      </footer>
+            <SisterSites selfUrl="https://getdropshipscout.com" clusters={['commerce', 'devtools']} />
+</footer>
     </div>
   )
 }
