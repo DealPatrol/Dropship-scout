@@ -215,6 +215,8 @@ export const PRODUCT_RESEARCH_GUIDES: Guide[] = [
       'sell-the-trend-vs-dropship-scout',
       'minea-vs-dropship-scout',
       'ecomhunt-vs-dropship-scout',
+      'autods-vs-dropship-scout',
+      'zik-analytics-vs-dropship-scout',
       'dropshipping-product-validation-checklist',
     ],
     sections: [
@@ -258,7 +260,7 @@ export const PRODUCT_RESEARCH_GUIDES: Guide[] = [
       },
       {
         question: 'Where are the side-by-side pages?',
-        answer: 'Sell The Trend, Minea, and Ecomhunt each have a page that states what that product says it does and what Dropship Scout does. They are descriptions, not rankings and not reviews.',
+        answer: 'Sell The Trend, Minea, Ecomhunt, AutoDS, and ZIK Analytics each have a page that states what that product says it does and what Dropship Scout does. They are descriptions, not rankings and not reviews.',
       },
     ],
   },
@@ -424,6 +426,116 @@ export const PRODUCT_RESEARCH_GUIDES: Guide[] = [
       {
         question: 'Can I compare their supplier with one I can order here?',
         answer: 'Yes, when you have both quotes. Put them in the supplier comparison. Keep the supplier this app can order from if you want the hosted store to fulfill the item.',
+      },
+    ],
+  },
+  {
+    slug: 'autods-vs-dropship-scout',
+    title: 'AutoDS vs Dropship Scout',
+    metaTitle: 'AutoDS vs Dropship Scout',
+    description: 'What AutoDS says it automates, what Dropship Scout checks before you list, and how to use a margin check with either one.',
+    intent: 'AutoDS vs Dropship Scout',
+    relatedResearch: [
+      'dropshipping-product-research-tool',
+      'dropshipping-profit-margin',
+      'how-to-validate-a-dropshipping-product',
+    ],
+    relatedGuides: [
+      'compare-dropshipping-product-research-tools',
+      'zik-analytics-vs-dropship-scout',
+      'sell-the-trend-vs-dropship-scout',
+      'dropshipping-product-validation-checklist',
+    ],
+    sections: [
+      {
+        heading: 'What AutoDS says it is',
+        paragraphs: [
+          'AutoDS describes itself, on autods.com, as a dropshipping automation platform. The features it names include a product marketplace and winning-products hub, a bulk product importer from marketplaces and suppliers, price and stock monitoring, and automatic order fulfillment. Its own help center says monitoring runs on scheduled scans rather than in real time.',
+          'This page does not repeat its catalog size, user counts, or plan prices. Those are their claims, and their prices change. Check autods.com for the current plans.',
+        ],
+      },
+      {
+        heading: 'What Dropship Scout does instead',
+        paragraphs: [
+          'Dropship Scout answers the question before automation: does this product clear supplier cost, shipping, card fees, and returns at the price you plan to charge, and can a supplier this app orders from fulfill it. The idea checker, supplier comparison, and profit calculator are public and do not need an account.',
+          'Signed-in sellers can import from CJ Dropshipping, Printful, Printify, or a direct supplier, and publish a hosted store page or push a listing to Shopify. There is no AutoDS integration, and this app does not run price or stock monitoring on another store.',
+        ],
+      },
+      {
+        heading: 'Use the margin check with either tool',
+        paragraphs: [
+          'Automation keeps a listing in sync after you choose it. It does not decide whether the product was worth listing. Before you import a product anywhere, write the buyer, get one quote for one variant, and run the numbers in the idea checker. If the remainder after fees does not cover an ad cost you can afford, automating that listing only automates a loss.',
+          `Free accounts can save 10 products and 3 launch workspaces. Pro is ${PRO_PRICE}, billed by Stripe, and removes the saved-product, research-catalog, and hosted-listing caps. Pro does not add order automation. Checkout opens after the account exists.`,
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: 'Is Dropship Scout an AutoDS alternative?',
+        answer: 'Only for part of the job. AutoDS describes itself as import, monitoring, and order automation. Dropship Scout is the margin and supplier check before you list, plus a hosted store page. Many sellers would use a check like this before any automation tool.',
+      },
+      {
+        question: 'Can Dropship Scout import products from AutoDS?',
+        answer: 'No. There is no integration. Import uses CJ Dropshipping, Printful, Printify, or a direct supplier who joined this platform. You can type any quote into the free tools by hand.',
+      },
+      {
+        question: 'Does Dropship Scout fulfill orders automatically?',
+        answer: 'Hosted store orders route to the connected supplier for the product. This app does not place orders on marketplaces for you, and it does not reprice another store when a supplier changes price.',
+      },
+    ],
+  },
+  {
+    slug: 'zik-analytics-vs-dropship-scout',
+    title: 'ZIK Analytics vs Dropship Scout',
+    metaTitle: 'ZIK Analytics vs Dropship Scout',
+    description: 'What ZIK Analytics says its sold-data research covers, what Dropship Scout checks, and how to turn a product name into a supplier quote.',
+    intent: 'ZIK Analytics vs Dropship Scout',
+    relatedResearch: [
+      'dropshipping-product-research-tool',
+      'winning-dropshipping-products',
+      'how-to-validate-a-dropshipping-product',
+    ],
+    relatedGuides: [
+      'compare-dropshipping-product-research-tools',
+      'autods-vs-dropship-scout',
+      'minea-vs-dropship-scout',
+      'dropshipping-product-validation-checklist',
+    ],
+    sections: [
+      {
+        heading: 'What ZIK Analytics says it is',
+        paragraphs: [
+          'ZIK Analytics describes itself, on zikanalytics.com, as a product research and market intelligence platform for eBay sellers, Shopify stores, and dropshippers. It names eBay product and competitor research based on sold listings, Shopify store tracking it labels as modelled estimates, an ad spy, and supplier matching.',
+          'This page does not repeat its listing counts or plan prices, and it does not vouch for any sales estimate. Check zikanalytics.com for current features and pricing.',
+        ],
+      },
+      {
+        heading: 'What Dropship Scout does instead',
+        paragraphs: [
+          'Dropship Scout does not track other sellers. It takes numbers you type or import, runs the fee and margin math, and lets you publish a hosted store page once a supplier this app orders from can fulfill the product. The built-in catalog is sample data and is labeled that way.',
+          'If you research on eBay sold data, the product name and sold price are useful inputs. Your own quote is still the number that decides the margin.',
+        ],
+      },
+      {
+        heading: 'From a sold listing to your own quote',
+        paragraphs: [
+          'Copy the product and the price buyers paid, not a revenue estimate. Get a quote for one variant from CJ Dropshipping, Printful, Printify, or a direct supplier. Put both into the idea checker. If two suppliers quote, compare them on landed cost and ship days in the supplier comparison.',
+          `Save the products you are actually quoting in a free account. Pro is ${PRO_PRICE}, billed by Stripe, and removes the free caps. It does not add sold-listing data or store tracking. Checkout opens after the account exists.`,
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: 'Does Dropship Scout show eBay sold data?',
+        answer: 'No. It does not track eBay, Shopify, or Amazon sales. The sample catalog is editorial and labeled as sample data.',
+      },
+      {
+        question: 'Can I use both?',
+        answer: 'Yes. Use a sold-data tool to find names and the price buyers paid. Use Dropship Scout for the quote, the fee check, and a hosted store page.',
+      },
+      {
+        question: 'Is a modelled store revenue figure a reason to list a product?',
+        answer: 'Not on its own. An estimate about another store is not your margin. A supplier quote, a sample, and a small test are the parts you control.',
       },
     ],
   },
