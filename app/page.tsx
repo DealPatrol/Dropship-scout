@@ -11,8 +11,8 @@ import { allIntentPages } from '@/lib/marketing/intent'
 import { faqPageJsonLd, jsonLdGraph, organizationJsonLd, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
 
 export const metadata = pageMetadata({
-  title: 'Dropshipping product research',
-  description: 'Check supplier cost and margin in a public launch workspace, then publish a store page when a supplier can fulfill. Start free. Pro is $29/month.',
+  title: 'Best Dropshipping Product Research Tool 2026',
+  description: 'Free dropshipping product research workspace. Find winning products, calculate profit margins after shipping and fees, compare suppliers, and publish a store. No account needed to start. Pro $29/month.',
   path: '/',
 })
 
@@ -102,13 +102,13 @@ export default function LandingPage() {
       <JsonLd data={jsonLd} />
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:pt-24 text-center">
         <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" /> Product research, suppliers, and a storefront in one workspace
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" /> Best free dropshipping product research tool 2026
         </p>
         <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
-          Check the margin and the supplier before you spend on ads
+          Find winning dropshipping products and check the margin first
         </h1>
         <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
-          Dropship Scout is a research workspace: run the margin math, confirm a supplier can fulfill the product, and publish a listing only after that check.
+          Dropship Scout is the free research workspace for dropshippers: run the margin math, confirm a supplier can fulfill, and only publish after the numbers work. Ideal for finding high-margin winning products in 2026.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <SignupLink href="/auth/sign-up" location="home-hero">
@@ -123,7 +123,7 @@ export default function LandingPage() {
           <span className="mx-2" aria-hidden="true">·</span>
           <Link href="/research/idea-checker" className="text-primary hover:underline">Check a product idea, no account</Link>
           <span className="mx-2" aria-hidden="true">·</span>
-          <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Profit margin calculator, no account</Link>
+          <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Free profit margin calculator</Link>
           <span className="mx-2" aria-hidden="true">·</span>
           <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">Compare two suppliers, no account</Link>
         </p>
