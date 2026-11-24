@@ -276,8 +276,8 @@ export const EXTRA_GUIDES: Guide[] = [
   {
     slug: 'tiktok-made-me-buy-it-products',
     title: 'TikTok Made Me Buy It products',
-    metaTitle: 'TikTok Made Me Buy It products',
-    description: 'How to research TikTok Made Me Buy It products without treating a video as a sales report.',
+    metaTitle: 'TikTok Made Me Buy It Dropshipping Products',
+    description: 'How to vet TikTok Made Me Buy It products for dropshipping: match the video to a supplier, check ship time and cost, then test your own page.',
     intent: 'TikTok Made Me Buy It products',
     relatedResearch: [
       'tiktok-trending-products-to-sell',
