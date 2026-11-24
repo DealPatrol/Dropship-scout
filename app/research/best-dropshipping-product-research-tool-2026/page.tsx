@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
 import { JsonLd } from '@/components/marketing/json-ld'
-import { pageMetadata, faqPageJsonLd } from '@/lib/seo'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata, faqPageJsonLd, jsonLdGraph } from '@/lib/seo'
 
 export const metadata: Metadata = pageMetadata({
   title: 'Best Dropshipping Product Research Tool 2026 | Dropship Scout',
-  description: 'Compare the best dropshipping product research tools in 2026. Dropship Scout helps you check supplier cost, margin after fees, and real fulfillment before spending on ads. Free idea checker + $29/mo Pro.',
+  description: 'Compare dropshipping product research tools for 2026. Dropship Scout checks supplier cost, margin after fees, and fulfillment before you spend on ads.',
   path: '/research/best-dropshipping-product-research-tool-2026',
 })
 
@@ -31,7 +30,7 @@ const faqs = [
 export default function BestResearchToolPage() {
   return (
     <>
-      <JsonLd data={faqPageJsonLd(faqs)} />
+      <JsonLd data={jsonLdGraph([faqPageJsonLd(faqs)])} />
       <article className="max-w-3xl mx-auto px-4 py-12 prose prose-invert">
         <h1>Best Dropshipping Product Research Tool 2026: Why Margin-First Beats Hype</h1>
         <p>Most dropshipping product research tools show trending products and estimated demand. Dropship Scout goes further: it forces the margin math after supplier cost, shipping, card fees, and returns before you spend a dollar on ads.</p>
