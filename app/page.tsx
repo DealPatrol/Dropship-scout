@@ -11,8 +11,8 @@ import { allIntentPages } from '@/lib/marketing/intent'
 import { faqPageJsonLd, jsonLdGraph, organizationJsonLd, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
 
 export const metadata = pageMetadata({
-  title: 'Best Dropshipping Product Research Tool 2026',
-  description: 'Free dropshipping product research workspace. Find winning products, calculate profit margins after shipping and fees, compare suppliers, and publish a store. No account needed to start. Pro $29/month.',
+  title: 'Dropshipping product research',
+  description: 'Free dropshipping product research workspace: check supplier cost and margin after fees, compare suppliers, then publish a store. Pro is $29/month.',
   path: '/',
 })
 
