@@ -30,7 +30,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
           </Link>
           <nav aria-label="Primary" className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             {links.map(link => (
-              <Link key={link.href} href={link.href} className="hover:text-foreground transition-colors">{link.label}</Link>
+              <Link key={link.href} href={link.href} className={`hover:text-foreground transition-colors${link.href === '/pricing' ? ' web-only' : ''}`}>{link.label}</Link>
             ))}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
@@ -41,7 +41,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
         </div>
         <nav aria-label="Mobile" className="md:hidden border-t border-border px-4 py-2 flex gap-4 overflow-x-auto text-sm text-muted-foreground">
           {links.map(link => (
-            <Link key={link.href} href={link.href} className="shrink-0 hover:text-foreground">{link.label}</Link>
+            <Link key={link.href} href={link.href} className={`shrink-0 hover:text-foreground${link.href === '/pricing' ? ' web-only' : ''}`}>{link.label}</Link>
           ))}
         </nav>
       </header>
@@ -59,7 +59,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
             <Link href="/tools/dropshipping-profit-calculator" className="text-muted-foreground hover:text-foreground">Profit margin calculator</Link>
             <Link href="/tools/dropshipping-supplier-comparison" className="text-muted-foreground hover:text-foreground">Supplier comparison</Link>
             <Link href="/research/preview" className="text-muted-foreground hover:text-foreground">Free preview</Link>
-            <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
+            <Link href="/pricing" className="web-only text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/faq" className="text-muted-foreground hover:text-foreground">FAQ</Link>
             <Link href="/guides" className="text-muted-foreground hover:text-foreground">Guides</Link>
           </div>
@@ -82,9 +82,9 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
         </div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
           <WatchForm source="footer" />
-          <p className="mt-8 border-t border-border pt-6 text-xs text-muted-foreground">© {new Date().getFullYear()} Dropship Scout. Payments are processed securely by Stripe.</p>
+          <p className="mt-8 border-t border-border pt-6 text-xs text-muted-foreground">© {new Date().getFullYear()} Dropship Scout.<span className="web-only"> Payments are processed securely by Stripe.</span></p>
         </div>
-            <SisterSites selfUrl="https://getdropshipscout.com" clusters={['commerce', 'devtools']} />
+            <div className="web-only"><SisterSites selfUrl="https://getdropshipscout.com" clusters={['commerce', 'devtools']} /></div>
 </footer>
     </div>
   )

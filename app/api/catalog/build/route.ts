@@ -11,6 +11,7 @@ import { PLAN_LIMITS, PlanLimitError, planLimitMessage } from '@/lib/billing'
 import { buildCatalog, parseBuilderPrompt } from '@/lib/merchandising/builder'
 import { NICHES } from '@/lib/merchandising/data'
 import type { BuilderCriteria } from '@/lib/merchandising/types'
+import { anthropicFastModel } from '@/lib/ai-models'
 
 async function parseWithClaude(prompt: string): Promise<BuilderCriteria | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null
@@ -18,8 +19,8 @@ async function parseWithClaude(prompt: string): Promise<BuilderCriteria | null> 
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const message = await client.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 256,
+      model: anthropicFastModel(),
+      max_tokens: 2048,
       messages: [{
         role: 'user',
         content: `Parse this store-building request into JSON criteria.

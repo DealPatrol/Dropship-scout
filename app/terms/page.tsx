@@ -14,7 +14,7 @@ export default function TermsPage() {
     <LegalPage
       title="Terms of service"
       path="/terms"
-      updated="October 9, 2026"
+      updated="November 23, 2026"
       intro={<p>These terms cover your use of Dropship Scout. By creating an account you agree to them. If you do not agree, do not use the service.</p>}
       sections={[
         {
@@ -23,6 +23,7 @@ export default function TermsPage() {
             <>
               <p>The Free plan costs nothing and has the limits shown on the pricing page. Pro is {PRO_MONTHLY_PRICE_LABEL} in US dollars, billed in advance each month by Stripe until you cancel.</p>
               <p>You can manage billing from Settings or by emailing support. Prices can change with notice before your next billing date.</p>
+              <p>In the iOS app, Pro is an auto-renewing App Store subscription (monthly or yearly) at the price shown in the app. Payment is charged to your Apple ID when you confirm. It renews automatically unless cancelled at least 24 hours before the end of the current period, and you manage or cancel it in your Apple ID settings. Apple&apos;s Licensed Application End User License Agreement (https://www.apple.com/legal/internet-services/itunes/dev/stdeula/) also applies to the iOS app.</p>
             </>
           ),
         },

@@ -62,3 +62,26 @@
     background: hsl(var(--muted-foreground));
   }
 }
+
+/* ── iOS app (Capacitor) ─────────────────────────────────────────────────────
+   <html class="native-ios"> is set by NativeClassScript / NativeIosBridge only
+   inside the iOS app. Web pages are unaffected. */
+.native-only { display: none; }
+html.native-ios .native-only { display: revert; }
+html.native-ios .web-only { display: none !important; }
+html.native-ios body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-tap-highlight-color: transparent;
+}
+html.native-ios body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: env(safe-area-inset-top);
+  background: hsl(var(--background));
+  z-index: 60;
+}
+html.native-ios header.sticky { top: env(safe-area-inset-top); }
+html.native-ios .h-screen { height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+html.native-ios .min-h-screen { min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }

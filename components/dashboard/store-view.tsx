@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { ExportLink } from '@/components/native/export-link'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -121,7 +122,7 @@ export function StoreView() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-3 text-sm"><a className="text-primary underline" href="/api/store/export?channel=shopify">Download Shopify draft CSV</a><a className="text-primary underline" href="/api/store/export?channel=etsy">Download Etsy listing worksheet</a></div>
+      <div className="flex flex-wrap gap-3 text-sm"><ExportLink className="text-primary underline" href="/api/store/export?channel=shopify" fileName="shopify-draft-products.csv">Download Shopify draft CSV</ExportLink><ExportLink className="text-primary underline" href="/api/store/export?channel=etsy" fileName="etsy-listing-worksheet.csv">Download Etsy listing worksheet</ExportLink></div>
       <p className="text-xs text-muted-foreground">Exports use your store listings. The Etsy worksheet is for manual listing preparation; it does not publish to Etsy.</p>
       <Card>
         <CardHeader>

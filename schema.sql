@@ -289,3 +289,20 @@ create table if not exists supplier_notifications (
   read_at timestamptz,
   created_at timestamptz default now()
 );
+
+-- App Store (iOS app) subscriptions. Stripe stays the web billing path; plan is
+-- 'pro' while either an App Store or a Stripe subscription is active.
+alter table users add column if not exists apple_original_transaction_id text;
+alter table users add column if not exists apple_product_id text;
+alter table users add column if not exists apple_expires_at timestamptz;
+alter table users add column if not exists apple_revoked_at timestamptz;
+alter table users add column if not exists apple_environment text;
+alter table users add column if not exists apple_signed_date bigint not null default 0;
+create unique index if not exists users_apple_otid_uidx on users (apple_original_transaction_id) where apple_original_transaction_id is not null;
+
+-- App Store Server Notifications V2 already processed (idempotency).
+create table if not exists apple_notifications (
+  notification_uuid text primary key,
+  notification_type text not null,
+  processed_at timestamptz default now()
+);

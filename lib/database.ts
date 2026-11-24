@@ -310,6 +310,19 @@ const SCHEMA_STATEMENTS = [
     read_at timestamptz,
     created_at timestamptz default now()
   )`,
+  // App Store (StoreKit 2) subscriptions for the iOS app. Stripe stays the web billing path.
+  `alter table users add column if not exists apple_original_transaction_id text`,
+  `alter table users add column if not exists apple_product_id text`,
+  `alter table users add column if not exists apple_expires_at timestamptz`,
+  `alter table users add column if not exists apple_revoked_at timestamptz`,
+  `alter table users add column if not exists apple_environment text`,
+  `alter table users add column if not exists apple_signed_date bigint not null default 0`,
+  `create unique index if not exists users_apple_otid_uidx on users (apple_original_transaction_id) where apple_original_transaction_id is not null`,
+  `create table if not exists apple_notifications (
+    notification_uuid text primary key,
+    notification_type text not null,
+    processed_at timestamptz default now()
+  )`,
 ]
 
 async function initSchema(): Promise<void> {

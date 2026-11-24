@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getSavedProducts, getSearchSession } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { Product } from '@/lib/types'
+import { anthropicSearchModel } from '@/lib/ai-models'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -43,8 +44,8 @@ export async function GET(req: NextRequest) {
     const prompt = buildRecommendationPrompt(saved, lastSession, limit)
 
     const message = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2048,
+      model: anthropicSearchModel(),
+      max_tokens: 8192,
       messages: [{ role: 'user', content: prompt }],
     })
 

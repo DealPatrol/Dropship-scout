@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { CheckoutButton } from '@/components/marketing/checkout-button'
+import { isNativeIos } from '@/lib/native/platform'
 import { SignupLink } from '@/components/marketing/signup-link'
 import { PRO_MONTHLY_PRICE_USD } from '@/lib/billing'
 import { calculateLaunchEconomics, type LaunchEconomicsInput, type LaunchEconomicsResult } from '@/lib/launch-economics'
@@ -33,6 +34,11 @@ async function fetcher(url: string) {
   return data
 }
 function download(name: string, content: string, type: string) {
+  // The iOS web view ignores <a download>; share the file through the Share Sheet there.
+  if (isNativeIos()) {
+    void import('@/lib/native/device').then(({ shareFile }) => shareFile(name, content, type))
+    return
+  }
   const url = URL.createObjectURL(new Blob([content], { type }))
   const a = document.createElement('a'); a.href = url; a.download = name; a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
@@ -40,7 +46,7 @@ function download(name: string, content: string, type: string) {
 function LaunchUpgradeOffer() {
   return (
     <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
-      <p className="text-sm">Pro is ${PRO_MONTHLY_PRICE_USD}/month and includes 50 saved launches. Stripe collects the card.</p>
+      <p className="text-sm"><span className="web-only">Pro is ${PRO_MONTHLY_PRICE_USD}/month and includes 50 saved launches. Stripe collects the card.</span><span className="native-only">Pro includes 50 saved launches.</span></p>
       <div className="mt-3">
         <CheckoutButton source="launch-limit">Continue to Pro checkout</CheckoutButton>
       </div>

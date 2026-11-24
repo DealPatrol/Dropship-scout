@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
+import { isNativeIosUserAgent } from '@/lib/native/platform'
 import { checkoutGate, parseBillingInterval, publicCheckoutError } from '@/lib/billing'
 import { getBillingProfile, saveWatchSubscriber, setStripeCustomer } from '@/lib/db'
 import { siteUrl } from '@/lib/site'
@@ -10,6 +11,11 @@ import {
 } from '@/lib/stripe'
 
 export async function POST(request: Request) {
+  // App Review Guideline 3.1.1: the iOS app sells Pro only through StoreKit.
+  if (isNativeIosUserAgent(request.headers.get('user-agent'))) {
+    return NextResponse.json({ error: 'In the iOS app, Pro is available as an App Store subscription in Settings.' }, { status: 403 })
+  }
+
   const user = await getSession()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

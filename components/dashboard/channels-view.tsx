@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { isNativeIos } from '@/lib/native/platform'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,6 +32,8 @@ interface ActionResult {
 
 export function ChannelsView() {
   const [channels, setChannels] = useState<Channel[]>([])
+  const [native, setNative] = useState(false)
+  useEffect(() => setNative(isNativeIos()), [])
   const [connections, setConnections] = useState<Connections | null>(null)
   const [pauseReason, setPauseReason] = useState<string | null>(null)
   const [shopDomain, setShopDomain] = useState('')
@@ -92,7 +95,8 @@ export function ChannelsView() {
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {message && <p role="status" className="text-sm text-green-400">{message}</p>}
 
-      {channels.map(channel => (
+      {/* App Review 2.1: the iOS app lists only channels that work today, not "coming soon" ones. */}
+      {channels.filter(channel => !(native && channel.status === 'coming_soon')).map(channel => (
         <Card key={channel.id}>
           <CardHeader>
             <div className="flex items-center justify-between gap-3">

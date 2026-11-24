@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { JsonLd } from '@/components/marketing/json-ld'
 import { pageMetadata, faqPageJsonLd } from '@/lib/seo'
-import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = pageMetadata({
   title: 'Best Dropshipping Product Research Tool 2026 | Dropship Scout',

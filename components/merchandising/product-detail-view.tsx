@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScoreBar, ScoreRing } from '@/components/merchandising/score-badge'
 import { useToast } from '@/components/ui/toaster'
+import { SaveToScoutKitButton } from '@/components/native/save-to-scout-kit'
 import {
   ArrowLeft,
   CalendarDays,
@@ -128,7 +129,18 @@ export function ProductDetailView({ product, userId }: { product: CatalogProduct
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <SaveToScoutKitButton
+            product={{
+              name: product.name,
+              category: NICHE_MAP[product.niches[0]]?.label ?? '',
+              sellPrice: product.price,
+              supplierCost: product.cost,
+              shippingDays: product.shippingDays,
+              tags: product.tags,
+              notes: 'Imported from the sample discovery catalog: price and cost are sample figures. Confirm with a real supplier quote.',
+            }}
+          />
           {inCatalog ? (
             <Button variant="secondary" className="gap-2" onClick={() => catalog.removeProduct(product.id)}>
               <Check className="h-4 w-4 text-green-400" />

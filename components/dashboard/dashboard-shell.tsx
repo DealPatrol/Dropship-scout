@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import type { SessionUser } from '@/lib/session'
 import { cn } from '@/lib/utils'
+import { isNativeIos, scoutKitUrl } from '@/lib/native/platform'
 import {
   Search,
   Bookmark,
@@ -23,6 +24,7 @@ import {
   Truck,
   Package,
   Plug,
+  WifiOff,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -54,6 +56,8 @@ export function DashboardShell({ user, plan, children }: DashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [native, setNative] = useState(false)
+  useEffect(() => setNative(isNativeIos()), [])
 
   async function handleSignOut() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -77,7 +81,17 @@ export function DashboardShell({ user, plan, children }: DashboardShellProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
+      <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
+        {native && (
+          // iOS app: back to the bundled offline Scout Kit (watchlist, calculator, supplier notes).
+          <a
+            href={scoutKitUrl('watchlist')}
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <WifiOff className="h-4 w-4 flex-shrink-0" />
+            Scout Kit (offline)
+          </a>
+        )}
         {navItems.map(item => {
           const Icon = item.icon
           const active = isActive(item)

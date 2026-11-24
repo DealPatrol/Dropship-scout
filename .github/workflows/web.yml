@@ -1,0 +1,47 @@
+name: Web and iOS bundle checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+      - name: Build bundled Scout Kit (Capacitor webDir)
+        run: pnpm build:native
+      - name: Validate iOS plist, scheme and StoreKit files
+        run: |
+          python3 - <<'PY'
+          import glob, json, plistlib, xml.etree.ElementTree as ET
+          for f in ['ios/App/App/Info.plist', 'ios/App/App/PrivacyInfo.xcprivacy']:
+              plistlib.load(open(f, 'rb'))
+          info = plistlib.load(open('ios/App/App/Info.plist', 'rb'))
+          assert info.get('ITSAppUsesNonExemptEncryption') is False, 'ITSAppUsesNonExemptEncryption must be NO'
+          assert info.get('NSFaceIDUsageDescription'), 'Face ID usage string missing'
+          for f in glob.glob('ios/App/App.xcodeproj/xcshareddata/xcschemes/*.xcscheme') + glob.glob('ios/App/App/Base.lproj/*.storyboard'):
+              ET.parse(f)
+          for f in glob.glob('ios/App/App/Assets.xcassets/**/Contents.json', recursive=True) + ['ios/App/App/DropshipScout.storekit']:
+              json.load(open(f))
+          print('iOS project files OK')
+          PY
+          sh -n ios/App/ci_scripts/ci_post_clone.sh
