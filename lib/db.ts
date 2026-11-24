@@ -63,7 +63,8 @@ export async function getUserPlan(userId: string): Promise<Plan> {
 export async function getBillingProfile(userId: string) {
   await ensureSchema()
   const rows = await sql`
-    select plan, stripe_customer_id, stripe_subscription_id, stripe_subscription_status
+    select plan, stripe_customer_id, stripe_subscription_id, stripe_subscription_status,
+      apple_original_transaction_id, apple_product_id, apple_expires_at, apple_revoked_at
     from users where id = ${userId}
   `
   return rows[0] ?? null
@@ -181,7 +182,11 @@ export async function reconcileStripeSubscription(input: {
             stripe_subscription_id = ${current.subscriptionId},
             stripe_subscription_status = ${current.status},
             stripe_event_created = ${input.eventCreated},
-            plan = ${current.plan}
+            plan = case
+              when ${current.plan} = 'pro' then 'pro'
+              when apple_revoked_at is null and apple_expires_at > now() then 'pro'
+              else 'free'
+            end
         where id = ${userId}
           and stripe_event_created <= ${input.eventCreated}
       `
@@ -193,7 +198,11 @@ export async function reconcileStripeSubscription(input: {
       set stripe_subscription_id = ${current.subscriptionId},
           stripe_subscription_status = ${current.status},
           stripe_event_created = ${input.eventCreated},
-          plan = ${current.plan}
+          plan = case
+            when ${current.plan} = 'pro' then 'pro'
+            when apple_revoked_at is null and apple_expires_at > now() then 'pro'
+            else 'free'
+          end
       where stripe_customer_id = ${current.customerId}
         and stripe_event_created <= ${input.eventCreated}
     `

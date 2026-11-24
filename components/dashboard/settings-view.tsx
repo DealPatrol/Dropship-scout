@@ -9,13 +9,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, CreditCard, Plug, User } from 'lucide-react'
+import { AppStoreProPanel } from '@/components/native/app-store-pro-panel'
+import { DeleteAccountCard } from '@/components/dashboard/delete-account-card'
+import { isNativeIos } from '@/lib/native/platform'
 
 interface SettingsViewProps {
   userId: string
   userEmail: string
 }
 
-export function SettingsView({ userEmail }: SettingsViewProps) {
+export function SettingsView({ userId, userEmail }: SettingsViewProps) {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [plan, setPlan] = useState<'free' | 'pro'>('free')
@@ -24,8 +27,17 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
   const [billingLoading, setBillingLoading] = useState(false)
   const [checkoutRequested, setCheckoutRequested] = useState(false)
   const [billingInterval, setBillingInterval] = useState<BillingInterval>('month')
+  const [native, setNative] = useState(false)
+  const [source, setSource] = useState<'apple' | 'stripe' | null>(null)
+  const [appleExpiresAt, setAppleExpiresAt] = useState<string | null>(null)
+  const [statusVersion, setStatusVersion] = useState(0)
 
   useEffect(() => {
+    // Inside the iOS app, Pro is sold only with StoreKit (Guideline 3.1.1): no Stripe checkout or portal.
+    if (isNativeIos()) {
+      setNative(true)
+      return
+    }
     const params = new URLSearchParams(window.location.search)
     setCheckoutRequested(params.get('checkout') === '1')
     setBillingInterval(parseBillingInterval(params.get('interval')))
@@ -45,10 +57,12 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
       .then(data => {
         setPlan(data.plan === 'pro' ? 'pro' : 'free')
         setHasStripeCustomer(Boolean(data.hasCustomer))
+        setSource(data.source === 'apple' || data.source === 'stripe' ? data.source : null)
+        setAppleExpiresAt(typeof data.apple?.expiresAt === 'string' ? data.apple.expiresAt : null)
       })
       .catch(() => undefined)
       .finally(() => setStatusLoaded(true))
-  }, [])
+  }, [statusVersion])
 
   async function openPortal() {
     const response = await fetch('/api/billing/portal', { method: 'POST' })
@@ -97,14 +111,14 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
   }
 
   useEffect(() => {
-    if (!statusLoaded || !checkoutRequested || plan === 'pro') return
+    if (native || !statusLoaded || !checkoutRequested || plan === 'pro') return
     const key = `ds-checkout-autostart-${billingInterval}`
     if (sessionStorage.getItem(key) === '1') return
     sessionStorage.setItem(key, '1')
     void handleUpgrade(billingInterval)
     // handleUpgrade is recreated each render; this effect should run once per visit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusLoaded, checkoutRequested, plan, billingInterval])
+  }, [native, statusLoaded, checkoutRequested, plan, billingInterval])
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
@@ -131,19 +145,31 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="pro">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-primary" />
-              Billing
+              {native ? 'Dropship Scout Pro' : 'Billing'}
             </CardTitle>
             <CardDescription>
               {plan === 'pro'
                 ? 'Pro includes 50 saved launch workspaces and removes the free-plan limits on saved products, research catalogs, and hosted listings.'
-                : `Free includes 3 saved launch workspaces, 10 saved products, 25 research-catalog products, and 25 hosted store listings. Pro is $${PRO_MONTHLY_PRICE_USD}/month.`}
+                : native
+                  ? 'Free includes 3 saved launch workspaces, 10 saved products, 25 research-catalog products, and 25 hosted store listings. Pro includes 50 saved launch workspaces and removes the other limits.'
+                  : `Free includes 3 saved launch workspaces, 10 saved products, 25 research-catalog products, and 25 hosted store listings. Pro is $${PRO_MONTHLY_PRICE_USD}/month.`}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
+            {native ? (
+              <AppStoreProPanel
+                userId={userId}
+                plan={plan}
+                source={source}
+                appleExpiresAt={appleExpiresAt}
+                onChanged={() => setStatusVersion(v => v + 1)}
+              />
+            ) : (
+            <>
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm font-medium capitalize">{plan} plan</span>
               {plan === 'pro' ? (
@@ -162,6 +188,8 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
               <button type="button" className="text-sm text-primary text-left" onClick={() => void handlePortal()}>
                 Open the billing portal
               </button>
+            )}
+            </>
             )}
           </CardContent>
         </Card>
@@ -183,6 +211,8 @@ export function SettingsView({ userEmail }: SettingsViewProps) {
 
         {notice && <p className="text-sm text-muted-foreground">{notice}</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+
+        <DeleteAccountCard />
       </div>
     </div>
   )

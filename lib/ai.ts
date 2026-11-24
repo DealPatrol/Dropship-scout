@@ -3,6 +3,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { Product, SearchParams } from './types'
+import { anthropicFastModel, anthropicSearchModel } from './ai-models'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -10,8 +11,8 @@ export async function generateProducts(params: SearchParams): Promise<Product[]>
   const { platforms, category, sortBy, customNiche } = params
 
   const message = await client.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
-    max_tokens: 1024,
+    model: anthropicSearchModel(),
+    max_tokens: 4096,
     messages: [{ role: 'user', content: buildSearchPrompt(platforms, category, sortBy, customNiche) }],
   })
 
@@ -26,8 +27,8 @@ export async function refreshProductInsight(product: {
   currentScore: number
 }): Promise<{ trend: string; score: number; aiInsight: string }> {
   const message = await client.messages.create({
-    model: 'claude-3-haiku-20240307',
-    max_tokens: 256,
+    model: anthropicFastModel(),
+    max_tokens: 2048,
     messages: [{
       role: 'user',
       content: `You are a dropshipping market analyst. Re-evaluate this product's current market status.

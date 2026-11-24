@@ -4,12 +4,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseBillingInterval, settingsCheckoutSearch } from '@/lib/billing'
 import { safeNextPath } from '@/lib/paths'
+import { isNativeIosUserAgent } from '@/lib/native/platform'
 import { SESSION_COOKIE, verifySessionToken } from '@/lib/session'
 
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value
   const user = token ? await verifySessionToken(token) : null
   const { pathname } = req.nextUrl
+
+  // Inside the iOS app (App Review Guideline 3.1.1): no web pricing or Stripe
+  // checkout intents. The app opens on the workspace; Pro is sold with StoreKit.
+  if (isNativeIosUserAgent(req.headers.get('user-agent'))) {
+    const nativeRedirect = nativeIosRedirect(req)
+    if (nativeRedirect) return NextResponse.redirect(nativeRedirect)
+  }
 
   // Protect /dashboard routes and keep the destination for after login.
   if (pathname.startsWith('/dashboard') && !user) {
@@ -62,6 +70,27 @@ export async function middleware(req: NextRequest) {
   }
 
   return res
+}
+
+function nativeIosRedirect(req: NextRequest): URL | null {
+  const { pathname, searchParams } = req.nextUrl
+  const url = req.nextUrl.clone()
+  if (pathname === '/') {
+    url.pathname = '/dashboard'
+    url.search = ''
+    return url
+  }
+  if (pathname === '/pricing') {
+    url.pathname = '/dashboard/settings'
+    url.search = ''
+    url.hash = 'pro'
+    return url
+  }
+  if ((pathname.startsWith('/auth/') || pathname === '/dashboard/settings') && (searchParams.has('plan') || searchParams.has('checkout') || searchParams.has('billing'))) {
+    for (const key of ['plan', 'interval', 'checkout', 'billing']) url.searchParams.delete(key)
+    return url
+  }
+  return null
 }
 
 export const config = {

@@ -5,11 +5,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateProducts } from '@/lib/ai'
 import { upsertSearchSession } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { anthropicConfigured } from '@/lib/ai-models'
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getSession()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    if (!anthropicConfigured()) {
+      return NextResponse.json({ error: 'AI search is not available right now. Use the Product Explorer or Supplier search instead.' }, { status: 503 })
+    }
 
     const { platforms, category, sortBy, customNiche } = await req.json()
 

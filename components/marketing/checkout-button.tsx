@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { isNativeIos } from '@/lib/native/platform'
 import { Loader2 } from 'lucide-react'
 import { FUNNEL, trackFunnel } from '@/lib/analytics/track-funnel'
 import { startProCheckout } from '@/components/billing/start-checkout'
@@ -21,6 +23,8 @@ export function CheckoutButton({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [waitlist, setWaitlist] = useState<string | null>(null)
+  const [native, setNative] = useState(false)
+  useEffect(() => setNative(isNativeIos()), [])
 
   async function onClick() {
     setLoading(true)
@@ -39,6 +43,15 @@ export function CheckoutButton({
       setError(err instanceof Error ? err.message : 'Could not start checkout')
       setLoading(false)
     }
+  }
+
+  if (native) {
+    // iOS app: Pro is an App Store subscription in Settings (Guideline 3.1.1).
+    return (
+      <Button asChild variant={variant}>
+        <Link href="/dashboard/settings#pro">See Pro options</Link>
+      </Button>
+    )
   }
 
   return (

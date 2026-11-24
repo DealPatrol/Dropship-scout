@@ -110,3 +110,15 @@ Research-catalog pushes to Shopify still live on My Catalog and use the same sav
 ## Shopify setup (optional)
 
 Open **Sales channels**, enter the `myshopify.com` domain, and save a Custom App Admin API token with `write_products`, `read_orders`, and `write_orders`. Dropship Scout calls `shop.json` before encrypting the token. WooCommerce uses an HTTPS store URL and a REST API consumer key with read/write access to products and orders.
+
+## iPhone app (App Store)
+
+The iOS app lives in `ios/` (Capacitor 8, Swift Package Manager) with a bundled offline Scout Kit in `native-app/`. It opens the online workspace at getdropshipscout.com inside the app and sells Pro with StoreKit 2 (Stripe stays web-only).
+
+```bash
+npx pnpm@10.33.3 build:native   # bundled Scout Kit → native-app/dist
+npx pnpm@10.33.3 build:ios      # Scout Kit + cap sync ios
+npx pnpm@10.33.3 ios:open       # open in Xcode (macOS)
+```
+
+App Review mapping, App Store Connect setup, privacy label answers and review notes: see [IOS_APP_STORE.md](IOS_APP_STORE.md).
