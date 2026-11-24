@@ -45,9 +45,10 @@ describe('company pages', () => {
 describe('homepage and Pro checkout', () => {
   it('uses a branded research title and links the public launch workspace', () => {
     const home = read('app/page.tsx')
-    const title = 'Dropshipping product research'
+    const title = 'Best Dropshipping Product Research Tool 2026'
     expect(home).toContain(`title: '${title}'`)
-    expect(documentTitle(title)).toBe(`${title} · Dropship Scout`)
+    // Main's SEO title is too long for the site suffix; documentTitle uses the title alone.
+    expect(documentTitle(title)).toBe(title)
     expect(documentTitle(title).length).toBeLessThanOrEqual(60)
     expect(documentTitle('Dropshipping launch workspace').length).toBeLessThanOrEqual(60)
     expect(home).toContain('href="/launch-preview"')

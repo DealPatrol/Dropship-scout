@@ -148,6 +148,8 @@ const ARTICLES: IntentPage[] = [
       'sell-the-trend-vs-dropship-scout',
       'minea-vs-dropship-scout',
       'ecomhunt-vs-dropship-scout',
+      'autods-vs-dropship-scout',
+      'zik-analytics-vs-dropship-scout',
     ],
     sections: [
       {
