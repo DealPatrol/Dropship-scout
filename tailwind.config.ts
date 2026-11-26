@@ -47,6 +47,11 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        cta: {
+          DEFAULT: 'hsl(var(--cta))',
+          hover: 'hsl(var(--cta-hover))',
+          foreground: 'hsl(var(--cta-foreground))',
+        },
         surface: {
           DEFAULT: 'hsl(var(--surface))',
           raised: 'hsl(var(--surface-raised))',

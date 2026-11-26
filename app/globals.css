@@ -4,34 +4,35 @@
 
 @layer base {
   :root {
-    /* Light mode (unused — we default to dark) */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 14%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 12%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 226 100% 63%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 47% 18%;
-    --secondary-foreground: 210 40% 90%;
-    --muted: 222 47% 18%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 226 100% 63%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 222 20% 22%;
-    --input: 222 20% 22%;
-    --ring: 226 100% 63%;
+    /* Monochrome/Sharp palette (HSL channels for Tailwind v3 tokens) */
+    --background: 192 8% 12%; /* #1D2122 */
+    --foreground: 233 11% 85%; /* #D3D4DC */
+    --card: 190 7% 18%; /* #2B3031 */
+    --card-foreground: 233 11% 85%;
+    --popover: 190 7% 18%;
+    --popover-foreground: 233 11% 85%;
+    --primary: 233 11% 85%;
+    --primary-foreground: 192 8% 12%;
+    --secondary: 195 7% 23%; /* #363C3E */
+    --secondary-foreground: 233 11% 85%;
+    --muted: 195 7% 23%;
+    --muted-foreground: 225 5% 61%; /* #989AA0, AA on dark cards */
+    --accent: 195 7% 23%;
+    --accent-foreground: 233 11% 85%;
+    --destructive: 6 77% 60%;
+    --destructive-foreground: 192 8% 12%;
+    --border: 195 7% 23%;
+    --input: 195 7% 23%;
+    --ring: 233 11% 85%;
+    --cta: 43 100% 62%; /* #FFC93C */
+    --cta-hover: 43 89% 55%; /* #F2B824 */
+    --cta-foreground: 192 8% 12%;
+    --surface: 190 7% 18%;
+    --surface-raised: 195 7% 23%;
+    --surface-overlay: 195 6% 28%;
+    --brand-blue: 190 7% 18%;
+    --brand-indigo: 195 7% 23%;
     --radius: 0.5rem;
-
-    /* Custom brand tokens */
-    --brand-blue: 226 100% 63%;
-    --brand-indigo: 237 80% 60%;
-    --surface: 222 47% 14%;
-    --surface-raised: 222 47% 17%;
-    --surface-overlay: 222 47% 20%;
   }
 
   * {
@@ -61,4 +62,12 @@
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground));
   }
+}
+
+.hero-accent {
+  text-decoration-line: underline;
+  text-decoration-color: #FFC93C;
+  text-decoration-thickness: 0.16em;
+  text-underline-offset: 0.14em;
+  text-decoration-skip-ink: none;
 }
