@@ -184,12 +184,20 @@ const ARTICLES: IntentPage[] = [
   },
   {
     slug: 'shopify-product-research',
-    title: 'Shopify product research',
-    metaTitle: 'Shopify product research',
-    description: 'How to research products for a Shopify store: supplier cost, ship time, and a listing you can tell apart.',
+    title: 'Shopify product research: a free tool and a 5-step checklist',
+    metaTitle: 'Shopify Product Research Tool & Checklist',
+    description: 'Free Shopify product research: check supplier cost, ship time, and margin before a product goes in your store, then push the one you sampled to Shopify.',
     kind: 'article',
     related: ['what-to-sell-in-a-shopify-store', 'shopify-vs-hosted-dropshipping', 'winning-dropshipping-products'],
+    relatedGuides: ['compare-dropshipping-product-research-tools', 'dropshipping-product-research-checklist'],
     sections: [
+      {
+        heading: 'Shopify product research in 5 steps',
+        paragraphs: [
+          '1. Pick one buyer and one use, such as a gift, a car, or a kitchen, before you look at products. 2. Get a supplier quote for the exact variant: product cost, shipping to your customer, and the ship window. 3. Run the margin after product cost, shipping, payment fees, and Shopify fees, then set a retail price that still clears it. 4. Order one sample and photograph the item that arrives. 5. Add only that product to Shopify and read the first orders before you add a second.',
+          'Dropship Scout covers steps 3 and 5 for free: the profit calculator and the idea checker do not need an account, and a free account can push 3 research products to Shopify each calendar month. Pro is $29 a month and removes that cap.',
+        ],
+      },
       {
         heading: 'Research the product before you open the theme',
         paragraphs: [
@@ -215,6 +223,14 @@ const ARTICLES: IntentPage[] = [
       {
         question: 'Can I research products without connecting Shopify?',
         answer: 'Yes. The sample catalog, preview, and saved products do not require Shopify. Connect Shopify only when you want to push a listing or pull paid orders.',
+      },
+      {
+        question: 'Is there a free Shopify product research tool?',
+        answer: 'Yes. Dropship Scout\'s idea checker and profit calculator are free and need no account. A free account can push 3 research products to a connected Shopify store per calendar month; Pro ($29 a month) removes that cap.',
+      },
+      {
+        question: 'What should I check before adding a product to Shopify?',
+        answer: 'The supplier\'s quoted cost for the exact variant, the shipping cost and ship window to your customer\'s country, the margin after payment and Shopify fees, and a sample you have received and photographed yourself.',
       },
       SHARED_FAQ,
     ],
