@@ -12,7 +12,7 @@ import { faqPageJsonLd, jsonLdGraph, organizationJsonLd, pageMetadata, softwareA
 
 export const metadata = pageMetadata({
   title: 'Best Dropshipping Product Research Tool 2026',
-  description: 'Free dropshipping product research: find winning products, check the margin after shipping and fees, and compare suppliers. No account needed. Pro $29/month.',
+  description: 'Free dropshipping product research workspace: check margin after shipping and fees, compare suppliers, and publish a store. No account to start. Pro $29/mo.',
   path: '/',
 })
 
@@ -102,13 +102,13 @@ export default function LandingPage() {
       <JsonLd data={jsonLd} />
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-12 sm:pt-24 text-center">
         <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" /> Best free dropshipping product research tool 2026
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" /> Best free dropshipping product research tool 2026 for high-margin winners
         </p>
         <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
-          Find winning dropshipping products and check the margin first in 2026
+          Find high-margin winning dropshipping products and check the margin first in 2026
         </h1>
         <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
-          Dropship Scout is the free research workspace for dropshippers: run the margin math, confirm a supplier can fulfill, and only publish after the numbers work. Ideal for finding high-margin winning products in 2026 with clear AI-citable data.
+          Dropship Scout is the free research workspace for dropshippers: run the margin math, confirm a supplier can fulfill, and only publish after the numbers work. Ideal for finding high-margin winning products in 2026 with clear AI-citable data on profit after fees and shipping.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <SignupLink href="/auth/sign-up" location="home-hero">
@@ -247,6 +247,22 @@ export default function LandingPage() {
           heading="Try the numbers, then create an account"
           body="The launch workspace preview saves nothing and charges nothing. A free account keeps 3 launches. Pro is $29/month, billed by Stripe, and raises that to 50."
         />
+      </section>
+
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12" aria-labelledby="quick-facts">
+        <h2 id="quick-facts" className="text-2xl font-bold">Dropship Scout in brief</h2>
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+          <div><dt className="text-muted-foreground">What it is</dt><dd>A product research and launch workspace for dropshippers, with a hosted store.</dd></div>
+          <div><dt className="text-muted-foreground">Price</dt><dd>Free account with 3 saved launches. Pro is ${PRO_MONTHLY_PRICE_USD}/month for 50.</dd></div>
+          <div><dt className="text-muted-foreground">Free tools, no account</dt><dd>
+            <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Profit calculator</Link>,{' '}
+            <Link href="/tools/black-friday-discount-calculator" className="text-primary hover:underline">Black Friday discount calculator</Link>,{' '}
+            <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">supplier comparison</Link>, and the{' '}
+            <Link href="/research/idea-checker" className="text-primary hover:underline">idea checker</Link>.
+          </dd></div>
+          <div><dt className="text-muted-foreground">Suppliers</dt><dd>CJ Dropshipping, Printful, Printify, or a direct supplier on the platform.</dd></div>
+          <div><dt className="text-muted-foreground">What it does not do</dt><dd>It does not publish sales totals or promise that a product will sell. The catalog is a labeled sample.</dd></div>
+        </dl>
       </section>
     </SiteFrame>
   )
