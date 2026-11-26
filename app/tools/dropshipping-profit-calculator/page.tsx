@@ -111,6 +111,9 @@ export default function ProfitCalculatorPage({
               <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">Compare two supplier quotes</Link>
             </li>
             <li>
+              <Link href="/tools/black-friday-discount-calculator" className="text-primary hover:underline">How deep can a Black Friday discount go?</Link>
+            </li>
+            <li>
               <Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link>
             </li>
           </ul>
