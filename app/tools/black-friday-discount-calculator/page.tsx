@@ -124,6 +124,7 @@ export default function SaleDiscountPage() {
                 <li key={slug}><Link href={`/guides/${guide.slug}`} className="text-primary hover:underline">{guide.title}</Link></li>
               )
             })}
+            <li><Link href="/tools/weekend-cash-desk" className="text-primary hover:underline">Products that still pay at 20% off</Link></li>
             <li><Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Dropshipping profit calculator</Link></li>
             <li><Link href="/pricing" className="text-primary hover:underline">Compare Free and Pro</Link></li>
           </ul>

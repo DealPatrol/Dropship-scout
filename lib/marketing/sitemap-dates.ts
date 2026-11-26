@@ -8,6 +8,7 @@ import { CONTENT_DATE } from '@/lib/seo'
 const PAGE_UPDATED: Record<string, string> = {
   '/': '2026-11-26',
   '/tools/black-friday-discount-calculator': '2026-11-26',
+  '/tools/weekend-cash-desk': '2026-11-26',
   '/tools/dropshipping-profit-calculator': '2026-11-26',
   '/guides/autods-vs-dropship-scout': '2026-11-24',
   '/guides/zik-analytics-vs-dropship-scout': '2026-11-24',

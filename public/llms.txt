@@ -83,10 +83,12 @@ Sitemap: https://getdropshipscout.com/sitemap.xml
 - [Dropshipping profit calculator · Dropship Scout](https://getdropshipscout.com/tools/dropshipping-profit-calculator): Free dropshipping profit margin and break-even calculator. Enter price, shipping, fees, and ad cost per sale. No signup.
 - [Dropshipping supplier comparison · Dropship Scout](https://getdropshipscout.com/tools/dropshipping-supplier-comparison): Free dropshipping supplier comparison. Compare landed cost, processing days, transit days, and country coverage. No signup.
 - [Black Friday discount calculator · Dropship Scout](https://getdropshipscout.com/tools/black-friday-discount-calculator): Free BFCM discount calculator for dropshippers. Deepest discount before a loss, profit per order at 10-50% off, break-even ROAS at the sale price, and how many more orders a sale needs. No signup.
+- [Products that still pay at 20% off · Dropship Scout](https://getdropshipscout.com/tools/weekend-cash-desk): Sample-catalog gifts that still leave money at 20% off under stated fees and a flat ship cost. No signup and no sales totals.
 
 ## Quick answers (updated 2026-11-26)
 - Maximum discount before an order loses money = 1 - (supplier cost + shipping paid + flat card fee + ad cost per sale) / (regular price x (1 - percent fees - refund reserve)). Source: https://getdropshipscout.com/tools/black-friday-discount-calculator
 - Example: a $40 product with $12 supplier cost, $5 shipping, 2.9% + $0.30 card fee, 5% refund reserve and $8 ad cost per sale leaves about $11.54 at full price and about $4.17 at 20% off, so a 20% sale needs about 2.8x the normal orders to earn the same. Example inputs only.
+- A 20% Black Friday discount only belongs on products that still leave money after supplier cost, shipping you pay, fees, a refund reserve, and the ad. Cheap gifts often do not. Source: https://getdropshipscout.com/tools/weekend-cash-desk
 - Dropship Scout does not publish sales totals or promise a product will sell. Its catalog is a labeled sample.
 
 ## Other sites from the same maker

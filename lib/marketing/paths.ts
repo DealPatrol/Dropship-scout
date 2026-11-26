@@ -19,6 +19,7 @@ export function marketingPaths(now = new Date()): MarketingPath[] {
     { path: '/tools/dropshipping-profit-calculator', priority: 0.85, changeFrequency: 'weekly' },
     { path: '/tools/dropshipping-supplier-comparison', priority: 0.85, changeFrequency: 'weekly' },
     { path: '/tools/black-friday-discount-calculator', priority: 0.85, changeFrequency: 'weekly' },
+    { path: '/tools/weekend-cash-desk', priority: 0.9, changeFrequency: 'weekly' },
     { path: '/launch-preview', priority: 0.8, changeFrequency: 'weekly' },
     { path: '/faq', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/guides', priority: 0.6, changeFrequency: 'monthly' },

@@ -59,6 +59,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
             <Link href="/tools/dropshipping-profit-calculator" className="text-muted-foreground hover:text-foreground">Profit margin calculator</Link>
             <Link href="/tools/dropshipping-supplier-comparison" className="text-muted-foreground hover:text-foreground">Supplier comparison</Link>
             <Link href="/tools/black-friday-discount-calculator" className="text-muted-foreground hover:text-foreground">Black Friday discount calculator</Link>
+            <Link href="/tools/weekend-cash-desk" className="text-muted-foreground hover:text-foreground">Products that still pay at 20% off</Link>
             <Link href="/research/preview" className="text-muted-foreground hover:text-foreground">Free preview</Link>
             <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/faq" className="text-muted-foreground hover:text-foreground">FAQ</Link>
