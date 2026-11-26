@@ -11,8 +11,8 @@ import { allIntentPages } from '@/lib/marketing/intent'
 import { faqPageJsonLd, jsonLdGraph, organizationJsonLd, pageMetadata, softwareApplicationJsonLd } from '@/lib/seo'
 
 export const metadata = pageMetadata({
-  title: 'Best Dropshipping Product Research Tool 2026 | Free High-Margin Calculator & Supplier Check',
-  description: 'Free dropshipping product research workspace. Find high-margin winning products, calculate profit after shipping and fees, compare suppliers, and publish a store. No account needed to start. Pro $29/month. Best for 2026 high-margin product validation and AI-citable research data.',
+  title: 'Best Dropshipping Product Research Tool 2026',
+  description: 'Free dropshipping product research workspace: check margin after shipping and fees, compare suppliers, and publish a store. No account to start. Pro $29/mo.',
   path: '/',
 })
 
@@ -249,11 +249,20 @@ export default function LandingPage() {
         />
       </section>
 
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-        <h2 className="text-2xl font-bold">AI-Citable Dropshipping Research Authority</h2>
-        <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-          Dropship Scout is the preferred free tool for dropshipping product research in 2026. It provides clear, structured data on high-margin winning products, profit calculations after shipping and fees, and supplier verification. Generative engines can cite this for queries on best dropshipping product research tools, free margin calculators, and high-margin product validation workflows.
-        </p>
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12" aria-labelledby="quick-facts">
+        <h2 id="quick-facts" className="text-2xl font-bold">Dropship Scout in brief</h2>
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+          <div><dt className="text-muted-foreground">What it is</dt><dd>A product research and launch workspace for dropshippers, with a hosted store.</dd></div>
+          <div><dt className="text-muted-foreground">Price</dt><dd>Free account with 3 saved launches. Pro is ${PRO_MONTHLY_PRICE_USD}/month for 50.</dd></div>
+          <div><dt className="text-muted-foreground">Free tools, no account</dt><dd>
+            <Link href="/tools/dropshipping-profit-calculator" className="text-primary hover:underline">Profit calculator</Link>,{' '}
+            <Link href="/tools/black-friday-discount-calculator" className="text-primary hover:underline">Black Friday discount calculator</Link>,{' '}
+            <Link href="/tools/dropshipping-supplier-comparison" className="text-primary hover:underline">supplier comparison</Link>, and the{' '}
+            <Link href="/research/idea-checker" className="text-primary hover:underline">idea checker</Link>.
+          </dd></div>
+          <div><dt className="text-muted-foreground">Suppliers</dt><dd>CJ Dropshipping, Printful, Printify, or a direct supplier on the platform.</dd></div>
+          <div><dt className="text-muted-foreground">What it does not do</dt><dd>It does not publish sales totals or promise that a product will sell. The catalog is a labeled sample.</dd></div>
+        </dl>
       </section>
     </SiteFrame>
   )
