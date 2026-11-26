@@ -105,7 +105,7 @@ export default function LandingPage() {
           <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" /> Best free dropshipping product research tool 2026 for high-margin winners
         </p>
         <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
-          Find high-margin winning dropshipping products and check the margin first in 2026
+          Find high-margin winning dropshipping products and check the <span className="hero-accent">margin first</span> in 2026
         </h1>
         <p className="mt-5 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
           Dropship Scout is the free research workspace for dropshippers: run the margin math, confirm a supplier can fulfill, and only publish after the numbers work. Ideal for finding high-margin winning products in 2026 with clear AI-citable data on profit after fees and shipping.
