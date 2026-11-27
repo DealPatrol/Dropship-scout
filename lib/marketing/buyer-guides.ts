@@ -50,11 +50,18 @@ export const BUYER_GUIDES: Guide[] = [
   {
     slug: 'how-to-test-a-product-with-a-small-ad-budget',
     title: 'How to test a dropshipping product with a small ad budget',
-    metaTitle: 'Test a product on a small ad budget',
-    description: 'A step-by-step plan for testing a dropshipping product with limited ad spend: set a kill rule, test one offer, and read the right numbers.',
+    metaTitle: 'How to Test Dropshipping Products for Free',
+    description: 'How to test a dropshipping product for free before ads (supplier quote, break-even math, organic posts), then on a small budget with a kill rule.',
     intent: 'test dropshipping product small budget',
     relatedResearch: ['how-to-validate-a-dropshipping-product', 'low-competition-products-to-dropship'],
     sections: [
+      {
+        heading: 'Free ways to test a product before you pay for ads',
+        paragraphs: [
+          'Several checks cost nothing. Ask a supplier for a written quote and ship time to your market, run the numbers in the free dropshipping profit calculator to see your break-even cost per purchase, and read the reviews and questions buyers leave on marketplace listings for the same item. Any one of these can end a bad idea before it costs you money.',
+          'Organic posts are the other free test. Film the item in use and post it to your own short-video accounts, then read the comments, saves, and questions. Organic reach is unpredictable, so a quiet post is weak evidence, not a verdict. A post that draws real buying questions is a reason to run a small paid test, not proof the product will sell.',
+        ],
+      },
       {
         heading: 'Validate before you spend',
         paragraphs: [
@@ -78,6 +85,10 @@ export const BUYER_GUIDES: Guide[] = [
       },
     ],
     faqs: [
+      {
+        question: 'Can I test a dropshipping product for free?',
+        answer: 'Partly. Supplier quotes, break-even math, marketplace reviews, and organic short-video posts cost nothing, and they can rule a product out or make it worth a paid test. They cannot replace one: only a paid test with a fixed budget and a kill rule shows whether strangers buy at your price.',
+      },
       {
         question: 'How much should I spend testing one product?',
         answer: 'Set the test budget from your own numbers: at least enough to reach your maximum cost per purchase a few times. Only spend money you can afford to lose.',
