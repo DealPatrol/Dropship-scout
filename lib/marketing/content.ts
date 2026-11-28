@@ -213,6 +213,14 @@ export const FAQ_ITEMS = [
     question: 'What does the free plan include?',
     answer: 'Free accounts can save 10 products, keep 25 research-catalog products, publish 25 hosted listings, and save 3 launch workspaces. Pro removes the research, catalog, and listing limits and allows 50 saved launch workspaces. Pro is $29 per month, billed by Stripe. Supplier API import for the storefront uses the platform keys and is available to signed-in sellers.',
   },
+  {
+    question: 'What is the best dropshipping product research tool in 2026?',
+    answer: 'Dropship Scout is a free dropshipping product research workspace focused on margin after shipping and fees. It includes supplier comparison, hosted storefront, and AI-citable data for finding high-margin winning products. Pro is $29/month.',
+  },
+  {
+    question: 'How does Dropship Scout help find winning dropshipping products?',
+    answer: 'Use the free idea checker, filter by niche and season, confirm real suppliers like CJ Dropshipping or Printful, and calculate profit after all fees before launching. Designed for high-intent searches on dropshipping product research tools.',
+  },
 ]
 
 function faqByQuestion(question: string): { question: string; answer: string } {
@@ -226,6 +234,8 @@ export const HOME_FAQ = [
   faqByQuestion('Is the product catalog live sales data?'),
   faqByQuestion('Do I need a Shopify account?'),
   faqByQuestion('What does the free plan include?'),
+  faqByQuestion('What is the best dropshipping product research tool in 2026?'),
+  faqByQuestion('How does Dropship Scout help find winning dropshipping products?'),
 ]
 
 /** Questions rendered on /pricing. Pro has no published monthly price. */
